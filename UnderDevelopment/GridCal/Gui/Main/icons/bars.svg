@@ -15,7 +15,7 @@
    height="192"
    viewBox="0 0 192 192"
    sodipodi:docname="bars.svg"
-   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)">
+   inkscape:version="0.92.3 (2405546, 2018-03-11)">
   <metadata
      id="metadata8">
     <rdf:RDF>
@@ -39,19 +39,27 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="784"
-     inkscape:window-height="480"
+     inkscape:window-width="1851"
+     inkscape:window-height="998"
      id="namedview4"
      showgrid="false"
      inkscape:zoom="1.2291667"
-     inkscape:cx="-47.999997"
-     inkscape:cy="96.000003"
-     inkscape:window-x="57"
+     inkscape:cx="-47.999998"
+     inkscape:cy="96.000006"
+     inkscape:window-x="69"
      inkscape:window-y="27"
-     inkscape:window-maximized="0"
+     inkscape:window-maximized="1"
      inkscape:current-layer="svg2" />
+  <rect
+     style="opacity:1;fill:#4d4d4d;fill-opacity:1;stroke:none;stroke-width:3.2327857;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+     id="rect812"
+     width="111.45763"
+     height="110.64407"
+     x="40.677967"
+     y="43.932205"
+     ry="8.4994164" />
   <path
-     style="fill:#999999;stroke-width:1.33333337"
+     style="fill:#f2f2f2;stroke-width:1.33333337"
      d="m 34,167.5618 c -1.466667,-0.6178 -4.166667,-2.73724 -6,-4.70985 l -3.333333,-3.58656 V 96.731782 34.198175 L 29.025641,29.8392 33.384616,25.480226 H 96 158.61539 l 4.35897,4.358974 4.35897,4.358975 v 62.615384 62.615391 l -4.35798,4.35897 -4.358,4.35897 -60.975342,0.2691 C 64.105569,168.56399 35.466667,168.17961 34,167.5618 Z M 72,108.81356 V 80.813559 h -8 -8 v 28.000001 28 h 8 8 z m 32,-12.000001 v -40 h -8 -8 v 40 40.000001 h 8 8 z m 32,24.000001 v -16 h -8 -8 v 16 16 h 8 8 z"
      id="path817"
      inkscape:connector-curvature="0" />

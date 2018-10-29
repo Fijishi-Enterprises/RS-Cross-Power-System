@@ -13,7 +13,7 @@
    version="1.1"
    id="svg6"
    sodipodi:docname="run_cascade.svg"
-   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)">
+   inkscape:version="0.92.3 (2405546, 2018-03-11)">
   <metadata
      id="metadata12">
     <rdf:RDF>
@@ -37,19 +37,19 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1863"
-     inkscape:window-height="1025"
+     inkscape:window-width="1851"
+     inkscape:window-height="998"
      id="namedview8"
      showgrid="false"
-     inkscape:zoom="4.9166667"
-     inkscape:cx="-48"
-     inkscape:cy="24"
-     inkscape:window-x="57"
+     inkscape:zoom="6.171875"
+     inkscape:cx="6.9723256"
+     inkscape:cy="58.462212"
+     inkscape:window-x="69"
      inkscape:window-y="27"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg6" />
   <path
-     style="fill:#999999;fill-rule:evenodd;stroke:#999999;stroke-width:2;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
+     style="fill:#f2f2f2;fill-rule:evenodd;stroke:#f2f2f2;stroke-width:2;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
      d="m 25.240544,12.592421 -0.20339,22.372883 19.728814,-11.59322 z"
      id="path4489-3-6"
      inkscape:connector-curvature="0" />
@@ -58,12 +58,12 @@
      id="path2"
      fill="none" />
   <path
-     style="fill:#666666;fill-rule:evenodd;stroke:#666666;stroke-width:2;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     style="fill:#e6e6e6;fill-rule:evenodd;stroke:#e6e6e6;stroke-width:2;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
      d="M 15.755866,12.592421 15.552476,34.965303 35.28129,23.372083 Z"
      id="path4489-3"
      inkscape:connector-curvature="0" />
   <path
-     style="fill:#333333;fill-rule:evenodd;stroke:#333333;stroke-width:2;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
+     style="fill:#b3b3b3;fill-rule:evenodd;stroke:#b3b3b3;stroke-width:2;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
      d="M 6.2711864,12.592421 6.0677966,34.965303 25.79661,23.372083 Z"
      id="path4489"
      inkscape:connector-curvature="0" />

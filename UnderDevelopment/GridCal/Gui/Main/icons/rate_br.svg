@@ -14,7 +14,7 @@
    viewBox="0 0 48.000001 48.000001"
    id="svg2"
    version="1.1"
-   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
    sodipodi:docname="rate_br.svg">
   <defs
      id="defs4" />
@@ -26,15 +26,15 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="7.9195959"
-     inkscape:cx="1.0417662"
+     inkscape:cx="-28.757734"
      inkscape:cy="31.52398"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
      units="px"
-     inkscape:window-width="1859"
-     inkscape:window-height="1025"
-     inkscape:window-x="61"
+     inkscape:window-width="1851"
+     inkscape:window-height="998"
+     inkscape:window-x="69"
      inkscape:window-y="27"
      inkscape:window-maximized="1" />
   <metadata
@@ -45,7 +45,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -56,7 +56,7 @@
      transform="translate(0,-1004.3622)">
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:18.36423874px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#999999;fill-opacity:1;stroke:none;stroke-width:0.45910597"
+       style="font-style:normal;font-weight:normal;font-size:18.36423874px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#f2f2f2;fill-opacity:1;stroke:none;stroke-width:0.45910597;"
        x="19.152025"
        y="1030.7521"
        id="text839"><tspan
@@ -64,9 +64,9 @@
          id="tspan837"
          x="19.152025"
          y="1030.7521"
-         style="stroke-width:0.45910597">?</tspan></text>
+         style="stroke-width:0.45910597;fill:#f2f2f2;">?</tspan></text>
     <path
-       style="fill:none;stroke:#999999;stroke-width:4;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:none;stroke:#f2f2f2;stroke-width:4;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="M 5.4295698,1035.0633 H 42.300138"
        id="path870"
        inkscape:connector-curvature="0" />

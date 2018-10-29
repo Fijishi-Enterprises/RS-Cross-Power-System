@@ -13,7 +13,7 @@
    version="1.1"
    id="svg6"
    sodipodi:docname="run_cascade_step.svg"
-   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)">
+   inkscape:version="0.92.3 (2405546, 2018-03-11)">
   <metadata
      id="metadata12">
     <rdf:RDF>
@@ -37,14 +37,14 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1863"
-     inkscape:window-height="1025"
+     inkscape:window-width="1851"
+     inkscape:window-height="998"
      id="namedview8"
      showgrid="false"
      inkscape:zoom="4.9166667"
-     inkscape:cx="-48"
+     inkscape:cx="-96"
      inkscape:cy="24"
-     inkscape:window-x="57"
+     inkscape:window-x="69"
      inkscape:window-y="27"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg6" />
@@ -53,7 +53,7 @@
      id="path2"
      fill="none" />
   <path
-     style="fill:#999999;fill-rule:evenodd;stroke:#999999;stroke-width:2;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     style="fill:#f2f2f2;fill-rule:evenodd;stroke:#f2f2f2;stroke-width:2;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
      d="m 14.339033,12.813563 -0.20339,22.372882 19.728814,-11.59322 z"
      id="path4489"
      inkscape:connector-curvature="0" />
