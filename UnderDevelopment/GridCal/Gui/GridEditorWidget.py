@@ -45,10 +45,10 @@ To do this the graphic objects call "parent.circuit.<function or object>"
 '''
 
 # Declare colors
-ACTIVE = {'style': Qt.SolidLine, 'color': Qt.black}
+ACTIVE = {'style': Qt.SolidLine, 'color': Qt.white}
 DEACTIVATED = {'style': Qt.DashLine, 'color': Qt.gray}
 EMERGENCY = {'style': Qt.SolidLine, 'color': QtCore.Qt.yellow}
-OTHER = ACTIVE = {'style': Qt.SolidLine, 'color': Qt.black}
+OTHER = {'style': Qt.SolidLine, 'color': Qt.white}
 FONT_SCALE = 1.9
 
 
@@ -1952,7 +1952,7 @@ class BusGraphicItem(QGraphicsRectItem):
         # Label:
         self.label = QGraphicsTextItem(bus.name, self)
         # self.label.setDefaultTextColor(QtCore.Qt.white)
-        self.label.setDefaultTextColor(QtCore.Qt.black)
+        self.label.setDefaultTextColor(ACTIVE['color'])
         self.label.setScale(FONT_SCALE)
 
         # square
