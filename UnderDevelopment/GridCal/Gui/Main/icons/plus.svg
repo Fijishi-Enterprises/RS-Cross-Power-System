@@ -52,18 +52,18 @@
      inkscape:current-layer="svg2" />
   <g
      id="g831"
-     style="stroke:#f2f2f2;stroke-linecap:round;fill:#f2f2f2">
+     style="stroke:#cccccc;stroke-linecap:round;fill:#cccccc">
     <path
        sodipodi:nodetypes="cc"
        inkscape:connector-curvature="0"
        id="path812"
        d="m 95.091973,56.172243 0.09447,79.795097"
-       style="fill:#f2f2f2;fill-rule:evenodd;stroke:#f2f2f2;stroke-width:16;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+       style="fill:#cccccc;fill-rule:evenodd;stroke:#cccccc;stroke-width:16;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <path
        sodipodi:nodetypes="cc"
        inkscape:connector-curvature="0"
        id="path812-3"
        d="m 134.96147,95.594487 -79.795108,0.0945"
-       style="fill:#f2f2f2;fill-rule:evenodd;stroke:#f2f2f2;stroke-width:16;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+       style="fill:#cccccc;fill-rule:evenodd;stroke:#cccccc;stroke-width:16;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
   </g>
 </svg>

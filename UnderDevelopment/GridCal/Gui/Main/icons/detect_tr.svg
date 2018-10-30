@@ -60,17 +60,17 @@
        cy="1029.3185"
        rx="14.376685"
        ry="13.796513"
-       style="fill:none;stroke:#f2f2f2;stroke-width:3.31116295;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+       style="fill:none;stroke:#cccccc;stroke-width:3.31116295;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <ellipse
        id="path12-3"
        cx="30.654205"
        cy="1029.3185"
        rx="14.376685"
        ry="13.796513"
-       style="fill:none;stroke:#f2f2f2;stroke-width:3.31116295;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+       style="fill:none;stroke:#cccccc;stroke-width:3.31116295;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:18.36423874px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#f2f2f2;fill-opacity:1;stroke:none;stroke-width:0.45910597;"
+       style="font-style:normal;font-weight:normal;font-size:18.36423874px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#cccccc;fill-opacity:1;stroke:#cccccc;stroke-width:0.45910597;"
        x="19.404564"
        y="1036.9392"
        id="text839"><tspan
@@ -78,6 +78,6 @@
          id="tspan837"
          x="19.404564"
          y="1036.9392"
-         style="stroke-width:0.45910597;stroke:none;fill:#f2f2f2;">?</tspan></text>
+         style="stroke-width:0.45910597;stroke:#cccccc;fill:#cccccc;">?</tspan></text>
   </g>
 </svg>

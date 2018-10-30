@@ -57,36 +57,36 @@
     <g
        id="g4170"
        transform="matrix(1.0358316,0,0,1.0358316,-1.6033047,-37.565543)"
-       style="fill:#f2f2f2;stroke:#f2f2f2">
+       style="fill:#cccccc;stroke:#cccccc">
       <rect
          y="1031.7977"
          x="5.9977112"
          height="15.708717"
          width="37.862564"
          id="rect3343"
-         style="fill:#f2f2f2;fill-rule:evenodd;stroke:#f2f2f2;stroke-width:1.77057254;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+         style="fill:#cccccc;fill-rule:evenodd;stroke:#cccccc;stroke-width:1.77057254;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
       <path
          inkscape:connector-curvature="0"
          id="path4145"
          d="m 6.0845807,1031.2735 9.5147883,-8.2367 0.142012,7.9526 z"
-         style="fill:#f2f2f2;fill-rule:evenodd;stroke:#f2f2f2;stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1" />
+         style="fill:#cccccc;fill-rule:evenodd;stroke:#cccccc;stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1" />
       <path
          inkscape:connector-curvature="0"
          id="path4145-7"
          d="m 16.200671,1031.4264 9.514793,-8.2367 0.142012,7.9526 z"
-         style="fill:#f2f2f2;fill-rule:evenodd;stroke:#f2f2f2;stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1" />
+         style="fill:#cccccc;fill-rule:evenodd;stroke:#cccccc;stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1" />
       <path
          inkscape:connector-curvature="0"
          id="path4145-75"
          d="m 26.192215,1031.6272 9.514793,-8.2367 0.142012,7.9526 z"
-         style="fill:#f2f2f2;fill-rule:evenodd;stroke:#f2f2f2;stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1" />
+         style="fill:#cccccc;fill-rule:evenodd;stroke:#cccccc;stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1" />
       <rect
          y="1012.163"
          x="36.319714"
          height="21.037216"
          width="7.5065866"
          id="rect4168"
-         style="fill:#f2f2f2;stroke:#f2f2f2;stroke-width:1.83852458;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+         style="fill:#cccccc;stroke:#cccccc;stroke-width:1.83852458;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     </g>
   </g>
 </svg>

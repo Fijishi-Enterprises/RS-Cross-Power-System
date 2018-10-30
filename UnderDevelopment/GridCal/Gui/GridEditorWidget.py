@@ -45,10 +45,11 @@ To do this the graphic objects call "parent.circuit.<function or object>"
 '''
 
 # Declare colors
-ACTIVE = {'style': Qt.SolidLine, 'color': Qt.white}
+light_gray = QColor(204, 204, 204)
+ACTIVE = {'style': Qt.SolidLine, 'color': light_gray}
 DEACTIVATED = {'style': Qt.DashLine, 'color': Qt.gray}
 EMERGENCY = {'style': Qt.SolidLine, 'color': QtCore.Qt.yellow}
-OTHER = {'style': Qt.SolidLine, 'color': Qt.white}
+OTHER = {'style': Qt.SolidLine, 'color': light_gray}
 FONT_SCALE = 1.9
 
 
