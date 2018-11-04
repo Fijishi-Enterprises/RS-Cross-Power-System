@@ -14,6 +14,7 @@
 # along with GridCal.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+from enum import Enum
 import pickle as pkl
 from warnings import warn
 import pandas as pd
@@ -32,6 +33,46 @@ from GridCal.Engine.PlotConfig import LINEWIDTH
 from GridCal.Engine.BasicStructures import CDF
 from GridCal.Engine.Numerical.JacobianBased import Jacobian
 from GridCal.Engine.BasicStructures import BusMode
+from GridCal.Engine.Devices import DeviceType
+
+
+class ResultTypes(Enum):
+    # Power flow
+    BusVoltage = 'Bus voltage', DeviceType.BusDevice
+    BusVoltagePolar = 'Bus voltage (polar)', DeviceType.BusDevice
+    BranchPower = 'Branch power', DeviceType.BranchDevice
+    BranchCurrent = 'Branch current', DeviceType.BranchDevice
+    BranchLoading = 'Branch loading', DeviceType.BranchDevice
+    BranchLosses = 'Branch losses', DeviceType.BranchDevice
+    BatteryPower = 'Battery power', DeviceType.BatteryDevice
+    BatteryEnergy = 'Battery energy', DeviceType.BatteryDevice
+
+    # MonteCarlo
+    BusVoltageAverage = 'Bus voltage avg', DeviceType.BusDevice
+    BusVoltageStd = 'Bus voltage std', DeviceType.BusDevice
+    BusVoltageCDF = 'Bus voltage CDF', DeviceType.BusDevice
+    BusPowerCDF = 'Bus power CDF', DeviceType.BusDevice
+    BranchCurrentAverage = 'Branch current avg', DeviceType.BranchDevice
+    BranchCurrentStd = 'Branch current std', DeviceType.BranchDevice
+    BranchCurrentCDF = 'Branch current CDF', DeviceType.BranchDevice
+    BranchLoadingAverage = 'Branch loading avg', DeviceType.BranchDevice
+    BranchLoadingStd = 'Branch loading std', DeviceType.BranchDevice
+    BranchLoadingCDF = 'Branch loading CDF', DeviceType.BranchDevice
+    BranchLossesAverage = 'Branch losses avg', DeviceType.BranchDevice
+    BranchLossesStd = 'Branch losses std', DeviceType.BranchDevice
+    BranchLossesCDF = 'Branch losses CDF', DeviceType.BranchDevice
+
+    # OPF
+    BusVoltageModule = 'Bus voltage module', DeviceType.BusDevice
+    BusVoltageAngle = 'Bus voltage angle', DeviceType.BusDevice
+    BusPower = 'Bus power', DeviceType.BusDevice
+    BranchOverloads = 'Branch overloads', DeviceType.BranchDevice
+    LoadShedding = 'Load shedding', DeviceType.LoadDevice
+    ControlledGeneratorShedding = 'Controlled generator shedding', DeviceType.ControlledGeneratorDevice
+    ControlledGeneratorPower = 'Controlled generator power', DeviceType.ControlledGeneratorDevice
+
+    # Short-circuit
+    BusShortCircuitPower = 'Bus short circuit power', DeviceType.BusDevice
 
 
 class CalculationInputs:
@@ -89,6 +130,7 @@ class CalculationInputs:
         self.tap_f = np.zeros(nbr, dtype=float)
         self.tap_t = np.zeros(nbr, dtype=float)
         self.tap_ang = np.zeros(nbr, dtype=float)
+        self.tap_mod = np.zeros(nbr, dtype=float)
 
         # needed fot the tap changer
         self.is_bus_to_regulated = np.zeros(nbr, dtype=int)
@@ -195,7 +237,7 @@ class CalculationInputs:
         """
         Compute the magnitudes that cannot be computed vector-wise
         """
-        self.bus_to_regulated_idx = np.where(self.is_bus_to_regulated > 0)[0]
+        self.bus_to_regulated_idx = np.where(self.is_bus_to_regulated == True)[0]
 
         dispatcheable_batteries_idx = np.where(self.battery_dispatchable == True)[0]
         self.dispatcheable_batteries_bus_idx = np.where(np.array(self.C_batt_bus[dispatcheable_batteries_idx, :].sum(axis=0))[0] > 0)[0]
@@ -259,6 +301,7 @@ class CalculationInputs:
         obj.tap_inc_reg_down = self.tap_inc_reg_down[branch_idx]
         obj.vset = self.vset[branch_idx]
         obj.tap_ang = self.tap_ang[branch_idx]
+        obj.tap_mod = self.tap_mod[branch_idx]
 
         obj.Ys = self.Ys
         obj.GBc = self.GBc
@@ -550,10 +593,13 @@ class PowerFlowResults:
 
         self.buses_useful_for_storage = None
 
-        self.available_results = ['Bus voltage',
+        self.available_results = [ResultTypes.BusVoltage,
                                   # 'Bus voltage (polar)',
-                                  'Branch power', 'Branch current',
-                                  'Branch_loading', 'Branch losses', 'Battery power']
+                                  ResultTypes.BranchPower,
+                                  ResultTypes.BranchCurrent,
+                                  ResultTypes.BranchLoading,
+                                  ResultTypes.BranchLosses,
+                                  ResultTypes.BatteryPower]
 
         self.plot_bars_limit = 100
 
@@ -729,17 +775,15 @@ class PowerFlowResults:
 
         return df
 
-    def plot(self, result_type, ax=None, indices=None, names=None):
+    def plot(self, result_type: ResultTypes, ax=None, indices=None, names=None):
         """
         Plot the results
         Args:
-            result_type:
-            ax:
-            indices:
-            names:
-
-        Returns:
-
+            result_type: ResultTypes
+            ax: matplotlib axis
+            indices: Indices f the array to plot (indices of the elements)
+            names: Names of the elements
+        Returns: DataFrame
         """
 
         if ax is None:
@@ -754,43 +798,43 @@ class PowerFlowResults:
             y_label = ''
             title = ''
             polar = False
-            if result_type == 'Bus voltage':
+            if result_type == ResultTypes.BusVoltage:
                 y = self.voltage[indices]
                 y_label = '(p.u.)'
                 title = 'Bus voltage '
                 polar = False
 
-            elif result_type == 'Bus voltage (polar)':
+            elif result_type == ResultTypes.BusVoltagePolar:
                 y = self.voltage[indices]
                 y_label = '(p.u.)'
                 title = 'Bus voltage '
                 polar = True
 
-            elif result_type == 'Branch power':
+            elif result_type == ResultTypes.BranchPower:
                 y = self.Sbranch[indices]
                 y_label = '(MVA)'
                 title = 'Branch power '
                 polar = False
 
-            elif result_type == 'Branch current':
+            elif result_type == ResultTypes.BranchCurrent:
                 y = self.Ibranch[indices]
                 y_label = '(p.u.)'
                 title = 'Branch current '
                 polar = False
 
-            elif result_type == 'Branch_loading':
+            elif result_type == ResultTypes.BranchLoading:
                 y = self.loading[indices] * 100
                 y_label = '(%)'
                 title = 'Branch loading '
                 polar = False
 
-            elif result_type == 'Branch losses':
+            elif result_type == ResultTypes.BranchLosses:
                 y = self.losses[indices]
                 y_label = '(MVA)'
                 title = 'Branch losses '
                 polar = False
 
-            elif result_type == 'Battery power':
+            elif result_type == ResultTypes.BatteryPower:
                 y = self.battery_power_inc[indices]
                 y_label = '(MVA)'
                 title = 'Battery power'
@@ -836,10 +880,13 @@ class PowerFlowResults:
         si = self.Sbranch.imag
         sm = np.abs(self.Sbranch)
         ld = np.abs(self.loading)
+        la = self.losses.real
+        lr = self.losses.imag
         ls = np.abs(self.losses)
+        tm = self.tap_module
 
-        branch_data = c_[sr, si, sm, ld, ls]
-        branch_cols = ['Real power (MW)', 'Imag power (MVAr)', 'Power module (MVA)', 'Loading(%)', 'Losses (MVA)']
+        branch_data = c_[sr, si, sm, ld, la, lr, ls, tm]
+        branch_cols = ['Real power (MW)', 'Imag power (MVAr)', 'Power module (MVA)', 'Loading(%)', 'Losses (MW)', 'Losses (MVAr)', 'Losses (MVA)', 'Tap module']
         df_branch = pd.DataFrame(data=branch_data, columns=branch_cols)
 
         return df_bus, df_branch
@@ -1128,10 +1175,19 @@ class MonteCarloResults:
         self.l_avg_conv = None
         self.loss_avg_conv = None
 
-        self.available_results = ['Bus voltage avg', 'Bus voltage std', 'Bus voltage CDF', 'Bus power CDF',
-                                  'Branch current avg', 'Branch current std', 'Branch current CDF',
-                                  'Branch loading avg', 'Branch loading std', 'Branch loading CDF',
-                                  'Branch losses avg', 'Branch losses std', 'Branch losses CDF']
+        self.available_results = [ResultTypes.BusVoltageAverage,
+                                  ResultTypes.BusVoltageStd,
+                                  ResultTypes.BusVoltageCDF,
+                                  ResultTypes.BusPowerCDF,
+                                  ResultTypes.BranchCurrentAverage,
+                                  ResultTypes.BranchCurrentStd,
+                                  ResultTypes.BranchCurrentCDF,
+                                  ResultTypes.BranchLoadingAverage,
+                                  ResultTypes.BranchLoadingStd,
+                                  ResultTypes.BranchLoadingCDF,
+                                  ResultTypes.BranchLossesAverage,
+                                  ResultTypes.BranchLossesStd,
+                                  ResultTypes.BranchLossesCDF]
 
     def append_batch(self, mcres):
         """
@@ -1315,7 +1371,7 @@ class MonteCarloResults:
 
         return idx, val, prob, cdf.arr[-1, :]
 
-    def plot(self, result_type, ax=None, indices=None, names=None):
+    def plot(self, result_type: ResultTypes, ax=None, indices=None, names=None):
         """
         Plot the results
         :param result_type:
@@ -1331,6 +1387,12 @@ class MonteCarloResults:
 
         p, n = self.V_points.shape
 
+        cdf_result_types = [ResultTypes.BusVoltageCDF,
+                            ResultTypes.BusPowerCDF,
+                            ResultTypes.BranchCurrentCDF,
+                            ResultTypes.BranchLoadingCDF,
+                            ResultTypes.BranchLossesCDF]
+
         if indices is None:
             if names is None:
                 indices = arange(0, n, 1)
@@ -1345,95 +1407,95 @@ class MonteCarloResults:
 
             y_label = ''
             title = ''
-            if result_type == 'Bus voltage avg':
+            if result_type == ResultTypes.BusVoltageAverage:
                 y = self.v_avg_conv[1:-1, indices]
                 y_label = '(p.u.)'
                 x_label = 'Sampling points'
                 title = 'Bus voltage \naverage convergence'
 
-            elif result_type == 'Branch current avg':
+            elif result_type == ResultTypes.BranchCurrentAverage:
                 y = self.c_avg_conv[1:-1, indices]
                 y_label = '(p.u.)'
                 x_label = 'Sampling points'
                 title = 'Bus current \naverage convergence'
 
-            elif result_type == 'Branch loading avg':
+            elif result_type == ResultTypes.BranchLoadingAverage:
                 y = self.l_avg_conv[1:-1, indices]
                 y_label = '(%)'
                 x_label = 'Sampling points'
                 title = 'Branch loading \naverage convergence'
 
-            elif result_type == 'Branch losses avg':
+            elif result_type == ResultTypes.BranchLossesAverage:
                 y = self.loss_avg_conv[1:-1, indices]
                 y_label = '(MVA)'
                 x_label = 'Sampling points'
                 title = 'Branch losses \naverage convergence'
 
-            elif result_type == 'Bus voltage std':
+            elif result_type == ResultTypes.BusVoltageStd:
                 y = self.v_std_conv[1:-1, indices]
                 y_label = '(p.u.)'
                 x_label = 'Sampling points'
                 title = 'Bus voltage standard \ndeviation convergence'
 
-            elif result_type == 'Branch current std':
+            elif result_type == ResultTypes.BranchCurrentStd:
                 y = self.c_std_conv[1:-1, indices]
                 y_label = '(p.u.)'
                 x_label = 'Sampling points'
                 title = 'Bus current standard \ndeviation convergence'
 
-            elif result_type == 'Branch loading std':
+            elif result_type == ResultTypes.BranchLoadingStd:
                 y = self.l_std_conv[1:-1, indices]
                 y_label = '(%)'
                 x_label = 'Sampling points'
                 title = 'Branch loading standard \ndeviation convergence'
 
-            elif result_type == 'Branch losses std':
+            elif result_type == ResultTypes.BranchLossesStd:
                 y = self.loss_std_conv[1:-1, indices]
                 y_label = '(MVA)'
                 x_label = 'Sampling points'
                 title = 'Branch losses standard \ndeviation convergence'
 
-            elif result_type == 'Bus voltage CDF':
+            elif result_type == ResultTypes.BusVoltageCDF:
                 cdf = CDF(np.abs(self.V_points[:, indices]))
                 cdf.plot(ax=ax)
                 y_label = '(p.u.)'
                 x_label = 'Probability $P(X \leq x)$'
-                title = 'Bus voltage'
+                title = result_type.value[0]
 
-            elif result_type == 'Branch loading CDF':
+            elif result_type == ResultTypes.BranchLoadingCDF:
                 cdf = CDF(np.abs(self.loading_points.real[:, indices]))
                 cdf.plot(ax=ax)
                 y_label = '(p.u.)'
                 x_label = 'Probability $P(X \leq x)$'
-                title = 'Branch loading'
+                title = result_type.value[0]
 
-            elif result_type == 'Branch losses CDF':
+            elif result_type == ResultTypes.BranchLossesCDF:
                 cdf = CDF(np.abs(self.losses_points[:, indices]))
                 cdf.plot(ax=ax)
                 y_label = '(MVA)'
                 x_label = 'Probability $P(X \leq x)$'
-                title = 'Branch losses'
+                title = result_type.value[0]
 
-            elif result_type == 'Branch current CDF':
+            elif result_type == ResultTypes.BranchCurrentCDF:
                 cdf = CDF(np.abs(self.I_points[:, indices]))
                 cdf.plot(ax=ax)
                 y_label = '(kA)'
                 x_label = 'Probability $P(X \leq x)$'
-                title = 'Branch current'
+                title = result_type.value[0]
 
-            elif result_type == 'Bus power CDF':
+            elif result_type == ResultTypes.BusPowerCDF:
                 cdf = CDF(np.abs(self.S_points[:, indices]))
                 cdf.plot(ax=ax)
                 y_label = '(p.u.)'
                 x_label = 'Probability $P(X \leq x)$'
-                title = 'Branch current'
+                title = result_type.value[0]
 
             else:
                 x_label = ''
                 y_label = ''
                 title = ''
 
-            if 'CDF' not in result_type:
+            if result_type not in cdf_result_types:
                 df = pd.DataFrame(data=np.abs(y), columns=labels)
                 lines = ax.plot(np.abs(y), linewidth=LINEWIDTH)
                 if len(df.columns) < 10:
@@ -1455,7 +1517,7 @@ class OptimalPowerFlowResults:
 
     def __init__(self, Sbus=None, voltage=None, load_shedding=None, generation_shedding=None,
                  battery_power=None, controlled_generation_power=None,
-                 Sbranch=None, overloads=None, loading=None, converged=None):
+                 Sbranch=None, overloads=None, loading=None, losses=None, converged=None):
         """
         OPF results constructor
         :param Sbus: bus power injections
@@ -1481,6 +1543,8 @@ class OptimalPowerFlowResults:
 
         self.loading = loading
 
+        self.losses = losses
+
         self.battery_power = battery_power
 
         self.controlled_generation_power = controlled_generation_power
@@ -1489,10 +1553,15 @@ class OptimalPowerFlowResults:
 
         self.converged = converged
 
-        self.available_results = ['Bus voltage module', 'Bus voltage angle', 'Branch power',
-                                  'Branch loading', 'Branch overloads', 'Load shedding',
-                                  'Controlled generator shedding',
-                                  'Controlled generator power', 'Battery power']
+        self.available_results = [ResultTypes.BusVoltageModule,
+                                  ResultTypes.BusVoltageAngle,
+                                  ResultTypes.BranchPower,
+                                  ResultTypes.BranchLoading,
+                                  ResultTypes.BranchOverloads,
+                                  ResultTypes.LoadShedding,
+                                  ResultTypes.ControlledGeneratorShedding,
+                                  ResultTypes.ControlledGeneratorPower,
+                                  ResultTypes.BatteryPower]
 
         self.plot_bars_limit = 100
 
@@ -1558,57 +1627,57 @@ class OptimalPowerFlowResults:
             labels = names[indices]
             y_label = ''
             title = ''
-            if result_type == 'Bus voltage module':
+            if result_type == ResultTypes.BusVoltageModule:
                 y = np.abs(self.voltage[indices])
                 y_label = '(p.u.)'
                 title = 'Bus voltage module'
 
-            if result_type == 'Bus voltage angle':
+            if result_type == ResultTypes.BusVoltageAngle:
                 y = np.angle(self.voltage[indices])
                 y_label = '(Radians)'
                 title = 'Bus voltage angle'
 
-            elif result_type == 'Branch power':
+            elif result_type == ResultTypes.BranchPower:
                 y = self.Sbranch[indices].real
                 y_label = '(MW)'
                 title = 'Branch power '
 
-            elif result_type == 'Bus power':
+            elif result_type == ResultTypes.BusPower:
                 y = self.Sbus[indices].real
                 y_label = '(MW)'
                 title = 'Bus power '
 
-            elif result_type == 'Branch loading':
+            elif result_type == ResultTypes.BranchLoading:
                 y = np.abs(self.loading[indices] * 100.0)
                 y_label = '(%)'
                 title = 'Branch loading '
 
-            elif result_type == 'Branch overloads':
+            elif result_type == ResultTypes.BranchOverloads:
                 y = np.abs(self.overloads[indices])
                 y_label = '(MW)'
                 title = 'Branch overloads '
 
-            elif result_type == 'Branch losses':
+            elif result_type == ResultTypes.BranchLosses:
                 y = self.losses[indices].real
                 y_label = '(MW)'
                 title = 'Branch losses '
 
-            elif result_type == 'Load shedding':
+            elif result_type == ResultTypes.LoadShedding:
                 y = self.load_shedding[indices]
                 y_label = '(MW)'
                 title = 'Load shedding'
 
-            elif result_type == 'Controlled generator shedding':
+            elif result_type == ResultTypes.ControlledGeneratorShedding:
                 y = self.generation_shedding[indices]
                 y_label = '(MW)'
                 title = 'Controlled generator shedding'
 
-            elif result_type == 'Controlled generator power':
+            elif result_type == ResultTypes.ControlledGeneratorPower:
                 y = self.controlled_generation_power[indices]
                 y_label = '(MW)'
                 title = 'Controlled generators power'
 
-            elif result_type == 'Battery power':
+            elif result_type == ResultTypes.BatteryPower:
                 y = self.battery_power[indices]
                 y_label = '(MW)'
                 title = 'Battery power'

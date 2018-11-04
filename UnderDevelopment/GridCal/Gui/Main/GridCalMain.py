@@ -23,6 +23,7 @@ from GridCal.Gui.ProfilesInput.profile_dialogue import ProfileInputGUI
 from GridCal.Gui.Analysis.AnalysisDialogue import GridAnalysisGUI
 from GridCal.Gui.LineBuilder.LineBuilderDialogue import TowerBuilderGUI
 from GridCal.Gui.GeneralDialogues import *
+from GridCal.Gui.GuiFunctions import *
 
 # Engine imports
 from GridCal.Engine.BlackOutDriver import *
@@ -612,7 +613,7 @@ class MainGUI(QMainWindow):
         msg += 'See the license file for more details. \n\n'
         msg += "The source of Gridcal can be found at:\n" + url + "\n\n"
 
-        msg += 'Copyright (C) 2018 Santiago Peñate Vera.\n'
+        msg += 'Copyright (C) 2018\nSantiago Peñate Vera\nMichel Lavoie'
 
         QMessageBox.about(self, "About GridCal", msg)
 
@@ -2885,7 +2886,8 @@ class MainGUI(QMainWindow):
         """
         elm = self.ui.result_listView.selectedIndexes()[0].data()
         lst = self.available_results_dict[elm]
-        mdl = get_list_model(lst)
+        # mdl = get_list_model(lst)
+        mdl = EnumModel(lst)
         self.ui.result_type_listView.setModel(mdl)
 
     def result_type_click(self, qt_val=None, indices=None):
@@ -2897,20 +2899,20 @@ class MainGUI(QMainWindow):
         """
 
         if len(self.ui.result_listView.selectedIndexes()) > 0 and \
-           len(self.ui.result_type_listView.selectedIndexes()) > 0:
+                len(self.ui.result_type_listView.selectedIndexes()) > 0:
 
             study = self.ui.result_listView.selectedIndexes()[0].data()
-            study_type = self.ui.result_type_listView.selectedIndexes()[0].data()
+            study_type = self.ui.result_type_listView.model().items[self.ui.result_type_listView.selectedIndexes()[0].row()]
 
-            if 'Bus' in study_type:
+            if study_type.value[1] == DeviceType.BusDevice:
                 names = self.circuit.bus_names
-            elif 'Branch' in study_type:
+            elif study_type.value[1] == DeviceType.BranchDevice:
                 names = self.circuit.branch_names
-            elif 'Load' in study_type:
+            elif study_type.value[1] == DeviceType.BusDevice.LoadDevice:
                 names = self.circuit.get_load_names()
-            elif 'Controlled' in study_type:
+            elif study_type.value[1] == DeviceType.BusDevice.ControlledGeneratorDevice:
                 names = self.circuit.get_controlled_generator_names()
-            elif 'Batter' in study_type:
+            elif study_type.value[1] == DeviceType.BusDevice.BatteryDevice:
                 names = self.circuit.get_battery_names()
             else:
                 names = None
