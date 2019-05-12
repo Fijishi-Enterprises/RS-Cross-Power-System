@@ -33,7 +33,7 @@ class Generator(EditableDevice):
 
         **power_factor** (float, 0.8): Power factor
 
-        **voltage_module** (float, 1.0): Voltage setpoint in per unit
+        **voltage_module** (float, 1.0): Voltage set-point in per unit
 
         **is_controlled** (bool, True): Is the generator voltage controlled?
 
@@ -43,11 +43,11 @@ class Generator(EditableDevice):
 
         **Snom** (float, 9999): Nominal apparent power in MVA
 
-        **power_prof** (DataFrame, None): Pandas DataFrame with the active power profile in MW
+        **power_prof** (array, None): Numpy array with the active power profile in MW
 
-        **power_factor_prof** (DataFrame, None): Pandas DataFrame with the power factor profile
+        **power_factor_prof** (array, None): Numpy array with the power factor profile
 
-        **vset_prof** (DataFrame, None): Pandas DataFrame with the voltage setpoint profile in per unit
+        **vset_prof** (DataFrame, None): Numpy array with the voltage set-point profile in per unit
 
         **active** (bool, True): Is the generator active?
 
@@ -65,11 +65,25 @@ class Generator(EditableDevice):
 
         **mttr** (float, 0.0): Mean time to recovery in hours
 
+        **a** (float, 1.0): phase A share of the declared power
+
+        **b** (float, 1.0): phase B share of the declared power
+
+        **c** (float, 1.0): phase C share of the declared power
+
+        **a_prof** (array, None): Numpy array with the phase A share of the declared power
+
+        **b_prof** (array, None): Numpy array with the phase B share of the declared power
+
+        **c_prof** (array, None): Numpy array with the phase C share of the declared power
+
+
     """
 
     def __init__(self, name='gen', active_power=0.0, power_factor=0.8, voltage_module=1.0, is_controlled=True,
                  Qmin=-9999, Qmax=9999, Snom=9999, power_prof=None, power_factor_prof=None, vset_prof=None, active=True,
-                 p_min=0.0, p_max=9999.0, op_cost=1.0, Sbase=100, enabled_dispatch=True, mttf=0.0, mttr=0.0):
+                 p_min=0.0, p_max=9999.0, op_cost=1.0, Sbase=100, enabled_dispatch=True, mttf=0.0, mttr=0.0,
+                 a=1.0, b=1.0, c=1.0, a_prof=None, b_prof=None, c_prof=None):
 
         EditableDevice.__init__(self,
                                 name=name,
@@ -96,16 +110,29 @@ class Generator(EditableDevice):
                                                   'enabled_dispatch': GCProp('', bool,
                                                                              'Enabled for dispatch? Used in OPF.'),
                                                   'mttf': GCProp('h', float, 'Mean time to failure'),
-                                                  'mttr': GCProp('h', float, 'Mean time to recovery')},
+                                                  'mttr': GCProp('h', float, 'Mean time to recovery'),
+                                                  'a': GCProp('p.u.', float,
+                                                              'phase A share of the declared power'),
+                                                  'b': GCProp('p.u.', float,
+                                                              'phase B share of the declared power'),
+                                                  'c': GCProp('p.u.', float,
+                                                              'phase C share of the declared power')
+                                                  },
                                 non_editable_attributes=list(),
                                 properties_with_profile={'P': 'P_prof',
                                                          'Pf': 'Pf_prof',
-                                                         'Vset': 'Vset_prof'})
-
+                                                         'Vset': 'Vset_prof',
+                                                         'a': 'a_prof',
+                                                         'b': 'b_prof',
+                                                         'c': 'c_prof'})
+        
+        # connection bus
         self.bus = None
 
+        # mean time to failure
         self.mttf = mttf
 
+        # mean time to repair
         self.mttr = mttr
 
         # is the device active active power dispatch?
@@ -150,6 +177,16 @@ class Generator(EditableDevice):
         # Cost of operation €/MW
         self.Cost = op_cost
 
+        # shape per phase
+        self.a = a
+        self.b = b
+        self.c = c
+
+        # share per phase profiles
+        self.a_prof = a_prof
+        self.b_prof = b_prof
+        self.c_prof = c_prof
+
         # Dynamic vars
         # self.Ra = Ra
         # self.Xa = Xa
@@ -186,7 +223,12 @@ class Generator(EditableDevice):
         """
 
         # make a new instance (separated object in memory)
-        gen = Generator()
+        gen = Generator(a=self.a,
+                        b=self.b,
+                        c=self.c,
+                        a_prof=self.a_prof,
+                        b_prof=self.b_prof,
+                        c_prof=self.c_prof)
 
         gen.name = self.name
 
@@ -261,7 +303,7 @@ class Generator(EditableDevice):
 
     def get_lp_var_profile(self, index):
         """
-        Get the profile of the LP solved values into a Pandas DataFrame
+        Get the profile of the LP solved values into a Numpy array
         :param index: time index
         :return: DataFrame with the LP values
         """

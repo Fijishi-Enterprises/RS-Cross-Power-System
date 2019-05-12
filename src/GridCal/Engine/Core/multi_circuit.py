@@ -137,6 +137,10 @@ class MultiCircuit:
                 self.device_type_name_dict[dev.device_type.value] = dev.device_type
 
     def clear(self):
+        """
+        Clear the objects in the circuit
+        """
+
         # Should be able to accept Branches, Lines and Transformers alike
         self.branches = list()
 
@@ -418,9 +422,13 @@ class MultiCircuit:
         return catalogue_dict
 
     def get_catalogue_dict_by_name(self, type_class=None):
+        """
 
+        :param type_class:
+        :return:
+        """
         d = dict()
-
+        name_prop = ''
         # ['Wires', 'Overhead lines', 'Underground lines', 'Sequence lines', 'Transformers']
 
         if type_class is None:
@@ -635,11 +643,19 @@ class MultiCircuit:
                 circuit.load_mttf[i_ld] = elm.mttf
                 circuit.load_mttr[i_ld] = elm.mttr
 
+                circuit.load_a[i_ld] = elm.a
+                circuit.load_b[i_ld] = elm.b
+                circuit.load_c[i_ld] = elm.c
+
                 if n_time > 0:
                     circuit.load_power_profile[:, i_ld] = elm.P_prof + 1j * elm.Q_prof
                     circuit.load_current_profile[:, i_ld] = elm.Ir_prof + 1j * elm.Ii_prof
                     circuit.load_admittance_profile[:, i_ld] = elm.G_prof + 1j * elm.B_prof
                     circuit.load_active_prof[:, i_ld] = elm.active_prof
+
+                    circuit.load_a_profile[:, i_ld] = elm.a_prof
+                    circuit.load_b_profile[:, i_ld] = elm.b_prof
+                    circuit.load_c_profile[:, i_ld] = elm.c_prof
 
                     if use_opf_vals:
                         # subtract the load shedding from the generation
@@ -654,11 +670,18 @@ class MultiCircuit:
                 circuit.static_gen_active[i_sta_gen] = elm.active
                 circuit.static_gen_mttf[i_sta_gen] = elm.mttf
                 circuit.static_gen_mttr[i_sta_gen] = elm.mttr
-                # circuit.static_gen_dispatchable[i_sta_gen] = elm.enabled_dispatch
+
+                circuit.static_gen_a[i_sta_gen] = elm.a
+                circuit.static_gen_b[i_sta_gen] = elm.b
+                circuit.static_gen_c[i_sta_gen] = elm.c
 
                 if n_time > 0:
                     circuit.static_gen_active_prof[:, i_sta_gen] = elm.active_prof
                     circuit.static_gen_power_profile[:, i_sta_gen] = elm.P_prof + 1j * elm.Q_prof
+
+                    circuit.static_gen_a_prof[:, i_sta_gen] = elm.a_prof
+                    circuit.static_gen_b_prof[:, i_sta_gen] = elm.b_prof
+                    circuit.static_gen_c_prof[:, i_sta_gen] = elm.c_prof
 
                 circuit.C_sta_gen_bus[i_sta_gen, i] = 1
                 i_sta_gen += 1
@@ -677,6 +700,10 @@ class MultiCircuit:
                 circuit.generator_mttf[i_gen] = elm.mttf
                 circuit.generator_mttr[i_gen] = elm.mttr
 
+                circuit.generator_a[i_gen] = elm.a
+                circuit.generator_b[i_gen] = elm.b
+                circuit.generator_c[i_gen] = elm.c
+
                 if n_time > 0:
                     # power profile
                     if use_opf_vals:
@@ -692,6 +719,10 @@ class MultiCircuit:
 
                     # Voltage profile
                     circuit.generator_voltage_profile[:, i_gen] = elm.Vset_prof
+
+                    circuit.generator_a_prof[:, i_gen] = elm.a_prof
+                    circuit.generator_b_prof[:, i_gen] = elm.b_prof
+                    circuit.generator_c_prof[:, i_gen] = elm.c_prof
 
                 circuit.C_gen_bus[i_gen, i] = 1
                 circuit.V0[i] *= elm.Vset
@@ -720,6 +751,10 @@ class MultiCircuit:
                 circuit.battery_min_soc[i_batt] = elm.min_soc
                 circuit.battery_max_soc[i_batt] = elm.max_soc
 
+                circuit.battery_a[i_batt] = elm.a
+                circuit.battery_b[i_batt] = elm.b
+                circuit.battery_c[i_batt] = elm.c
+
                 if n_time > 0:
                     # power profile
                     if use_opf_vals:
@@ -729,6 +764,10 @@ class MultiCircuit:
                         circuit.battery_power_profile[:, i_batt] = elm.P_prof
                     # Voltage profile
                     circuit.battery_voltage_profile[:, i_batt] = elm.Vset_prof
+
+                    circuit.battery_a_prof[:, i_batt] = elm.a_prof
+                    circuit.battery_b_prof[:, i_batt] = elm.b_prof
+                    circuit.battery_c_prof[:, i_batt] = elm.c_prof
 
                 circuit.battery_active_prof[:, i_batt] = elm.active_prof
 
@@ -743,9 +782,17 @@ class MultiCircuit:
                 circuit.shunt_mttf[i_sh] = elm.mttf
                 circuit.shunt_mttr[i_sh] = elm.mttr
 
+                circuit.shunt_a[i_sh] = elm.a
+                circuit.shunt_b[i_sh] = elm.b
+                circuit.shunt_c[i_sh] = elm.c
+
                 if n_time > 0:
                     circuit.shunt_active_prof[:, i_sh] = elm.active_prof
                     circuit.shunt_admittance_profile[:, i_sh] = elm.G_prof + 1j * elm.B_prof
+
+                    circuit.shunt_a_prof[:, i_sh] = elm.a_prof
+                    circuit.shunt_b_prof[:, i_sh] = elm.b_prof
+                    circuit.shunt_c_prof[:, i_sh] = elm.c_prof
 
                 circuit.C_shunt_bus[i_sh, i] = 1
                 i_sh += 1

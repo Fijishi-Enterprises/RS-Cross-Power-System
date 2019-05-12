@@ -1,6 +1,7 @@
 
 from research.three_phase.Engine import *
 
+from itertools import product
 from scipy.sparse import lil_matrix
 
 np.set_printoptions(linewidth=100000)
@@ -14,9 +15,12 @@ def set_sub(A, cols, rows, sub_mat):
     :param rows: array of rows (size n)
     :param sub_mat: dense array (size n x m)
     """
-    for i, a in enumerate(rows):
-        for j, b in enumerate(cols):
-            A[a, b] = sub_mat[i, j]
+    # for i, a in enumerate(rows):
+    #     for j, b in enumerate(cols):
+    #         A[a, b] = sub_mat[i, j]
+
+    for (i, a), (j, b) in product(enumerate(rows), enumerate(cols)):
+        A[a, b] = sub_mat[i, j]
 
 
 def y_bus(circuit: Circuit):
@@ -78,6 +82,8 @@ def y_bus(circuit: Circuit):
 
     print(ybus.todense())
 
+    return ybus
+
 
 if __name__ == "__main__":
 
@@ -94,19 +100,26 @@ if __name__ == "__main__":
     b3 = Bus("B3", number_of_phases=3, Vnom=10.0)
     # b3.add_generator(Generator("", P=P*0.5, v=1.0))
 
+    b4 = Bus("B4", number_of_phases=3, Vnom=10.0)
+
     line_type1 = LineTypeSeq(name="",
                              Z_SEQ=np.array([0.4606 + 1.7536j, 0.1808 + 0.6054j, 0.1808 + 0.6054j])/100,
                              Ysh_SEQ=np.array([0, 0, 0]))
 
     lne1 = Line("L1", line_type1, bus_from=b1, bus_to=b2, conn_from=[0, 1, 2], conn_to=[0, 1, 2], length=100.0)
     lne2 = Line("L2", line_type1, bus_from=b2, bus_to=b3, conn_from=[0, 1, 2], conn_to=[0, 1, 2], length=10.0)
+    lne3 = Line("L3", line_type1, bus_from=b2, bus_to=b4, conn_from=[0, 1, 2], conn_to=[0, 1, 2], length=10.0)
+    lne4 = Line("L4", line_type1, bus_from=b1, bus_to=b3, conn_from=[0, 1, 2], conn_to=[0, 1, 2], length=10.0)
 
     circuit_ = Circuit(Sbase=100)
     circuit_.buses.append(b1)
     circuit_.buses.append(b2)
     circuit_.buses.append(b3)
+    circuit_.buses.append(b4)
 
     circuit_.branches.append(lne1)
     circuit_.branches.append(lne2)
+    circuit_.branches.append(lne3)
+    circuit_.branches.append(lne4)
 
     y_bus(circuit=circuit_)

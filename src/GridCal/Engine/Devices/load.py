@@ -40,17 +40,29 @@ class Load(EditableDevice):
 
         **Q** (float, 0.0): Reactive power in MVAr
 
-        **G_prof** (DataFrame, None): Pandas DataFrame with the conductance profile in equivalent MW
+        **a** (float, 1.0): phase A share of the declared power
 
-        **B_prof** (DataFrame, None): Pandas DataFrame with the susceptance profile in equivalent MVAr
+        **b** (float, 1.0): phase B share of the declared power
 
-        **Ir_prof** (DataFrame, None): Pandas DataFrame with the real current profile in equivalent MW
+        **c** (float, 1.0): phase C share of the declared power
 
-        **Ii_prof** (DataFrame, None): Pandas DataFrame with the imaginary current profile in equivalent MVAr
+        **G_prof** (array, None): Numpy array with the conductance profile in equivalent MW
 
-        **P_prof** (DataFrame, None): Pandas DataFrame with the active power profile in equivalent MW
+        **B_prof** (array, None): Numpy array with the susceptance profile in equivalent MVAr
 
-        **Q_prof** (DataFrame, None): Pandas DataFrame with the reactive power profile in equivalent MVAr
+        **Ir_prof** (array, None): Numpy array with the real current profile in equivalent MW
+
+        **Ii_prof** (array, None): Numpy array with the imaginary current profile in equivalent MVAr
+
+        **P_prof** (array, None): Numpy array with the active power profile in equivalent MW
+
+        **Q_prof** (array, None): Numpy array with the reactive power profile in equivalent MVAr
+
+        **a_prof** (array, None): Numpy array with the phase A share of the declared power
+
+        **b_prof** (array, None): Numpy array with the phase B share of the declared power
+
+        **c_prof** (array, None): Numpy array with the phase C share of the declared power
 
         **active** (bool, True): Is the load active?
 
@@ -60,9 +72,9 @@ class Load(EditableDevice):
 
     """
 
-    def __init__(self, name='Load', G=0.0, B=0.0, Ir=0.0, Ii=0.0, P=0.0, Q=0.0,
-                  G_prof=None, B_prof=None, Ir_prof=None, Ii_prof=None, P_prof=None, Q_prof=None,
-                  active=True, mttf=0.0, mttr=0.0):
+    def __init__(self, name='Load', G=0.0, B=0.0, Ir=0.0, Ii=0.0, P=0.0, Q=0.0, a=1.0, b=1.0, c=1.0,
+                 G_prof=None, B_prof=None, Ir_prof=None, Ii_prof=None, P_prof=None, Q_prof=None,
+                 a_prof=None, b_prof=None, c_prof=None,  active=True, mttf=0.0, mttr=0.0):
 
         EditableDevice.__init__(self,
                                 name=name,
@@ -82,38 +94,76 @@ class Load(EditableDevice):
                                                    'B': GCProp('MVAr', float,
                                                                'Reactive power of the impedance component at V=1.0 p.u.'),
                                                    'mttf': GCProp('h', float, 'Mean time to failure'),
-                                                   'mttr': GCProp('h', float, 'Mean time to recovery')},
+                                                   'mttr': GCProp('h', float, 'Mean time to recovery'),
+                                                   'a': GCProp('p.u.', float,
+                                                               'phase A share of the declared power'),
+                                                   'b': GCProp('p.u.', float,
+                                                               'phase B share of the declared power'),
+                                                   'c': GCProp('p.u.', float,
+                                                               'phase C share of the declared power')
+                                                  },
                                 non_editable_attributes=list(),
                                 properties_with_profile={'P': 'P_prof',
                                                          'Q': 'Q_prof',
                                                          'Ir': 'Ir_prof',
                                                          'Ii': 'Ii_prof',
                                                          'G': 'G_prof',
-                                                         'B': 'B_prof'})
+                                                         'B': 'B_prof',
+                                                         'a': 'a_prof',
+                                                         'b': 'b_prof',
+                                                         'c': 'c_prof'})
 
+        # connection bus
         self.bus = None
 
+        # mean time to failure
         self.mttf = mttf
 
+        # mean time to repair
         self.mttr = mttr
 
-        # Impedance in equivalent MVA
+        # active and reactive admittance in MW and MVAr at v=1.0 p.u
         self.G = G
         self.B = B
+
+        # active and reactive current in MW and MVAr at v=1.0 p.u
         self.Ir = Ir
         self.Ii = Ii
+
+        # active and reactive power in MW and MVAr
         self.P = P
         self.Q = Q
+
+        # active and reactive admittance profiles in MW and MVAr at v=1.0 p.u
         self.G_prof = G_prof
         self.B_prof = B_prof
+
+        # active and reactive current profiles in MW and MVAr at v=1.0 p.u
         self.Ir_prof = Ir_prof
         self.Ii_prof = Ii_prof
+
+        # active and reactive power profiles in MW and MVAr
         self.P_prof = P_prof
         self.Q_prof = Q_prof
 
+        # shape per phase
+        self.a = a
+        self.b = b
+        self.c = c
+
+        # share per phase profiles
+        self.a_prof = a_prof
+        self.b_prof = b_prof
+        self.c_prof = c_prof
+
     def copy(self):
 
-        load = Load()
+        load = Load(a=self.a,
+                    b=self.b,
+                    c=self.c,
+                    a_prof=self.a_prof,
+                    b_prof=self.b_prof,
+                    c_prof=self.c_prof)
 
         load.name = self.name
 

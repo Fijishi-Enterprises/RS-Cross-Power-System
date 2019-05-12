@@ -26,9 +26,9 @@ class Shunt(EditableDevice):
 
         **B** (float, 0.0): Susceptance in MW at 1 p.u. voltage
 
-        **G_prof** (DataFrame, None): Pandas DataFrame with the conductance profile in MW at 1 p.u. voltage
+        **G_prof** (array, None): Numpy array with the conductance profile in MW at 1 p.u. voltage
 
-        **B_prof** (DataFrame, None): Pandas DataFrame with the susceptance profile in MW at 1 p.u. voltage
+        **B_prof** (array, None): Numpy array with the susceptance profile in MW at 1 p.u. voltage
 
         **active** (bool, True): Is the shunt active?
 
@@ -36,9 +36,22 @@ class Shunt(EditableDevice):
 
         **mttr** (float, 0.0): Mean time to recovery in hours
 
+        **a** (float, 1.0): phase A share of the declared power
+
+        **b** (float, 1.0): phase B share of the declared power
+
+        **c** (float, 1.0): phase C share of the declared power
+
+        **a_prof** (array, None): Numpy array with the phase A share of the declared power
+
+        **b_prof** (array, None): Numpy array with the phase B share of the declared power
+
+        **c_prof** (array, None): Numpy array with the phase C share of the declared power
+
     """
 
-    def __init__(self, name='shunt', G=0.0, B=0.0, G_prof=None, B_prof=None, active=True, mttf=0.0, mttr=0.0):
+    def __init__(self, name='shunt', G=0.0, B=0.0, G_prof=None, B_prof=None, active=True, mttf=0.0, mttr=0.0,
+                 a=1.0, b=1.0, c=1.0, a_prof=None, b_prof=None, c_prof=None):
 
         EditableDevice.__init__(self,
                                 name=name,
@@ -52,16 +65,28 @@ class Shunt(EditableDevice):
                                                   'B': GCProp('MVAr', float,
                                                               'Reactive power of the impedance component at V=1.0 p.u.'),
                                                   'mttf': GCProp('h', float, 'Mean time to failure'),
-                                                  'mttr': GCProp('h', float, 'Mean time to recovery')},
+                                                  'mttr': GCProp('h', float, 'Mean time to recovery'),
+                                                  'a': GCProp('p.u.', float,
+                                                              'phase A share of the declared power'),
+                                                  'b': GCProp('p.u.', float,
+                                                              'phase B share of the declared power'),
+                                                  'c': GCProp('p.u.', float,
+                                                              'phase C share of the declared power')
+                                                  },
                                 non_editable_attributes=list(),
                                 properties_with_profile={'G': 'G_prof',
-                                                         'B': 'B_prof'})
+                                                         'B': 'B_prof',
+                                                         'a': 'a_prof',
+                                                         'b': 'b_prof',
+                                                         'c': 'c_prof'})
 
         # The bus this element is attached to: Not necessary for calculations
         self.bus = None
 
+        # mean time to failure
         self.mttf = mttf
 
+        # mean time to repair
         self.mttr = mttr
 
         # Impedance (MVA)
@@ -71,6 +96,16 @@ class Shunt(EditableDevice):
         # admittance profile
         self.G_prof = G_prof
         self.B_prof = B_prof
+
+        # shape per phase
+        self.a = a
+        self.b = b
+        self.c = c
+
+        # share per phase profiles
+        self.a_prof = a_prof
+        self.b_prof = b_prof
+        self.c_prof = c_prof
 
     def copy(self):
         """
@@ -84,7 +119,13 @@ class Shunt(EditableDevice):
                     B_prof=self.B_prof,
                     active=self.active,
                     mttf=self.mttf,
-                    mttr=self.mttr)
+                    mttr=self.mttr,
+                    a=self.a,
+                    b=self.b,
+                    c=self.c,
+                    a_prof=self.a_prof,
+                    b_prof=self.b_prof,
+                    c_prof=self.c_prof)
         return shu
 
     def get_json_dict(self, id, bus_dict):

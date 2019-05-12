@@ -196,7 +196,6 @@ class Transformer(Branch):
         :param bus_to: bus to object
         :param conn_from: vector of connection in the bus from i.e. [0, 1, 2]
         :param conn_to: vector of connection in the bus to, i.e. [0, 1, 2]
-        :param rating: transformer rating in MVA
         """
         self.name = name
 

@@ -14,6 +14,7 @@
 # along with GridCal.  If not, see <http://www.gnu.org/licenses/>.
 
 import numpy as np
+from itertools import product
 import networkx as nx
 from scipy.sparse import lil_matrix, diags, csc_matrix
 from typing import List, Dict
@@ -53,6 +54,22 @@ def get_branches_of_the_island(island, C_branch_bus):
     br_idx = br_idx[:n_visited]
 
     return br_idx
+
+
+def set_sub(A, cols, rows, sub_mat):
+    """
+    Set sub-matrix in place into sparse matrix
+    :param A: Sparse matrix
+    :param cols: array of columns (size m)
+    :param rows: array of rows (size n)
+    :param sub_mat: dense array (size n x m)
+    """
+    # for i, a in enumerate(rows):
+    #     for j, b in enumerate(cols):
+    #         A[a, b] = sub_mat[i, j]
+
+    for (i, a), (j, b) in product(enumerate(rows), enumerate(cols)):
+        A[a, b] = sub_mat[i, j]
 
 
 def calc_connectivity(branch_active, C_branch_bus_f, C_branch_bus_t, apply_temperature, R_corrected, R, X, G, B,
@@ -343,9 +360,17 @@ class NumericalCircuit:
         self.load_mttf = np.zeros(n_ld, dtype=float)
         self.load_mttr = np.zeros(n_ld, dtype=float)
 
+        self.load_a = np.zeros(n_ld, dtype=float)
+        self.load_b = np.zeros(n_ld, dtype=float)
+        self.load_c = np.zeros(n_ld, dtype=float)
+
         self.load_power_profile = np.zeros((n_time, n_ld), dtype=complex)
         self.load_current_profile = np.zeros((n_time, n_ld), dtype=complex)
         self.load_admittance_profile = np.zeros((n_time, n_ld), dtype=complex)
+
+        self.load_a_profile = np.zeros((n_time, n_ld), dtype=float)
+        self.load_b_profile = np.zeros((n_time, n_ld), dtype=float)
+        self.load_c_profile = np.zeros((n_time, n_ld), dtype=float)
 
         self.C_load_bus = lil_matrix((n_ld, n_bus), dtype=int)
 
@@ -375,6 +400,14 @@ class NumericalCircuit:
         self.battery_power_profile = np.zeros((n_time, n_batt), dtype=float)
         self.battery_voltage_profile = np.zeros((n_time, n_batt), dtype=float)
 
+        self.battery_a = np.zeros(n_batt, dtype=float)
+        self.battery_b = np.zeros(n_batt, dtype=float)
+        self.battery_c = np.zeros(n_batt, dtype=float)
+
+        self.battery_a_prof = np.zeros((n_time, n_batt), dtype=float)
+        self.battery_b_prof = np.zeros((n_time, n_batt), dtype=float)
+        self.battery_c_prof = np.zeros((n_time, n_batt), dtype=float)
+
         self.C_batt_bus = lil_matrix((n_batt, n_bus), dtype=int)
 
         # static generator
@@ -387,6 +420,14 @@ class NumericalCircuit:
 
         self.static_gen_mttf = np.zeros(n_sta_gen, dtype=float)
         self.static_gen_mttr = np.zeros(n_sta_gen, dtype=float)
+
+        self.static_gen_a = np.zeros(n_sta_gen, dtype=float)
+        self.static_gen_b = np.zeros(n_sta_gen, dtype=float)
+        self.static_gen_c = np.zeros(n_sta_gen, dtype=float)
+
+        self.static_gen_a_prof = np.zeros((n_time, n_sta_gen), dtype=float)
+        self.static_gen_b_prof = np.zeros((n_time, n_sta_gen), dtype=float)
+        self.static_gen_c_prof = np.zeros((n_time, n_sta_gen), dtype=float)
 
         self.static_gen_power_profile = np.zeros((n_time, n_sta_gen), dtype=complex)
 
@@ -414,6 +455,14 @@ class NumericalCircuit:
         self.generator_power_factor_profile = np.zeros((n_time, n_gen), dtype=float)
         self.generator_voltage_profile = np.zeros((n_time, n_gen), dtype=float)
 
+        self.generator_a = np.zeros(n_gen, dtype=float)
+        self.generator_b = np.zeros(n_gen, dtype=float)
+        self.generator_c = np.zeros(n_gen, dtype=float)
+
+        self.generator_a_prof = np.zeros((n_time, n_gen), dtype=float)
+        self.generator_b_prof = np.zeros((n_time, n_gen), dtype=float)
+        self.generator_c_prof = np.zeros((n_time, n_gen), dtype=float)
+
         self.C_gen_bus = lil_matrix((n_gen, n_bus), dtype=int)
 
         # shunt
@@ -428,13 +477,15 @@ class NumericalCircuit:
 
         self.shunt_admittance_profile = np.zeros((n_time, n_sh), dtype=complex)
 
-        self.C_shunt_bus = lil_matrix((n_sh, n_bus), dtype=int)
+        self.shunt_a = np.zeros(n_sh, dtype=float)
+        self.shunt_b = np.zeros(n_sh, dtype=float)
+        self.shunt_c = np.zeros(n_sh, dtype=float)
 
-        # Islands indices
-        # self.islands = list()  # bus indices per island
-        # self.island_branches = list()  # branch indices per island
-        #
-        # self.calculation_islands = list()
+        self.shunt_a_prof = np.zeros((n_time, n_sh), dtype=float)
+        self.shunt_b_prof = np.zeros((n_time, n_sh), dtype=float)
+        self.shunt_c_prof = np.zeros((n_time, n_sh), dtype=float)
+
+        self.C_shunt_bus = lil_matrix((n_sh, n_bus), dtype=int)
 
     def get_different_states(self):
         """

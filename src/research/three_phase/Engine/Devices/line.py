@@ -81,7 +81,12 @@ class LineTypeABC:
         C = - Yseries
         D = Yseries #+ self.ysh_ABC * line_length / 2.0
 
-        return A / y_base, B / y_base, C / y_base, D / y_base, As / y_base, Ds / y_base
+        return A / y_base, \
+               B / y_base, \
+               C / y_base, \
+               D / y_base, \
+               As / y_base, \
+               Ds / y_base
 
 
 class Line(Branch):

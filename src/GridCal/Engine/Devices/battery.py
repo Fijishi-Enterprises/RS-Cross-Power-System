@@ -85,13 +85,28 @@ class Battery(Generator):
         **discharge_per_cycle** (float, 0.1): Per unit of power to deliver per cycle
         when discharging
 
+        **a** (float, 1.0): phase A share of the declared power
+
+        **b** (float, 1.0): phase B share of the declared power
+
+        **c** (float, 1.0): phase C share of the declared power
+
+        **a_prof** (array, None): Numpy array with the phase A share of the declared power
+
+        **b_prof** (array, None): Numpy array with the phase B share of the declared power
+
+        **c_prof** (array, None): Numpy array with the phase C share of the declared power
+
+
+
     """
 
     def __init__(self, name='batt', active_power=0.0, power_factor=0.8, voltage_module=1.0,
                  is_controlled=True, Qmin=-9999, Qmax=9999, Snom=9999, Enom=9999, p_min=-9999, p_max=9999,
                  op_cost=1.0, power_prof=None, power_factor_prof=None, vset_prof=None, active=True, Sbase=100,
                  enabled_dispatch=True, mttf=0.0, mttr=0.0, charge_efficiency=0.9, discharge_efficiency=0.9,
-                 max_soc=0.99, min_soc=0.3, soc=0.8, charge_per_cycle=0.1, discharge_per_cycle=0.1):
+                 max_soc=0.99, min_soc=0.3, soc=0.8, charge_per_cycle=0.1, discharge_per_cycle=0.1,
+                 a=1.0, b=1.0, c=1.0, a_prof=None, b_prof=None, c_prof=None):
 
         Generator.__init__(self, name=name,
                            active_power=active_power,
@@ -108,7 +123,13 @@ class Battery(Generator):
                            Sbase=Sbase,
                            enabled_dispatch=enabled_dispatch,
                            mttf=mttf,
-                           mttr=mttr)
+                           mttr=mttr,
+                           a=a,
+                           b=b,
+                           c=c,
+                           a_prof=a_prof,
+                           b_prof=b_prof,
+                           c_prof=c_prof)
 
         # type of this device
         self.device_type = DeviceType.BatteryDevice
@@ -137,7 +158,14 @@ class Battery(Generator):
                                  'Cost': GCProp('e/MWh', float, 'Generation unitary cost. Used in OPF.'),
                                  'enabled_dispatch': GCProp('', bool, 'Enabled for dispatch? Used in OPF.'),
                                  'mttf': GCProp('h', float, 'Mean time to failure'),
-                                 'mttr': GCProp('h', float, 'Mean time to recovery')}
+                                 'mttr': GCProp('h', float, 'Mean time to recovery'),
+                                 'a': GCProp('p.u.', float,
+                                             'phase A share of the declared power'),
+                                 'b': GCProp('p.u.', float,
+                                             'phase B share of the declared power'),
+                                 'c': GCProp('p.u.', float,
+                                             'phase C share of the declared power')
+                                 }
 
         self.charge_efficiency = charge_efficiency
 
@@ -174,7 +202,12 @@ class Battery(Generator):
         """
 
         # create a new instance of the battery
-        batt = Battery()
+        batt = Battery(a=self.a,
+                       b=self.b,
+                       c=self.c,
+                       a_prof=self.a_prof,
+                       b_prof=self.b_prof,
+                       c_prof=self.c_prof)
 
         batt.name = self.name
 

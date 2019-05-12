@@ -36,9 +36,22 @@ class StaticGenerator(EditableDevice):
 
         **mttr** (float, 0.0): Mean time to recovery in hours
 
+        **a** (float, 1.0): phase A share of the declared power
+
+        **b** (float, 1.0): phase B share of the declared power
+
+        **c** (float, 1.0): phase C share of the declared power
+
+        **a_prof** (array, None): Numpy array with the phase A share of the declared power
+
+        **b_prof** (array, None): Numpy array with the phase B share of the declared power
+
+        **c_prof** (array, None): Numpy array with the phase C share of the declared power
+
     """
 
-    def __init__(self, name='StaticGen', P=0.0, Q=0.0, P_prof=None, Q_prof=None, active=True, mttf=0.0, mttr=0.0):
+    def __init__(self, name='StaticGen', P=0.0, Q=0.0, P_prof=None, Q_prof=None, active=True, mttf=0.0, mttr=0.0,
+                 a=1.0, b=1.0, c=1.0, a_prof=None, b_prof=None, c_prof=None):
 
         EditableDevice.__init__(self,
                                 name=name,
@@ -50,10 +63,20 @@ class StaticGenerator(EditableDevice):
                                                   'P': GCProp('MW', float, 'Active power'),
                                                   'Q': GCProp('MVAr', float, 'Reactive power'),
                                                   'mttf': GCProp('h', float, 'Mean time to failure'),
-                                                  'mttr': GCProp('h', float, 'Mean time to recovery')},
+                                                  'mttr': GCProp('h', float, 'Mean time to recovery'),
+                                                  'a': GCProp('p.u.', float,
+                                                              'phase A share of the declared power'),
+                                                  'b': GCProp('p.u.', float,
+                                                              'phase B share of the declared power'),
+                                                  'c': GCProp('p.u.', float,
+                                                              'phase C share of the declared power')
+                                                  },
                                 non_editable_attributes=list(),
                                 properties_with_profile={'P': 'P_prof',
-                                                         'Q': 'Q_prof'})
+                                                         'Q': 'Q_prof',
+                                                         'a': 'a_prof',
+                                                         'b': 'b_prof',
+                                                         'c': 'c_prof'})
 
         self.bus = None
 
@@ -69,6 +92,16 @@ class StaticGenerator(EditableDevice):
         self.P_prof = P_prof
         self.Q_prof = Q_prof
 
+        # shape per phase
+        self.a = a
+        self.b = b
+        self.c = c
+
+        # share per phase profiles
+        self.a_prof = a_prof
+        self.b_prof = b_prof
+        self.c_prof = c_prof
+
     def copy(self):
         """
         Deep copy of this object
@@ -80,7 +113,13 @@ class StaticGenerator(EditableDevice):
                                P_prof=self.P_prof,
                                Q_prof=self.Q_prof,
                                mttf=self.mttf,
-                               mttr=self.mttr)
+                               mttr=self.mttr,
+                               a=self.a,
+                               b=self.b,
+                               c=self.c,
+                               a_prof=self.a_prof,
+                               b_prof=self.b_prof,
+                               c_prof=self.c_prof)
 
     def get_json_dict(self, id, bus_dict):
         """
