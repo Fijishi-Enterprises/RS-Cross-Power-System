@@ -2,12 +2,14 @@ import os
 import string
 import sys
 from enum import Enum
+import PySide2
 
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 import math
-from PyQt5.QtWidgets import *
+
+from PySide2.QtWidgets import *
 
 from GridCal.Gui.Analysis.gui import *
 from GridCal.Engine.Core.multi_circuit import MultiCircuit

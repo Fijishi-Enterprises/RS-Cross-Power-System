@@ -138,9 +138,8 @@ class MultiCircuit:
 
     def clear(self):
         """
-        Clear the objects in the circuit
+        Clear the multi-circuit (remove the bus and branch objects)
         """
-
         # Should be able to accept Branches, Lines and Transformers alike
         self.branches = list()
 

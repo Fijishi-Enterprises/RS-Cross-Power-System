@@ -2,6 +2,28 @@
 Change log
 ==========
 
+Notice that some versions skip numbers. This is not an error,
+this is because the stupid policy of pypi to not allow to correct packages.
+Hence if something goes wrong, you need to re-upload with a new version number.
+
+
+version 3.3.5
+_____________
+
+- Greatly improved PSS/e .raw file import support.
+
+version 3.3.4
+_____________
+
+- The tower names are displayed correctly now.
+
+- Completely switched from PyQt5 to PySide2.
+
+- Added support for PSS/e RAW file format version 29.
+
+- Overall bug fix.
+
+
 version 3.3.0
 _____________
 

@@ -15,11 +15,14 @@
 
 import math
 import chardet
+import os
+import re
 import numpy as np
 import pandas as pd
 from numpy import array
 from pandas import DataFrame as df
 from warnings import warn
+from typing import List, AnyStr
 
 from GridCal.Engine.Core.multi_circuit import MultiCircuit
 from GridCal.Engine.Devices import *
@@ -90,6 +93,8 @@ class PSSeGrid:
         self.generators = list()
         self.branches = list()
         self.transformers = list()
+        self.areas = list()
+        self.zones = list()
 
     def get_circuit(self, logger: list):
         """
@@ -101,6 +106,10 @@ class PSSeGrid:
         circuit = MultiCircuit()
         circuit.Sbase = self.SBASE
 
+        area_dict = {elm.I: elm.ARNAME for elm in self.areas}
+
+        zones_dict = {elm.I: elm.ZONAME for elm in self.zones}
+
         # ---------------------------------------------------------------------
         # Bus related
         # ---------------------------------------------------------------------
@@ -109,6 +118,13 @@ class PSSeGrid:
 
             # relate each PSS bus index with a GridCal bus object
             psse_bus_dict[psse_bus.I] = psse_bus.bus
+
+            # replace area idx by area name if available
+            if abs(psse_bus.bus.area) in area_dict.keys():
+                psse_bus.bus.area = area_dict[abs(psse_bus.bus.area)]
+
+            if abs(psse_bus.bus.zone) in zones_dict.keys():
+                psse_bus.bus.zone = zones_dict[abs(psse_bus.bus.zone)]
 
             # add the bus to the circuit
             circuit.add_bus(psse_bus.bus)
@@ -216,10 +232,12 @@ class PSSeBus:
             self.bus = Bus(name=name, vnom=self.BASKV, vmin=0.9, vmax=1.1, xpos=0, ypos=0,
                            active=True, area=self.AREA, zone=self.ZONE)
 
-        elif version == 30:
-
+        elif version in [29, 30]:
+            # I, ’NAME’, BASKV, IDE, GL, BL, AREA, ZONE, VM, VA, OWNER
             self.I, self.NAME, self.BASKV, self.IDE, self.GL, self.BL, \
              self.AREA, self.ZONE, self.VM, self.VA, self.OWNER = data[0]
+
+            # print(self.NAME, self.I)
 
             # create bus
             name = self.NAME
@@ -228,11 +246,14 @@ class PSSeBus:
                            active=True, area=self.AREA, zone=self.ZONE)
 
             if self.GL > 0 or self.BL > 0:
-                sh = Shunt(name='Shunt_' + self.ID,
+                sh = Shunt(name='Shunt_' + str(self.I),
                            G=self.GL, B=self.BL,
                            active=True)
 
                 self.bus.shunts.append(sh)
+
+        else:
+            logger.append('Bus not implemented for version ' + str(version))
 
         # set type
         if self.IDE in bustype.keys():
@@ -299,12 +320,15 @@ class PSSeLoad:
             self.I, self.ID, self.STATUS, self.AREA, self.ZONE, self.PL, self.QL, \
              self.IP, self.IQ, self.YP, self.YQ, self.OWNER, self.SCALE = data[0]
 
-        elif version == 30:
+        elif version in [29, 30]:
+            # I, ID, STATUS, AREA, ZONE, PL, QL, IP, IQ, YP, YQ, OWNER
+            self.I, self.ID, self.STATUS, self.AREA, self.ZONE, \
+             self.PL, self.QL, self.IP, self.IQ, self.YP, self.YQ, self.OWNER = data[0]
 
-            self.I, self.ID, self.STATUS, self.AREA, self.ZONE, self.PL, \
-             self.QL, self.IP, self.IQ, self.YP, self.YQ, self.OWNER = data[0]
+        else:
+            logger.append('Load not implemented for version ' + str(version))
 
-    def get_object(self, bus: Bus, logger:list):
+    def get_object(self, bus: Bus, logger: list):
         """
         Return GridCal Load object
         Returns:
@@ -353,12 +377,10 @@ class PSSeShunt:
         Args:
             data:
         """
-        if version == 33:
+        if version in [33, 32]:
             self.I, self.ID, self.STATUS, self.GL, self.BL = data[0]
-
-        elif version == 32:
-
-            self.I, self.ID, self.STATUS, self.GL, self.BL = data[0]
+        else:
+            logger.append('Shunt not implemented for the version ' + str(version))
 
     def get_object(self, bus: Bus, logger: list):
         """
@@ -492,8 +514,41 @@ class PSSeGenerator:
                  self.ZR, self.ZX, self.RT, self.XT, self.GTAP, self.STAT, self.RMPCT, self.PT, self.PB, \
                  self.WMOD, self.WPF = data[0]
 
+        elif version in [29]:
+            """
+            I,ID,PG,QG,QT,QB,VS,IREG,MBASE,
+            ZR,ZX,RT,XT,GTAP,STAT,RMPCT,PT,PB,
+            O1,F1,...,O4,F4
+            """
+            if length == 26:
+                self.I, self.ID, self.PG, self.QG, self.QT, self.QB, self.VS, self.IREG, self.MBASE, \
+                 self.ZR, self.ZX, self.RT, self.XT, self.GTAP, self.STAT, self.RMPCT, self.PT, self.PB, \
+                 self.O1, self.F1, self.O2, self.F2, self.O3, self.F3, self.O4, self.F4 = data[0]
+
+            elif length == 24:
+                self.I, self.ID, self.PG, self.QG, self.QT, self.QB, self.VS, self.IREG, self.MBASE, \
+                 self.ZR, self.ZX, self.RT, self.XT, self.GTAP, self.STAT, self.RMPCT, self.PT, self.PB, \
+                 self.O1, self.F1, self.O2, self.F2, self.O3, self.F3 = data[0]
+
+            elif length == 22:
+                self.I, self.ID, self.PG, self.QG, self.QT, self.QB, self.VS, self.IREG, self.MBASE, \
+                 self.ZR, self.ZX, self.RT, self.XT, self.GTAP, self.STAT, self.RMPCT, self.PT, self.PB, \
+                 self.O1, self.F1, self.O2, self.F2 = data[0]
+
+            elif length == 20:
+                self.I, self.ID, self.PG, self.QG, self.QT, self.QB, self.VS, self.IREG, self.MBASE, \
+                 self.ZR, self.ZX, self.RT, self.XT, self.GTAP, self.STAT, self.RMPCT, self.PT, self.PB, \
+                 self.O1, self.F1 = data[0]
+
+            elif length == 18:
+                self.I, self.ID, self.PG, self.QG, self.QT, self.QB, self.VS, self.IREG, self.MBASE, \
+                 self.ZR, self.ZX, self.RT, self.XT, self.GTAP, self.STAT, self.RMPCT, self.PT, self.PB = data[0]
+
             else:
                 raise Exception('Wrong data length in generator' + str(length))
+
+        else:
+            logger.append('Generator not implemented for version ' + str(version))
 
     def get_object(self, logger: list):
         """
@@ -510,6 +565,48 @@ class PSSeGenerator:
                            Snom=self.MBASE,
                            power_prof=None,
                            vset_prof=None,
+                           active=bool(self.STAT))
+
+        return object
+
+
+class PSSeInductionMachine:
+
+    def __init__(self, data, version, logger: list):
+        """
+
+        :param data:
+        :param version:
+        :param logger:
+        """
+
+        if version in [30, 32, 33]:
+            '''
+            I,ID,STAT,SCODE,DCODE,AREA,ZONE,OWNER,TCODE,BCODE,MBASE,RATEKV,
+            PCODE,PSET,H,A,B,D,E,RA,XA,XM,R1,X1,R2,X2,X3,E1,SE1,E2,SE2,IA1,IA2,
+            XAMULT
+            '''
+            self.I, self.ID, self.STAT, self.SCODE, self.DCODE, self.AREA, self.ZONE, self.OWNER, \
+            self.TCODE, self.BCODE, self.MBASE, self.RATEKV = data[0]
+
+            self.PCODE, self.PSET, self.H, self.A, self.B, self.D, self.E, self.RA, self.XA, self.XM, self.R1, \
+            self.X1, self.R2, self.X2, self.X3, self.E1, self.SE1, self.E2, self.SE2, self.IA1, self.IA2 = data[1]
+
+            self.XAMULT = data[2]
+        else:
+            logger.append('Induction machine not implemented for version ' + str(version))
+
+    def get_object(self, logger: list):
+        """
+        Return GridCal Load object
+        Returns:
+            Gridcal Load object
+        """
+
+        object = Generator(name='Gen_' + str(self.ID),
+                           active_power=self.PSET,
+                           voltage_module=self.RATEKV,
+                           Snom=self.MBASE,
                            active=bool(self.STAT))
 
         return object
@@ -581,18 +678,22 @@ class PSSeBranch:
                 self.I, self.J, self.CKT, self.R, self.X, self.B, self.RATEA, self.RATEB, self.RATEC, \
                  self.GI, self.BI, self.GJ, self.BJ, self.ST, self.MET, self.LEN, \
                  self.O1, self.F1, self.O2, self.F2, self.O3, self.F3, self.O4, self.F4 = data[0]
+
             elif length == 22:
                 self.I, self.J, self.CKT, self.R, self.X, self.B, self.RATEA, self.RATEB, self.RATEC, \
                  self.GI, self.BI, self.GJ, self.BJ, self.ST, self.MET, self.LEN, \
                  self.O1, self.F1, self.O2, self.F2, self.O3, self.F3 = data[0]
+
             elif length == 20:
                 self.I, self.J, self.CKT, self.R, self.X, self.B, self.RATEA, self.RATEB, self.RATEC, \
                  self.GI, self.BI, self.GJ, self.BJ, self.ST, self.MET, self.LEN, \
                  self.O1, self.F1, self.O2, self.F2 = data[0]
+
             elif length == 18:
                 self.I, self.J, self.CKT, self.R, self.X, self.B, self.RATEA, self.RATEB, self.RATEC, \
                  self.GI, self.BI, self.GJ, self.BJ, self.ST, self.MET, self.LEN, \
                  self.O1, self.F1 = data[0]
+
             elif length == 16:
                 self.I, self.J, self.CKT, self.R, self.X, self.B, self.RATEA, self.RATEB, self.RATEC, \
                  self.GI, self.BI, self.GJ, self.BJ, self.ST, self.MET, self.LEN = data[0]
@@ -601,37 +702,42 @@ class PSSeBranch:
                 logger.append('Wrong data length in branch' + str(length))
                 return
 
-        elif version == 30:
+        elif version in [29, 30]:
             """
-            I,J,CKT,R,X,B,RATEA,RATEB,RATEC,GI,BI,GJ,BJ,ST,LEN,01,F1, ,04,F4
+            v29, v30
+            I,J,CKT,R,X,B,RATEA,RATEB,RATEC,GI,BI,GJ,BJ,ST,LEN,01,F1,...,04,F4
             """
-            if length == 24:
+            if length == 23:
                 self.I, self.J, self.CKT, self.R, self.X, self.B, self.RATEA, self.RATEB, self.RATEC, \
                  self.GI, self.BI, self.GJ, self.BJ, self.ST, self.LEN, \
                  self.O1, self.F1, self.O2, self.F2, self.O3, self.F3, self.O4, self.F4 = data[0]
-            elif length == 22:
+
+            elif length == 21:
                 self.I, self.J, self.CKT, self.R, self.X, self.B, self.RATEA, self.RATEB, self.RATEC, \
                  self.GI, self.BI, self.GJ, self.BJ, self.ST, self.LEN, \
                  self.O1, self.F1, self.O2, self.F2, self.O3, self.F3 = data[0]
-            elif length == 20:
+
+            elif length == 19:
                 self.I, self.J, self.CKT, self.R, self.X, self.B, self.RATEA, self.RATEB, self.RATEC, \
                  self.GI, self.BI, self.GJ, self.BJ, self.ST, self.LEN, \
                  self.O1, self.F1, self.O2, self.F2 = data[0]
-            elif length == 18:
+
+            elif length == 17:
                 self.I, self.J, self.CKT, self.R, self.X, self.B, self.RATEA, self.RATEB, self.RATEC, \
                  self.GI, self.BI, self.GJ, self.BJ, self.ST, self.LEN, \
                  self.O1, self.F1 = data[0]
-            elif length == 16:
+
+            elif length == 15:
                 self.I, self.J, self.CKT, self.R, self.X, self.B, self.RATEA, self.RATEB, self.RATEC, \
                  self.GI, self.BI, self.GJ, self.BJ, self.ST, self.LEN = data[0]
 
             else:
                 logger.append('Wrong data length in branch' + str(length))
-                return
+                raise Exception('Wrong data length in branch' + str(length))
 
         else:
 
-            logger.append('Invalid Branch version')
+            logger.append('Branch not implemented for version ' + str(version))
 
     def get_object(self, psse_bus_dict, logger: list):
         """
@@ -642,8 +748,8 @@ class PSSeBranch:
         Returns:
             Gridcal Branch object
         """
-        bus_from = psse_bus_dict[self.I]
-        bus_to = psse_bus_dict[self.J]
+        bus_from = psse_bus_dict[abs(self.I)]
+        bus_to = psse_bus_dict[abs(self.J)]
 
         if self.LEN > 0:
             r = self.R * self.LEN
@@ -668,6 +774,282 @@ class PSSeBranch:
                         mttr=0,
                         branch_type=BranchType.Line)
         return object
+
+
+class PSSeTwoTerminalDCLine:
+
+    def __init__(self, data, version, logger: list):
+        """
+
+        :param data:
+        :param version:
+        :param logger:
+
+
+
+        NAME	The non-blank alphanumeric identifier assigned to this dc line. Each two-terminal dc line must have a
+        unique NAME. NAME may be up to twelve characters and may contain any combination of blanks, uppercase letters,
+        numbers and special characters. NAME must be enclosed in single or double quotes if it contains any blanks or
+        special characters. No default allowed.
+
+        MDC	Control mode: 0 for blocked, 1 for power, 2 for current. MDC = 0 by default.
+
+        RDC	The dc line resistance; entered in ohms. No default allowed.
+
+        SETVL	Current (amps) or power (MW) demand. When MDC is one, a positive value of SETVL specifies desired power
+        at the rectifier and a negative value specifies desired inverter power. No default allowed.
+
+        VSCHD	Scheduled compounded dc voltage; entered in kV. No default allowed.
+
+        VCMOD	Mode switch dc voltage; entered in kV. When the inverter dc voltage falls below this value and the
+        line is in power control mode (i.e., MDC = 1), the line switches to current control mode with a desired
+        current corresponding to the desired power at scheduled dc voltage. VCMOD = 0.0 by default.
+
+        RCOMP	Compounding resistance; entered in ohms. Gamma and/or TAPI is used to attempt to hold the compounded
+        voltage (VDCI + DCCURRCOMP) at VSCHD. To control the inverter end dc voltage VDCI, set RCOMP to zero;
+        to control the rectifier end dc voltage VDCR, set RCOMP to the dc line resistance, RDC; otherwise,
+        set RCOMP to the appropriate fraction of RDC. RCOMP = 0.0 by default.
+
+        DELTI	Margin entered in per unit of desired dc power or current. This is the fraction by which the order is
+        reduced when ALPHA is at its minimum and the inverter is controlling the line current. DELTI = 0.0 by default.
+
+        METER	Metered end code of either R (for rectifier) or I (for inverter). METER = I by default.
+
+        DCVMIN	Minimum compounded dc voltage; entered in kV. Only used in constant gamma operation
+        (i.e., when ANMXI = ANMNI) when TAPI is held constant and an ac transformer tap is adjusted to control
+        dc voltage (i.e., when IFI, ITI, and IDI specify a twowinding transformer). DCVMIN = 0.0 by default.
+
+        CCCITMX	Iteration limit for capacitor commutated two-terminal dc line Newton solution procedure.
+        CCCITMX = 20 by default.
+
+        CCCACC	Acceleration factor for capacitor commutated two-terminal dc line Newton solution procedure.
+        CCCACC = 1.0 by default.
+
+        IPR	Rectifier converter bus number, or extended bus name enclosed in single quotes (refer to Extended Bus
+        Names). No default allowed.
+
+        NBR	Number of bridges in series (rectifier). No default allowed.
+
+        ANMXR	Nominal maximum rectifier firing angle; entered in degrees. No default allowed.
+
+        ANMNR	Minimum steady-state rectifier firing angle; entered in degrees. No default allowed.
+
+        RCR	Rectifier commutating transformer resistance per bridge; entered in ohms. No default allowed.
+
+        XCR	Rectifier commutating transformer reactance per bridge; entered in ohms. No default allowed.
+
+        EBASR	Rectifier primary base ac voltage; entered in kV. No default allowed.
+
+        TRR	Rectifier transformer ratio. TRR = 1.0 by default.
+
+        TAPR	Rectifier tap setting. TAPR = 1.0 by default.
+
+        If no two-winding transformer is specified by IFR, ITR, and IDR, TAPR is adjusted to keep alpha within limits;
+        otherwise, TAPR is held fixed and this transformer’s tap ratio is adjusted. The adjustment logic assumes that
+        the rectifier converter bus is on the Winding 2 side of the transformer. The limits TMXR and TMNR specified
+        here are used; except for the transformer control mode flag (COD1 of Transformer Data), the ac tap adjustment
+        data is ignored.
+
+        TMXR	Maximum rectifier tap setting. TMXR = 1.5 by default.
+
+        TMNR	Minimum rectifier tap setting. TMNR = 0.51 by default.
+
+        STPR	Rectifier tap step; must be positive. STPR = 0.00625 by default.
+
+        ICR	Rectifier firing angle measuring bus number, or extended bus name enclosed in single quotes
+        (refer to Extended Bus Names). The firing angle and angle limits used inside the dc model are adjusted by
+        the difference between the phase angles at this bus and the ac/dc interface (i.e., the converter bus, IPR).
+        ICR = 0 by default.
+
+        IFR	Winding 1 side from bus number, or extended bus name enclosed in single quotes, of a two-winding
+        transformer. IFR = 0 by default.
+
+        ITR	Winding 2 side to bus number, or extended bus name enclosed in single quotes, of a two-winding
+        transformer. ITR = 0 by default.
+
+        IDR	Circuit identifier; the branch described by IFR, ITR, and IDR must have been entered as a two-winding
+        transformer; an ac transformer may control at most only one dc converter. IDR = '1' by default.
+
+        XCAPR	Commutating capacitor reactance magnitude per bridge; entered in ohms. XCAPR = 0.0 by default.
+
+
+        """
+
+        if version == 33:
+            '''
+            'NAME',MDC,RDC,SETVL,VSCHD,VCMOD,RCOMP,DELTI,METER,DCVMIN,CCCITMX,CCCACC
+            IPR,NBR,ANMXR,ANMNR,RCR,XCR,EBASR,TRR,TAPR,TMXR,TMNR,STPR,ICR,IFR,ITR,IDR,XCAPR
+            IPI,NBI,ANMXI,ANMNI,RCI,XCI,EBASI,TRI,TAPI,TMXI,TMNI,STPI,ICI,IFI,ITI,IDI,XCAPI 
+            '''
+
+            self.NAME, self.MDC, self.RDC, self.SETVL, self.VSCHD, self.VCMOD, self.RCOMP, self.DELTI, self.METER, \
+            self.DCVMIN, self.CCCITMX, self.CCCACC = data[0]
+
+            self.IPR, self.NBR, self.ANMXR, self.ANMNR, self.RCR, self.XCR, self.EBASR, self.TRR, self.TAPR, \
+            self.TMXR, self.TMNR, self.STPR, self.ICR, self.IFR, self.ITR, self.IDR, self.XCAPR = data[1]
+
+            self.IPI, self.NBI, self.ANMXI, self.ANMNI, self.RCI, self.XCI, self.EBASI, self.TRI, self.TAPI, \
+            self.TMXI, self.TMNI, self.STPI, self.ICI, self.IFI, self.ITI, self.IDI, self.XCAPI = data[2]
+
+        elif version == 29:
+            '''
+            I,MDC,RDC,SETVL,VSCHD,VCMOD,RCOMP,DELTI,METER,DCVMIN,CCCITMX,CCCACC
+            IPR,NBR,ALFMX,ALFMN,RCR,XCR,EBASR,TRR,TAPR,TMXR,TMNR,STPR,ICR,IFR,ITR,IDR,XCAPR
+            IPI,NBI,GAMMX,GAMMN,RCI,XCI,EBASI,TRI,TAPI,TMXI,TMNI,STPI,ICI,IFI,ITI,IDI,XCAPI
+            '''
+
+            self.I, self.MDC, self.RDC, self.SETVL, self.VSCHD, self.VCMOD, self.RCOMP, self.DELTI, self.METER, \
+            self.DCVMIN, self.CCCITMX, self.CCCACC = data[0]
+
+            self.IPR, self.NBR, self.ANMXR, self.ANMNR, self.RCR, self.XCR, self.EBASR, self.TRR, self.TAPR, \
+            self.TMXR, self.TMNR, self.STPR, self.ICR, self.IFR, self.ITR, self.IDR, self.XCAPR = data[1]
+
+            self.IPI, self.NBI, self.ANMXI, self.ANMNI, self.RCI, self.XCI, self.EBASI, self.TRI, self.TAPI, \
+            self.TMXI, self.TMNI, self.STPI, self.ICI, self.IFI, self.ITI, self.IDI, self.XCAPI = data[2]
+
+            self.NAME = str(self.I)
+        else:
+            logger.append('Version ' + str(version) + ' not implemented for DC Lines')
+
+    def get_object(self, psse_bus_dict, logger: list):
+        """
+        GEt equivalent object
+        :param psse_bus_dict:
+        :param logger:
+        :return:
+        """
+        bus1 = psse_bus_dict[abs(self.IPR)]
+        bus2 = psse_bus_dict[abs(self.IPI)]
+
+        if self.MDC == 1:
+            # SETVL is in MW
+            rate = self.SETVL
+        elif self.MDC == 2:
+            # SETVL is in A
+            rate = self.SETVL * self.VSCHD / 1000.0
+        else:
+            # doesn't say, so I expect it to be MW
+            rate = self.SETVL
+
+        obj = Branch(bus_from=bus1,
+                     bus_to=bus2,
+                     name=self.NAME + '_DC_2_terminals',
+                     r=self.RDC,
+                     rate=rate)
+        return obj
+
+
+class PSSeVscDCLine:
+
+    def __init__(self, data, version, logger: list):
+        """
+
+        :param data:
+        :param version:
+        :param logger:
+
+        NAME	The non-blank alphanumeric identifier assigned to this dc line. Each VSC dc line must have a unique NAME. NAME may be up to twelve characters and may contain any combination of blanks, uppercase letters, numbers and special characters. NAME must be enclosed in single or double quotes if it contains any blanks or special characters. No default allowed.
+        MDC	Control mode: 0 for out-of-service, 1 for in-service. MDC = 1 by default.
+        RDC	The dc line resistance; entered in ohms. RDC must be positive. No default allowed.
+        Oi An owner number (1 through 9999). Each VSC dc line may have up to four owners. By default, O1 is 1, and O2, O3 and O4 are zero.
+        Fi	The fraction of total ownership assigned to owner Oi; each Fi must be positive. The Fi values are normalized such that they sum to 1.0 before they are placed in the working case. By default, each Fi is 1.0.
+
+        IBUS	Converter bus number, or extended bus name enclosed in single quotes (refer to Extended Bus Names). No default allowed.
+
+        TYPE	Code for the type of converter dc control:
+        0	 for converter out-of-service 1	 for dc voltage control 2	 for MW control.
+        When both converters are in-service, exactly one converter of each VSC dc line must be TYPE 1. No default allowed.
+        MODE	Converter ac control mode:
+        1	for ac voltage control
+        2	for fixed ac power factor.
+        MODE = 1 by default.
+        DCSET	Converter dc setpoint. For TYPE = 1, DCSET is the scheduled dc voltage on the dc side of the converter bus; entered in kV. For TYPE = 2, DCSET is the power demand, where a positive value specifies that the converter is feeding active power into the ac network at bus IBUS, and a negative value specifies that the converter is withdrawing active power from the ac network at bus IBUS; entered in MW. No default allowed.
+        ACSET	Converter ac setpoint. For MODE = 1, ACSET is the regulated ac voltage setpoint; entered in pu. For MODE = 2, ACSET is the power factor setpoint. ACSET = 1.0 by default.
+        Aloss,
+        Bloss	Coefficients of the linear equation used to calculate converter losses:
+        KWconv loss = Aloss + (Idc * Bloss)
+        Aloss is entered in kW. Bloss is entered in kW/amp. Aloss = Bloss = 0.0 by default.
+        MINloss	Minimum converter losses; entered in kW. MINloss = 0.0 by default.
+        SMAX	Converter MVA rating; entered in MVA. SMAX = 0.0 to allow unlimited converter MVA loading. SMAX = 0.0 by default.
+        IMAX	Converter ac current rating; entered in amps. IMAX = 0.0 to allow unlimited converter current loading. If a positive IMAX is specified, the base voltage assigned to bus IBUS must be positive. IMAX = 0.0 by default.
+        PWF	Power weighting factor fraction (0.0 < PWF < 1.0) used in reducing the active power order and either the reactive power order (when MODE is 2) or the reactive power limits (when MODE is 1) when the converter MVA or current rating is violated. When PWF is 0.0, only the active power is reduced; when PWF is 1.0, only the reactive power is reduced; otherwise, a weighted reduction of both active and reactive power is applied. PWF = 1.0 by default.
+        MAXQ	Reactive power upper limit; entered in Mvar. A positive value of reactive power indicates reactive power flowing into the ac network from the converter; a negative value of reactive power indicates reactive power withdrawn from the ac network.
+        Not used if MODE = 2. MAXQ = 9999.0 by default.
+        MINQ	Reactive power lower limit; entered in Mvar. A positive value of reactive power indicates reactive power flowing into the ac network from the converter; a negative value of reactive power indicates reactive power withdrawn from the ac network.
+        Not used if MODE = 2. MINQ = -9999.0 by default.
+        REMOT	Bus number, or extended bus name enclosed in single quotes (refer to Extended Bus Names), of a remote Type 1 or 2 bus for which voltage is to be regulated by this converter to the value specified by ACSET. If bus REMOT is other than a Type 1 or 2 bus, bus IBUS regulates its own voltage to the value specified by ACSET.
+        REMOT is entered as zero if the converter is to regulate its own voltage. Not used if MODE = 2. REMOT = 0 by default.
+        RMPCT	Percent of the total Mvar required to hold the voltage at the bus controlled by bus IBUS that is to be contributed by this VSC; RMPCT must be positive. RMPCT is needed only if REMOT specifies a valid remote bus and there is more than one local or remote voltage controlling device (plant, switched shunt, FACTS device shunt element, or VSC dc line converter) controlling the voltage at bus REMOT to a setpoint, or REMOT is zero but bus IBUS is the controlled bus, local or remote, of one or more other setpoint mode voltage controlling devices. Not used if MODE = 2. RMPCT = 100.0 by default.
+
+
+        """
+        if version == 33:
+
+            '''
+            NAME, MDC, RDC, O1, F1, ... O4, F4
+            IBUS,TYPE,MODE,DCSET,ACSET,ALOSS,BLOSS,MINLOSS,SMAX,IMAX,PWF,MAXQ,MINQ,REMOT,RMPCT
+            IBUS,TYPE,MODE,DCSET,ACSET,ALOSS,BLOSS,MINLOSS,SMAX,IMAX,PWF,MAXQ,MINQ,REMOT,RMPCT
+            '''
+
+            if len(data[0]) == 11:
+                self.NAME, self.MDC, self.RDC,  self.O1, self.F1, self.O2, self.F2, \
+                 self.O3, self.F3, self.O4, self.F4 = data[0]
+            elif len(data[0]) == 9:
+                self.NAME, self.MDC, self.RDC,  self.O1, self.F1, self.O2, self.F2, self.O3, self.F3 = data[0]
+            elif len(data[0]) == 7:
+                self.NAME, self.MDC, self.RDC,  self.O1, self.F1, self.O2, self.F2 = data[0]
+            elif len(data[0]) == 5:
+                self.NAME, self.MDC, self.RDC,  self.O1, self.F1 = data[0]
+
+            self.IBUS1, self.TYPE1, self.MODE1, self.DCSET1, self.ACSET1, self.ALOSS1, self.BLOSS1, self.MINLOSS1, \
+             self.SMAX1, self.IMAX1, self.PWF1, self.MAXQ1, self.MINQ1, self.REMOT1, self.RMPCT1 = data[1]
+
+            self.IBUS2, self.TYPE2, self.MODE2, self.DCSET2, self.ACSET2, self.ALOSS2, self.BLOSS2, self.MINLOSS2, \
+             self.SMAX2, self.IMAX2, self.PWF2, self.MAXQ2, self.MINQ2, self.REMOT2, self.RMPCT2 = data[2]
+
+        elif version == 29:
+
+            '''
+            ’NAME’, MDC, RDC, O1, F1, ... O4, F4
+            IBUS,TYPE,MODE,DCSET,ACSET,ALOSS,BLOSS,MINLOSS,SMAX,IMAX,PWF,MAXQ,MINQ,REMOT,RMPCT
+            IBUS,TYPE,MODE,DCSET,ACSET,ALOSS,BLOSS,MINLOSS,SMAX,IMAX,PWF,MAXQ,MINQ,REMOT,RMPCT
+            '''
+
+            if len(data[0]) == 11:
+                self.NAME, self.MDC, self.RDC,  self.O1, self.F1, self.O2, self.F2, \
+                 self.O3, self.F3, self.O4, self.F4 = data[0]
+            elif len(data[0]) == 9:
+                self.NAME, self.MDC, self.RDC,  self.O1, self.F1, self.O2, self.F2, self.O3, self.F3 = data[0]
+            elif len(data[0]) == 7:
+                self.NAME, self.MDC, self.RDC,  self.O1, self.F1, self.O2, self.F2 = data[0]
+            elif len(data[0]) == 5:
+                self.NAME, self.MDC, self.RDC,  self.O1, self.F1 = data[0]
+
+            self.IBUS1, self.TYPE1, self.MODE1, self.DCSET1, self.ACSET1, self.ALOSS1, self.BLOSS1, self.MINLOSS1, \
+             self.SMAX1, self.IMAX1, self.PWF1, self.MAXQ1, self.MINQ1, self.REMOT1, self.RMPCT1 = data[1]
+
+            self.IBUS2, self.TYPE2, self.MODE2, self.DCSET2, self.ACSET2, self.ALOSS2, self.BLOSS2, self.MINLOSS2, \
+             self.SMAX2, self.IMAX2, self.PWF2, self.MAXQ2, self.MINQ2, self.REMOT2, self.RMPCT2 = data[2]
+
+        else:
+            logger.append('Version ' + str(version) + ' not implemented for DC Lines')
+
+    def get_object(self, psse_bus_dict, logger: list):
+        """
+        GEt equivalent object
+        :param psse_bus_dict:
+        :param logger:
+        :return:
+        """
+        bus1 = psse_bus_dict[abs(self.IBUS1)]
+        bus2 = psse_bus_dict[abs(self.IBUS2)]
+
+        obj = Branch(bus_from=bus1,
+                     bus_to=bus2,
+                     name=self.NAME + '_DC_2_terminals',
+                     r=self.RDC,
+                     rate=max(self.SMAX1, self.SMAX2))
+        return obj
 
 
 class PSSeTransformer:
@@ -1056,14 +1438,13 @@ class PSSeTransformer:
             # Line 1: for both types
 
             if len(data[0]) == 21:
-
                 n = len(data[0])
                 dta = np.zeros(21, dtype=object)
                 dta[0:n] = data[0]
 
                 self.I, self.J, self.K, self.CKT, self.CW, self.CZ, self.CM, self.MAG1, self.MAG2, self.NMETR, \
-                 self.NAME, self.STAT, self.O1, self.F1, self.O2, self.F2, self.O3, self.F3, self.O4, self.F4, \
-                 self.VECGRP = dta
+                self.NAME, self.STAT, self.O1, self.F1, self.O2, self.F2, self.O3, self.F3, self.O4, self.F4, \
+                self.VECGRP = dta
 
             if len(data[0]) == 20:
 
@@ -1073,7 +1454,7 @@ class PSSeTransformer:
 
                 self.I, self.J, self.K, self.CKT, self.CW, self.CZ, self.CM, self.MAG1, self.MAG2, self.NMETR, \
                  self.NAME, self.STAT, self.O1, self.F1, self.O2, self.F2, self.O3, self.F3, self.O4, self.F4, \
-                 self.VECGRP = dta
+                  self.VECGRP = dta
 
             elif len(data[0]) == 18:
                 self.I, self.J, self.K, self.CKT, self.CW, self.CZ, self.CM, self.MAG1, self.MAG2, self.NMETR, \
@@ -1088,36 +1469,49 @@ class PSSeTransformer:
                 self.I, self.J, self.K, self.CKT, self.CW, self.CZ, self.CM, self.MAG1, self.MAG2, self.NMETR, \
                  self.NAME, self.STAT, self.VECGRP = data[0]
 
-            # line 2
-            if len(data[1]) == 3:
-                # 2-windings
+            if len(data) == 4:
                 self.windings = 2
+
+                '''
+                I,J,K,CKT,CW,CZ,CM,MAG1,MAG2,NMETR,’NAME’,STAT,O1,F1,...,O4,F4,VECGRP
+                R1-2,X1-2,SBASE1-2
+                WINDV1,NOMV1,ANG1,RATA1,RATB1,RATC1,COD1,CONT1,RMA1,RMI1,VMA1,VMI1,NTP1,TAB1,CR1,CX1,CNXA1
+                WINDV2,NOMV2
+                '''
+
                 self.R1_2, self.X1_2, self.SBASE1_2 = data[1]
-            else:
-                # 3-windings
-                self.windings = 3
-                self.R1_2, self.X1_2, self.SBASE1_2, self.R2_3, self.X2_3, self.SBASE2_3, self.R3_1, \
-                 self.X3_1, self.SBASE3_1, self.VMSTAR, self.ANSTAR = data[1]
 
-            # line 3: for both types
-            n = len(data[2])
-            dta = np.zeros(17, dtype=object)
-            dta[0:n] = data[2]
+                n = len(data[2])
+                dta = np.zeros(17, dtype=object)
+                dta[0:n] = data[2]
 
-            self.WINDV1, self.NOMV1, self.ANG1, self.RATA1, self.RATB1, self.RATC1, self.COD1, self.CONT1, self.RMA1, \
-             self.RMI1, self.VMA1, self.VMI1, self.NTP1, self.TAB1, self.CR1, self.CX1, self.CNXA1 = dta
+                self.WINDV1, self.NOMV1, self.ANG1, self.RATA1, self.RATB1, self.RATC1, self.COD1, self.CONT1, self.RMA1, \
+                self.RMI1, self.VMA1, self.VMI1, self.NTP1, self.TAB1, self.CR1, self.CX1, self.CNXA1 = dta
 
-            # line 4
-            if len(data[3]) == 2:
-                # 2-windings
                 self.WINDV2, self.NOMV2 = data[3]
+
             else:
-                # 3 - windings
+                self.windings = 3
+
+                '''
+                I,J,K,CKT,CW,CZ,CM,MAG1,MAG2,NMETR,’NAME’,STAT,O1,F1,...,O4,F4,VECGRP
+                R1-2,X1-2,SBASE1-2,R2-3,X2-3,SBASE2-3,R3-1,X3-1,SBASE3-1,VMSTAR,ANSTAR
+                WINDV1,NOMV1,ANG1,RATA1,RATB1,RATC1,COD1,CONT1,RMA1,RMI1,VMA1,VMI1,NTP1,TAB1,CR1,CX1,CNXA1
+                WINDV2,NOMV2,ANG2,RATA2,RATB2,RATC2,COD2,CONT2,RMA2,RMI2,VMA2,VMI2,NTP2,TAB2,CR2,CX2,CNXA2
+                WINDV3,NOMV3,ANG3,RATA3,RATB3,RATC3,COD3,CONT3,RMA3,RMI3,VMA3,VMI3,NTP3,TAB3,CR3,CX3,CNXA3
+                '''
+
+                self.R1_2, self.X1_2, self.SBASE1_2, self.R2_3, self.X2_3, self.SBASE2_3, self.R3_1, self.X3_1, \
+                self.SBASE3_1, self.VMSTAR, self.ANSTAR = data[1]
+
+                self.WINDV1, self.NOMV1, self.ANG1, self.RATA1, self.RATB1, self.RATC1, self.COD1, self.CONT1, \
+                self.RMA1, self.RMI1, self.VMA1, self.VMI1, self.NTP1, self.TAB1, self.CR1, self.CX1, self.CNXA1 = data[2]
+
                 self.WINDV2, self.NOMV2, self.ANG2, self.RATA2, self.RATB2, self.RATC2, self.COD2, self.CONT2, \
-                 self.RMA2, self.RMI2, self.VMA2, self.VMI2, self.NTP2, self.TAB2, self.CR2, self.CX2, self.CNXA2, \
-                 self.WINDV3, self.NOMV3, self.ANG3, self.RATA3, self.RATB3, self.RATC3, self.COD3, self.CONT3, \
-                 self.RMA3, self.RMI3, self.VMA3, self.VMI3, self.NTP3, self.TAB3, \
-                 self.CR3, self.CX3, self.CNXA3 = data[3]
+                self.RMA2, self.RMI2, self.VMA2, self.VMI2, self.NTP2, self.TAB2, self.CR2, self.CX2, self.CNXA2 = data[3]
+
+                self.WINDV3, self.NOMV3, self.ANG3, self.RATA3, self.RATB3, self.RATC3, self.COD3, self.CONT3, \
+                self.RMA3, self.RMI3, self.VMA3, self.VMI3, self.NTP3, self.TAB3, self.CR3, self.CX3, self.CNXA3 = data[4]
 
         elif version == 32:
 
@@ -1228,7 +1622,7 @@ class PSSeTransformer:
 
             # line 3: for both types
             self.WINDV1, self.NOMV1, self.ANG1, self.RATA1, self.RATB1, self.RATC1, self.COD1, self.CONT1, self.RMA1, \
-            self.RMI1, self.VMA1, self.VMI1, self.NTP1, self.TAB1, self.CR1, self.CX1 = data[2]
+             self.RMI1, self.VMA1, self.VMI1, self.NTP1, self.TAB1, self.CR1, self.CX1 = data[2]
 
             # line 4
             if len(data[3]) == 2:
@@ -1237,10 +1631,100 @@ class PSSeTransformer:
             else:
                 # 3 - windings
                 self.WINDV2, self.NOMV2, self.ANG2, self.RATA2, self.RATB2, self.RATC2, self.COD2, self.CONT2, \
-                self.RMA2, self.RMI2, self.VMA2, self.VMI2, self.NTP2, self.TAB2, self.CR2, self.CX2, \
-                self.WINDV3, self.NOMV3, self.ANG3, self.RATA3, self.RATB3, self.RATC3, self.COD3, self.CONT3, \
-                self.RMA3, self.RMI3, self.VMA3, self.VMI3, self.NTP3, self.TAB3, \
-                self.CR3, self.CX3 = data[3]
+                 self.RMA2, self.RMI2, self.VMA2, self.VMI2, self.NTP2, self.TAB2, self.CR2, self.CX2, \
+                 self.WINDV3, self.NOMV3, self.ANG3, self.RATA3, self.RATB3, self.RATC3, self.COD3, self.CONT3, \
+                 self.RMA3, self.RMI3, self.VMA3, self.VMI3, self.NTP3, self.TAB3, \
+                 self.CR3, self.CX3 = data[3]
+
+        elif version == 29:
+
+            '''
+            In this version 
+            
+                2 windings -> 4 lines
+                
+                I,J,K,CKT,CW,CZ,CM,MAG1,MAG2,NMETR,’NAME’,STAT,O1,F1,...,O4,F4
+                R1-2,X1-2,SBASE1-2
+                WINDV1,NOMV1,ANG1,RATA1,RATB1,RATC1,COD,CONT,RMA,RMI,VMA,VMI,NTP,TAB,CR,CX
+                WINDV2,NOMV2
+                
+                3 windings -> 5 lines
+                
+                I,J,K,CKT,CW,CZ,CM,MAG1,MAG2,NMETR,’NAME’,STAT,O1,F1,...,O4,F4
+                R1-2,X1-2,SBASE1-2,R2-3,X2-3,SBASE2-3,R3-1,X3-1,SBASE3-1,VMSTAR,ANSTAR
+                WINDV1,NOMV1,ANG1,RATA1,RATB1,RATC1,COD,CONT,RMA,RMI,VMA,VMI,NTP,TAB,CR,CX
+                WINDV2,NOMV2,ANG2,RATA2,RATB2,RATC2
+                WINDV3,NOMV3,ANG3,RATA3,RATB3,RATC3
+                 
+            '''
+
+            # Line 1: for both types
+            if len(data[0]) == 20:
+                self.I, self.J, self.K, self.CKT, self.CW, self.CZ, self.CM, self.MAG1, self.MAG2, self.NMETR, \
+                self.NAME, self.STAT, self.O1, self.F1, self.O2, self.F2, self.O3, self.F3, self.O4, self.F4 = data[0]
+            elif len(data[0]) == 18:
+                self.I, self.J, self.K, self.CKT, self.CW, self.CZ, self.CM, self.MAG1, self.MAG2, self.NMETR, \
+                self.NAME, self.STAT, self.O1, self.F1, self.O2, self.F2, self.O3, self.F3 = data[0]
+            elif len(data[0]) == 16:
+                self.I, self.J, self.K, self.CKT, self.CW, self.CZ, self.CM, self.MAG1, self.MAG2, self.NMETR, \
+                self.NAME, self.STAT, self.O1, self.F1, self.O2, self.F2 = data[0]
+            elif len(data[0]) == 14:
+                self.I, self.J, self.K, self.CKT, self.CW, self.CZ, self.CM, self.MAG1, self.MAG2, self.NMETR, \
+                self.NAME, self.STAT, self.O1, self.F1 = data[0]
+            elif len(data[0]) == 12:
+                self.I, self.J, self.K, self.CKT, self.CW, self.CZ, self.CM, self.MAG1, self.MAG2, self.NMETR, \
+                self.NAME, self.STAT = data[0]
+
+            # line 2
+            if len(data[1]) == 3:
+
+                '''
+                I,J,K,CKT,CW,CZ,CM,MAG1,MAG2,NMETR,’NAME’,STAT,O1,F1,...,O4,F4
+                R1-2,X1-2,SBASE1-2
+                WINDV1,NOMV1,ANG1,RATA1,RATB1,RATC1,COD,CONT,RMA,RMI,VMA,VMI,NTP,TAB,CR,CX
+                WINDV2,NOMV2
+                '''
+
+                # 2-windings
+                self.windings = 2
+                self.R1_2, self.X1_2, self.SBASE1_2 = data[1]
+
+                self.WINDV1, self.NOMV1, self.ANG1, self.RATA1, self.RATB1, self.RATC1, self.COD1, self.CONT1, self.RMA1, \
+                self.RMI1, self.VMA1, self.VMI1, self.NTP1, self.TAB1, self.CR1, self.CX1 = data[2]
+
+                self.WINDV2, self.NOMV2 = data[3]
+
+            else:
+
+                '''
+                I,J,K,CKT,CW,CZ,CM,MAG1,MAG2,NMETR,’NAME’,STAT,O1,F1,...,O4,F4
+                R1-2,X1-2,SBASE1-2,R2-3,X2-3,SBASE2-3,R3-1,X3-1,SBASE3-1,VMSTAR,ANSTAR
+                
+                WINDV1,NOMV1,ANG1,RATA1,RATB1,RATC1,COD,CONT,RMA,RMI,VMA,VMI,NTP,TAB,CR,CX
+                
+                WINDV2,NOMV2,ANG2,RATA2,RATB2,RATC2
+                
+                WINDV3,NOMV3,ANG3,RATA3,RATB3,RATC3
+                '''
+
+                # 3-windings
+                self.windings = 3
+
+                self.R1_2, self.X1_2, self.SBASE1_2, self.R2_3, self.X2_3, self.SBASE2_3, self.R3_1, \
+                 self.X3_1, self.SBASE3_1, self.VMSTAR, self.ANSTAR = data[1]
+
+                self.WINDV1, self.NOMV1, self.ANG1, self.RATA1, self.RATB1, self.RATC1, self.COD1, \
+                self.CONT1, self.RMA1,  self.RMI1, self.VMA1, self.VMI1, self.NTP1, self.TAB1, \
+                self.CR1, self.CX1 = data[2]
+
+                self.WINDV2, self.NOMV2, self.ANG2, self.RATA2, self.RATB2, self.RATC2 = data[3]
+
+                self.WINDV3, self.NOMV3, self.ANG3, self.RATA3, self.RATB3, self.RATC3 = data[4]
+
+            pass
+
+        else:
+            logger.append('Transformer not implemented for version ' + str(version))
 
     def get_object(self, psse_bus_dict, logger: list):
         """
@@ -1306,9 +1790,9 @@ class PSSeTransformer:
 
         elif self.windings == 3:
 
-            bus_1 = psse_bus_dict[self.I]
-            bus_2 = psse_bus_dict[self.J]
-            bus_3 = psse_bus_dict[self.k]
+            bus_1 = psse_bus_dict[abs(self.I)]
+            bus_2 = psse_bus_dict[abs(self.J)]
+            bus_3 = psse_bus_dict[abs(self.K)]
 
             r = self.R1_2
             x = self.X1_2
@@ -1369,6 +1853,55 @@ class PSSeTransformer:
 
             return [object1, object2, object3]
 
+        else:
+            raise Exception(str(self.windings) + ' number of windings!')
+
+
+class PSSeArea:
+
+    def __init__(self, data, version, logger: list):
+        """
+
+        :param data:
+        :param version:
+        :param logger:
+        """
+
+        self.I = -1
+
+        self.ARNAME = ''
+
+        if version in [29, 33]:
+            # I, ISW, PDES, PTOL, 'ARNAME'
+            self.I, self.ISW, self.PDES, self.PTOL, self.ARNAME = data[0]
+
+            self.ARNAME = self.ARNAME.replace("'", "").strip()
+        else:
+            logger.append('Areas not defined for version ' + str(version))
+
+
+class PSSeZone:
+
+    def __init__(self, data, version, logger: list):
+        """
+
+        :param data:
+        :param version:
+        :param logger:
+        """
+
+        self.I = -1
+
+        self.ZONAME = ''
+
+        if version in [29, 33]:
+            # I, 'ZONAME'
+            self.I, self.ZONAME = data[0]
+
+            self.ZONAME = self.ZONAME.replace("'", "").strip()
+        else:
+            logger.append('Zones not defined for version ' + str(version))
+
 
 def interpret_line(line, splitter=','):
     """
@@ -1405,59 +1938,82 @@ class PSSeParser:
             file_name: file name or path
         """
         self.parsers = dict()
-        self.versions = [33, 32, 30]
+        self.versions = [33, 32, 30, 29]
 
         self.logger = list()
 
-        self.pss_grid, logs = self.parse_psse(file_name)
+        self.file_name = file_name
+
+        self.pss_grid, logs = self.parse_psse()
 
         self.logger += logs
 
         self.circuit = self.pss_grid.get_circuit(self.logger)
 
-        self.check_grid()
-
-    def check_grid(self):
-        pass
-        # check buses names
-        # for bus in self.circuit.buses:
-
-    def parse_psse(self, file_name):
+    def read_and_split(self):
         """
-        Parser implemented according to:
-            - POM section 5.2.1 (v.33)
-            - POM section 5.2.1 (v.32)
-
-        Args:
-            file_name:
-
-        Returns:
-
+        Read the text file and split it into sections
+        :return:
         """
-        # print('Parsing ', file_name)
-
         logger = list()
 
         # make a guess of the file encoding
-        detection = chardet.detect(open(file_name, "rb").read())
+        detection = chardet.detect(open(self.file_name, "rb").read())
 
         # open the text file into a variable
-        with open(file_name, 'r', encoding=detection['encoding']) as my_file:
+        with open(self.file_name, 'r', encoding=detection['encoding']) as my_file:
             txt = my_file.read()
 
         # split the text file into sections
         sections = txt.split(' /')
+
+        sections_dict = dict()
+
+        str_a = 'End of'.lower()
+        str_b = 'data'.lower()
+
+        for i, sec in enumerate(sections):
+            data = sec.split('\n')
+            first = data.pop(0).lower()
+            if str_a in first:
+                if ',' in first:
+                    srch = first.split(',')[0]
+                else:
+                    srch = first
+                name = re.search(str_a + '(.*)' + str_b, srch).group(1).strip()
+                data2 = sections[i-1].split('\n')[1:]
+
+                if name.lower() == 'bus':
+                    data2.pop(0)
+                    data2.pop(0)
+
+                sections_dict[name] = data2
+
+        return sections, sections_dict
+
+    def parse_psse(self) -> (MultiCircuit, List[AnyStr]):
+        """
+        Parser implemented according to:
+            - POM section 4.1.1 Power Flow Raw Data File Contents (v.29)
+            - POM section 5.2.1                                   (v.33)
+            - POM section 5.2.1                                   (v.32)
+
+        Returns: MultiCircuit, List[str]
+        """
+
+        logger = list()
+
+        sections, sections_dict = self.read_and_split()
 
         # header -> new grid
         grid = PSSeGrid(interpret_line(sections[0]))
 
         if grid.REV not in self.versions:
             logger.append('The PSSe version is not compatible. Compatible versions are:' + str(self.versions))
-            return
+            return grid, logger
         else:
             version = grid.REV
 
-        meta_data = list()
         # declare contents:
         # section_idx, objects_list, expected_data_length, ObjectT, lines per objects
 
@@ -1484,59 +2040,123 @@ class PSSeParser:
         # 19: Induction Machine Data
         # 20: Q Record
 
-        meta_data.append([1, grid.buses, PSSeBus, 1])
-        meta_data.append([2, grid.loads, PSSeLoad, 1])
-        meta_data.append([3, grid.shunts, PSSeShunt, 1])
-        meta_data.append([4, grid.generators, PSSeGenerator, 1])
-        meta_data.append([5, grid.branches, PSSeBranch, 1])
-        meta_data.append([6, grid.transformers, PSSeTransformer, 4])
+        meta_data = dict()
+        meta_data['bus'] = [1, grid.buses, PSSeBus, 1]
+        meta_data['load'] = [2, grid.loads, PSSeLoad, 1]
+        meta_data['fixed shunt'] = [3, grid.shunts, PSSeShunt, 1]
+        # meta_data['shunt'] = [3, grid.shunts, PSSeShunt, 1]
+        meta_data['generator'] = [4, grid.generators, PSSeGenerator, 1]
+        meta_data['induction machine'] = [5, grid.generators, PSSeInductionMachine, 3]
+        meta_data['branch'] = [6, grid.branches, PSSeBranch, 1]
+        meta_data['transformer'] = [7, grid.transformers, PSSeTransformer, 4]
+        meta_data['two-terminal dc'] = [8, grid.branches, PSSeTwoTerminalDCLine, 3]
+        meta_data['vsc dc line'] = [9, grid.branches, PSSeVscDCLine, 3]
+        meta_data['area'] = [10, grid.areas, PSSeArea, 1]
+        meta_data['zone'] = [11, grid.zones, PSSeZone, 1]
 
-        for section_idx, objects_list, ObjectT, lines_per_object in meta_data:
+        for key, values in meta_data.items():
 
-            # split the section lines by object declaration: '\n  ' delimits each object start.
-            # lines = sections[section_idx].split('\n  ')
-            lines = sections[section_idx].split('\n')
+            # get the parsers for the declared object type
+            section_idx, objects_list, ObjectT, lines_per_object = values
 
-            # this removes the useless header
-            lines.pop(0)
+            if key in sections_dict.keys():
+                lines = sections_dict[key]
 
-            # iterate ove the object's lines
-            for l in range(0, len(lines), lines_per_object):
+                # iterate ove the object's lines to pack them as expected (normally 1 per object except transformers...)
+                l = 0
+                while l < len(lines):
 
-                if ',' in lines[l]:
+                    lines_per_object2 = lines_per_object
 
-                    data = list()
-                    for k in range(lines_per_object):
-                        data.append(interpret_line(lines[l + k]))
+                    if version in [29, 33] and key == 'transformer':
+                        # as you know the PSS/e raw format is nuts, that is why for v29
+                        # the transformers may have 4 or 5 lines to define them
+                        if (l + 1) < len(lines):
+                            dta = lines[l+1].split(',')
+                            if len(dta) > 3:
+                                # 3 - windings
+                                lines_per_object2 = 5
+                            else:
+                                # 2-windings
+                                lines_per_object2 = 4
 
-                    # pick the line that matches the object and split it by line returns \n
-                    # object_lines = line.split('\n')
+                    if ',' in lines[l]:
+                        data = list()
+                        for k in range(lines_per_object2):
+                            data.append(interpret_line(lines[l + k]))
 
-                    # interpret each line of the object and store into data
-                    # data is a vector of vectors with data definitions
-                    # for the buses, branches, loads etc. data contains 1 vector,
-                    # for the transformers data contains 4 vectors
-                    # data = [interpret_line(object_lines[k]) for k in range(lines_per_object)]
+                        # pick the line that matches the object and split it by line returns \n
+                        # object_lines = line.split('\n')
 
-                    # pass the data to the according object to assign it to the matching variables
-                    objects_list.append(ObjectT(data, version, logger))
+                        # interpret each line of the object and store into data
+                        # data is a vector of vectors with data definitions
+                        # for the buses, branches, loads etc. data contains 1 vector,
+                        # for the transformers data contains 4 vectors
+                        # data = [interpret_line(object_lines[k]) for k in range(lines_per_object)]
 
-                else:
-                    logger.append('SKIP:' + lines[l])
+                        # pass the data to the according object to assign it to the matching variables
+                        objects_list.append(ObjectT(data, version, logger))
+
+                    else:
+                        logger.append('Skipped:' + lines[l])
+
+                    # add lines
+                    l += lines_per_object2
+
+            else:
+                logger.append('"' + key + '" is not in the data')
+
+        # add logs for the non parsed objects
+        for key in sections_dict.keys():
+            if key not in meta_data.keys():
+                logger.append(key + ' is not implemented in the parser.')
 
         return grid, logger
 
 
 if __name__ == '__main__':
-    # file
-    # fname = 'IEEE57.RAW'
-    fname = 'nordpool.raw'
+    import os
+    from GridCal.Engine.IO.file_handler import FileSave
 
-    parser = PSSeParser(fname)
-
+    folder = 'C:\\Users\\A487516\\Desktop\\Mozambique-Zambia\\Network files\\2022\\Study cases\\ACCC_1'
+    fname = 'ALL_MAX.raw'
+    input_file = os.path.join(folder, fname)
+    parser = PSSeParser(input_file)
 
     print('Logs')
     for l in parser.logger:
         print(l)
 
-    pass
+    xlsx_file = input_file + '.xlsx'
+    FileSave(circuit=parser.circuit,
+             file_name=xlsx_file).save()
+
+    print('Saved!')
+
+    # post process to get capacity by zone
+    import pandas as pd
+
+    xls = pd.ExcelFile(xlsx_file)
+    bus = pd.read_excel(xls, 'bus')
+    br = pd.read_excel(xls, 'branch')
+    gen = pd.read_excel(xls, 'generator')
+    xls.close()
+
+    gen_bus = pd.merge(bus, gen, left_on='name', right_on='bus')
+    power_per_area_and_zone = gen_bus.groupby(['area', 'zone']).sum()['Snom']
+
+    br['area_from'] = br['bus_from'].map(bus.set_index('name')['area'].drop_duplicates())
+    br['area_to'] = br['bus_to'].map(bus.set_index('name')['area'].drop_duplicates())
+
+    br['zone_from'] = br['bus_from'].map(bus.set_index('name')['zone'].drop_duplicates())
+    br['zone_to'] = br['bus_to'].map(bus.set_index('name')['zone'].drop_duplicates())
+
+    transmission_per_area = br.groupby(['area_from', 'area_to']).sum()['rate']
+    transmission_per_zone = br.groupby(['zone_from', 'zone_to']).sum()['rate']
+
+    xls2 = pd.ExcelWriter(input_file + '_process.xlsx')
+    power_per_area_and_zone.to_excel(xls2, sheet_name='power_per_ar_zo')
+    transmission_per_area.to_excel(xls2, sheet_name='transmission_per_area')
+    transmission_per_zone.to_excel(xls2, sheet_name='transmission_per_zone')
+    xls2.save()
+    print('Saved 2!')

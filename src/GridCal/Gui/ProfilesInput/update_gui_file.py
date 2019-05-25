@@ -3,7 +3,7 @@ Script to update correctly the main GUI (.py) file from the Qt design (.ui) file
 """
 from subprocess import call
 
-if __name__ == '__main':
+if __name__ == '__main__':
     # pyrcc5 icons.qrc -o icons_rc.py
     # pyuic5 -x MainWindow.ui -o MainWindow.py
 
@@ -11,11 +11,10 @@ if __name__ == '__main':
     filename_ui = 'gui.ui'
 
     # update icon/images resources
-    call(['pyrcc5', 'icons.qrc', '-o', 'icons_rc.py'])
+    call(['pyside2-rcc', 'icons.qrc', '-o', 'icons_rc.py'])
 
     # update ui handler file
-    call(['pyuic5', '-x', filename_ui, '-o', filename])
-
+    call(['pyside2-uic', '-x', filename_ui, '-o', filename])
 
     # replace annoying text import
     # Read in the file
