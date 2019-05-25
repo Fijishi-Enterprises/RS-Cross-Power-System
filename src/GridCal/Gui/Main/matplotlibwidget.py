@@ -106,7 +106,7 @@ class MplCanvas(FigureCanvas):
             self.zoom_x_limits = [xdata - new_width * (1-relx), xdata + new_width * relx]
             self.zoom_y_limits = [ydata - new_height * (1-rely), ydata + new_height * rely]
 
-            ax.set_xlim(self.zoom_x_limits )
+            ax.set_xlim(self.zoom_x_limits)
             ax.set_ylim(self.zoom_y_limits)
             ax.figure.canvas.draw()
 
