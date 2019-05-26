@@ -19,12 +19,12 @@ from GridCal.Engine.Devices.meta_devices import EditableDevice, DeviceType, GCPr
 
 class SequenceLineType(EditableDevice):
 
-    def __init__(self, name='SequenceLine', rating=1,
-                 R=0, X=0, G=0, B=0, R0=0, X0=0, G0=0, B0=0, tpe=BranchType.Line):
+    def __init__(self, name='SequenceLine', rating=1, R=0, X=0, G=0, B=0, R0=0, X0=0, G0=0, B0=0,
+                 R2=0, X2=0, G2=0, B2=0):
         """
         Constructor
-        :param name: name of the model
-        :param rating: Line rating in kA
+        :param name: name of the device
+        :param rating: rating in kA
         :param R: Resistance of positive sequence in Ohm/km
         :param X: Reactance of positive sequence in Ohm/km
         :param G: Conductance of positive sequence in Ohm/km
@@ -33,34 +33,46 @@ class SequenceLineType(EditableDevice):
         :param X0: Reactance of zero sequence in Ohm/km
         :param G0: Conductance of zero sequence in Ohm/km
         :param B0: Susceptance of zero sequence in Ohm/km
+        :param R2: Resistance of negative sequence in Ohm/km
+        :param X2: Reactance of negative sequence in Ohm/km
+        :param G2: Conductance of negative sequence in Ohm/km
+        :param B2: Susceptance of negative sequence in Ohm/km
         """
-
         EditableDevice.__init__(self,
                                 name=name,
                                 active=True,
-                                device_type=DeviceType.SequenceLineDevice,
+                                device_type=DeviceType.UnderGroundLineDevice,
                                 editable_headers={'name': GCProp('', str, "Name of the line template"),
-                                                  'rating': GCProp('kA', float, "Current rating of the line"),
+                                                  'rating': GCProp('kA', float, "Current rating of the cable"),
                                                   'R': GCProp('Ohm/km', float, "Positive-sequence "
-                                                              "resistance per km"),
+                                                                               "resistance per km"),
                                                   'X': GCProp('Ohm/km', float, "Positive-sequence "
-                                                              "reactance per km"),
+                                                                               "reactance per km"),
                                                   'G': GCProp('S/km', float, "Positive-sequence "
-                                                              "shunt conductance per km"),
+                                                                             "shunt conductance per km"),
                                                   'B': GCProp('S/km', float, "Positive-sequence "
-                                                              "shunt susceptance per km"),
+                                                                             "shunt susceptance per km"),
                                                   'R0': GCProp('Ohm/km', float, "Zero-sequence "
-                                                               "resistance per km"),
+                                                                                "resistance per km"),
                                                   'X0': GCProp('Ohm/km', float, "Zero-sequence "
-                                                               "reactance per km"),
+                                                                                "reactance per km"),
                                                   'G0': GCProp('S/km', float, "Zero-sequence "
-                                                               "shunt conductance per km"),
+                                                                              "shunt conductance per km"),
                                                   'B0': GCProp('S/km', float, "Zero-sequence "
-                                                               "shunt susceptance per km")},
+                                                                              "shunt susceptance per km"),
+                                                  'R2': GCProp('Ohm/km', float, "Negative-sequence "
+                                                                                "resistance per km"),
+                                                  'X2': GCProp('Ohm/km', float, "Negative-sequence "
+                                                                                "reactance per km"),
+                                                  'G2': GCProp('S/km', float, "Negative-sequence "
+                                                                              "shunt conductance per km"),
+                                                  'B2': GCProp('S/km', float, "Negative-sequence "
+                                                                              "shunt susceptance per km")
+                                                  },
                                 non_editable_attributes=list(),
                                 properties_with_profile={})
 
-        self.tpe = tpe
+        self.tpe = BranchType.Line
 
         self.rating = rating
 
@@ -75,3 +87,7 @@ class SequenceLineType(EditableDevice):
         self.G0 = G0
         self.B0 = B0
 
+        self.R2 = R2
+        self.X2 = X2
+        self.G2 = G2
+        self.B2 = B2

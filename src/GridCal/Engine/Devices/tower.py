@@ -87,6 +87,14 @@ class Tower(EditableDevice):
         self.Gsh0 = 0.0
         self.Bsh0 = 0.0
 
+        # total series impedance (negative sequence)
+        self.R2 = 0.0
+        self.X2 = 0.0
+
+        # total shunt admittance (negative sequence)
+        self.Gsh2 = 0.0
+        self.Bsh2 = 0.0
+
         # current rating of the tower in kA
         self.rating = 0.0
 
@@ -289,6 +297,11 @@ class Tower(EditableDevice):
             self.X1 = self.z_seq[1, 1].imag
             self.Gsh1 = self.y_seq[1, 1].real
             self.Bsh1 = self.y_seq[1, 1].imag
+
+            self.R2 = self.z_seq[2, 2].real
+            self.X2 = self.z_seq[2, 2].imag
+            self.Gsh2 = self.y_seq[2, 2].real
+            self.Bsh2 = self.y_seq[2, 2].imag
         else:
             pass
 

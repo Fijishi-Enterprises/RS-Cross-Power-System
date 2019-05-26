@@ -4419,6 +4419,8 @@ points from time series</string>
    <addaction name="actionStorage_location_suggestion"/>
    <addaction name="actionGrid_Reduction"/>
    <addaction name="separator"/>
+   <addaction name="action3_phase_mode"/>
+   <addaction name="separator"/>
   </widget>
   <action name="actionLine">
    <property name="text">
@@ -4984,6 +4986,18 @@ points from time series</string>
    </property>
    <property name="text">
     <string>Save as</string>
+   </property>
+  </action>
+  <action name="action3_phase_mode">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/Icons/icons/3phase.svg</normaloff>:/Icons/icons/3phase.svg</iconset>
+   </property>
+   <property name="text">
+    <string>3-phase mode</string>
    </property>
   </action>
  </widget>

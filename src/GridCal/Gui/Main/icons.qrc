@@ -68,6 +68,7 @@
     <file>icons/grid_icon.svg</file>
     <file>icons/pf.svg</file>
     <file>icons/short_circuit.svg</file>
+    <file>icons/3phase.svg</file>
     <file>icons/stochastic_power_flow.svg</file>
     <file>icons/pf_ts.svg</file>
   </qresource>

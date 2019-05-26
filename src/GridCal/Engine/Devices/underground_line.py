@@ -19,7 +19,8 @@ from GridCal.Engine.Devices.meta_devices import EditableDevice, DeviceType, GCPr
 
 class UndergroundLineType(EditableDevice):
 
-    def __init__(self, name='UndergroundLine', rating=1, R=0, X=0, G=0, B=0, R0=0, X0=0, G0=0, B0=0):
+    def __init__(self, name='UndergroundLine', rating=1, R=0, X=0, G=0, B=0, R0=0, X0=0, G0=0, B0=0,
+                 R2=0, X2=0, G2=0, B2=0):
         """
         Constructor
         :param name: name of the device
@@ -32,7 +33,10 @@ class UndergroundLineType(EditableDevice):
         :param X0: Reactance of zero sequence in Ohm/km
         :param G0: Conductance of zero sequence in Ohm/km
         :param B0: Susceptance of zero sequence in Ohm/km
-        :param tpe:
+        :param R2: Resistance of negative sequence in Ohm/km
+        :param X2: Reactance of negative sequence in Ohm/km
+        :param G2: Conductance of negative sequence in Ohm/km
+        :param B2: Susceptance of negative sequence in Ohm/km
         """
         EditableDevice.__init__(self,
                                 name=name,
@@ -55,7 +59,16 @@ class UndergroundLineType(EditableDevice):
                                                   'G0': GCProp('S/km', float, "Zero-sequence "
                                                                               "shunt conductance per km"),
                                                   'B0': GCProp('S/km', float, "Zero-sequence "
-                                                                              "shunt susceptance per km")},
+                                                                              "shunt susceptance per km"),
+                                                  'R2': GCProp('Ohm/km', float, "Negative-sequence "
+                                                                                "resistance per km"),
+                                                  'X2': GCProp('Ohm/km', float, "Negative-sequence "
+                                                                                "reactance per km"),
+                                                  'G2': GCProp('S/km', float, "Negative-sequence "
+                                                                              "shunt conductance per km"),
+                                                  'B2': GCProp('S/km', float, "Negative-sequence "
+                                                                              "shunt susceptance per km")
+                                                  },
                                 non_editable_attributes=list(),
                                 properties_with_profile={})
 
@@ -73,6 +86,11 @@ class UndergroundLineType(EditableDevice):
         self.X0 = X0
         self.G0 = G0
         self.B0 = B0
+
+        self.R2 = R2
+        self.X2 = X2
+        self.G2 = G2
+        self.B2 = B2
 
     def z_series(self):
         """

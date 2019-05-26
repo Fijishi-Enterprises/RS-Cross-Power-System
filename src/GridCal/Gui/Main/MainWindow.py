@@ -3,7 +3,7 @@
 # Form implementation generated from reading ui file 'MainWindow.ui',
 # licensing of 'MainWindow.ui' applies.
 #
-# Created: Thu May 16 20:40:06 2019
+# Created: Sun May 26 21:48:47 2019
 #      by: pyside2-uic  running on PySide2 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -1178,27 +1178,24 @@ class Ui_mainWindow(object):
         self.tolerance_stochastic_spinBox.setMaximum(20)
         self.tolerance_stochastic_spinBox.setProperty("value", 3)
         self.tolerance_stochastic_spinBox.setObjectName("tolerance_stochastic_spinBox")
-        self.gridLayout_6.addWidget(self.tolerance_stochastic_spinBox, 6, 1, 1, 1)
+        self.gridLayout_6.addWidget(self.tolerance_stochastic_spinBox, 5, 1, 1, 1)
         self.max_iterations_stochastic_spinBox = QtWidgets.QSpinBox(self.frame_15)
         self.max_iterations_stochastic_spinBox.setMinimum(10)
         self.max_iterations_stochastic_spinBox.setMaximum(99999999)
         self.max_iterations_stochastic_spinBox.setProperty("value", 1000)
         self.max_iterations_stochastic_spinBox.setObjectName("max_iterations_stochastic_spinBox")
-        self.gridLayout_6.addWidget(self.max_iterations_stochastic_spinBox, 7, 1, 1, 1)
+        self.gridLayout_6.addWidget(self.max_iterations_stochastic_spinBox, 6, 1, 1, 1)
         self.label_13 = QtWidgets.QLabel(self.frame_15)
         self.label_13.setObjectName("label_13")
-        self.gridLayout_6.addWidget(self.label_13, 7, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.label_13, 6, 0, 1, 1)
         self.label_12 = QtWidgets.QLabel(self.frame_15)
         self.label_12.setObjectName("label_12")
-        self.gridLayout_6.addWidget(self.label_12, 6, 0, 1, 1)
-        self.group_by_comboBox = QtWidgets.QComboBox(self.frame_15)
-        self.group_by_comboBox.setObjectName("group_by_comboBox")
-        self.gridLayout_6.addWidget(self.group_by_comboBox, 4, 0, 1, 2)
+        self.gridLayout_6.addWidget(self.label_12, 5, 0, 1, 1)
         self.label_55 = QtWidgets.QLabel(self.frame_15)
         self.label_55.setObjectName("label_55")
         self.gridLayout_6.addWidget(self.label_55, 3, 0, 1, 1)
         spacerItem20 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.gridLayout_6.addItem(spacerItem20, 8, 0, 1, 1)
+        self.gridLayout_6.addItem(spacerItem20, 7, 0, 1, 1)
         self.label_14 = QtWidgets.QLabel(self.frame_15)
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(85, 87, 83))
@@ -1948,6 +1945,12 @@ class Ui_mainWindow(object):
         self.actionSave_as = QtWidgets.QAction(mainWindow)
         self.actionSave_as.setIcon(icon31)
         self.actionSave_as.setObjectName("actionSave_as")
+        self.action3_phase_mode = QtWidgets.QAction(mainWindow)
+        self.action3_phase_mode.setCheckable(True)
+        icon64 = QtGui.QIcon()
+        icon64.addPixmap(QtGui.QPixmap(":/Icons/icons/3phase.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.action3_phase_mode.setIcon(icon64)
+        self.action3_phase_mode.setObjectName("action3_phase_mode")
         self.menuProject.addAction(self.actionNew_project)
         self.menuProject.addAction(self.actionOpen_file)
         self.menuProject.addAction(self.actionSave)
@@ -2012,6 +2015,8 @@ class Ui_mainWindow(object):
         self.toolBar.addAction(self.actionAuto_rate_branches)
         self.toolBar.addAction(self.actionStorage_location_suggestion)
         self.toolBar.addAction(self.actionGrid_Reduction)
+        self.toolBar.addSeparator()
+        self.toolBar.addAction(self.action3_phase_mode)
         self.toolBar.addSeparator()
 
         self.retranslateUi(mainWindow)
@@ -2286,6 +2291,7 @@ class Ui_mainWindow(object):
         self.actionExport_all_results.setText(QtWidgets.QApplication.translate("mainWindow", "Export all results", None, -1))
         self.actionExport_all_results.setToolTip(QtWidgets.QApplication.translate("mainWindow", "Export all the results", None, -1))
         self.actionSave_as.setText(QtWidgets.QApplication.translate("mainWindow", "Save as", None, -1))
+        self.action3_phase_mode.setText(QtWidgets.QApplication.translate("mainWindow", "3-phase mode", None, -1))
 
 from .matplotlibwidget import MatplotlibWidget
 from .icons_rc import *

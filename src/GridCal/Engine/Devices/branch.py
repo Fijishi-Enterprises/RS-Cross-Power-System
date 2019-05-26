@@ -279,13 +279,32 @@ class Branch(EditableDevice):
 
         **name** (str, "Branch"): Name of the branch
 
-        **r** (float, 1e-20): Branch resistance in per unit
+        **r** (float, 1e-20): Branch positive sequence resistance in per unit
 
-        **x** (float, 1e-20): Branch reactance in per unit
+        **x** (float, 1e-20): Branch positive sequence reactance in per unit
 
-        **g** (float, 1e-20): Branch shunt conductance in per unit
+        **g** (float, 1e-20): Branch positive sequence shunt conductance in per unit
 
-        **b** (float, 1e-20): Branch shunt susceptance in per unit
+        **b** (float, 1e-20): Branch positive sequence shunt susceptance in per unit
+
+
+        **r0** (float, 1e-20): Branch zero sequence resistance in per unit
+
+        **x0** (float, 1e-20): Branch zero sequence reactance in per unit
+
+        **g0** (float, 1e-20): Branch zero sequence shunt conductance in per unit
+
+        **b0** (float, 1e-20): Branch zero sequence shunt susceptance in per unit
+
+
+        **r2** (float, 1e-20): Branch negative sequence resistance in per unit
+
+        **x2** (float, 1e-20): Branch negative sequence reactance in per unit
+
+        **g2** (float, 1e-20): Branch negative sequence shunt conductance in per unit
+
+        **b2** (float, 1e-20): Branch negative sequence shunt susceptance in per unit
+
 
         **rate** (float, 1.0): Branch rate in MVA
 
@@ -325,6 +344,7 @@ class Branch(EditableDevice):
     """
 
     def __init__(self, bus_from: Bus, bus_to: Bus, name='Branch', r=1e-20, x=1e-20, g=1e-20, b=1e-20,
+                 r0=1e-20, x0=1e-20, g0=1e-20, b0=1e-20, r2=1e-20, x2=1e-20, g2=1e-20, b2=1e-20,
                  rate=1.0, tap=1.0, shift_angle=0, active=True, tolerance=0,
                  mttf=0, mttr=0, r_fault=0.0, x_fault=0.0, fault_pos=0.5,
                  branch_type: BranchType = BranchType.Line, length=1, vset=1.0,
@@ -346,10 +366,21 @@ class Branch(EditableDevice):
                                                                  'used in reliability studies.'),
                                                   'mttr': GCProp('h', float, 'Mean time to recovery, '
                                                                  'used in reliability studies.'),
-                                                  'R': GCProp('p.u.', float, 'Total resistance.'),
-                                                  'X': GCProp('p.u.', float, 'Total reactance.'),
-                                                  'G': GCProp('p.u.', float, 'Total shunt conductance.'),
-                                                  'B': GCProp('p.u.', float, 'Total shunt susceptance.'),
+                                                  'R': GCProp('p.u.', float, 'Positive sequence total resistance.'),
+                                                  'X': GCProp('p.u.', float, 'Positive sequence total reactance.'),
+                                                  'G': GCProp('p.u.', float, 'Positive sequence total shunt conductance.'),
+                                                  'B': GCProp('p.u.', float, 'Positive sequence total shunt susceptance.'),
+
+                                                  'R0': GCProp('p.u.', float, 'Zero sequence total resistance.'),
+                                                  'X0': GCProp('p.u.', float, 'Zero sequence total reactance.'),
+                                                  'G0': GCProp('p.u.', float, 'Zero sequence total shunt conductance.'),
+                                                  'B0': GCProp('p.u.', float, 'Zero sequence total shunt susceptance.'),
+
+                                                  'R2': GCProp('p.u.', float, 'Negative sequence total resistance.'),
+                                                  'X2': GCProp('p.u.', float, 'Negative sequence total reactance.'),
+                                                  'G2': GCProp('p.u.', float, 'Negative sequence total shunt conductance.'),
+                                                  'B2': GCProp('p.u.', float, 'Negative sequence total shunt susceptance.'),
+
                                                   'tolerance': GCProp('%', float,
                                                                       'Tolerance expected for the impedance values\n'
                                                                       '7% is expected for transformers\n'
@@ -407,13 +438,28 @@ class Branch(EditableDevice):
         self.fault_pos = fault_pos
 
         # total impedance and admittance in p.u.
+        # positive sequence
         self.R = r
         self.X = x
         self.G = g
         self.B = b
 
-        self.mttf = mttf
+        # zero sequence
+        self.R0 = r0
+        self.X0 = x0
+        self.G0 = g0
+        self.B0 = b0
 
+        # negative sequence
+        self.R2 = r2
+        self.X2 = x2
+        self.G2 = g2
+        self.B2 = b2
+
+        self.Zabc = np.zeros((3, 3), dtype=complex)
+        self.Yabc = np.zeros((3, 3), dtype=complex)
+
+        self.mttf = mttf
         self.mttr = mttr
 
         # Conductor base and operating temperatures in ºC
@@ -459,6 +505,31 @@ class Branch(EditableDevice):
                      'reactance': BranchType.Reactance}
 
         self.inv_conv = {val: key for key, val in self.conv.items()}
+
+    def make_zy_from_sequence_components(self):
+        """
+        If there is no template from where to fill in the 3x3 matrices
+        make a guess by using the sequence components
+        """
+        z0 = complex(self.R0, self.X0)
+        z1 = complex(self.R, self.X)
+        z2 = complex(self.R2, self.X2)
+
+        y0 = complex(self.G0, self.B0)
+        y1 = complex(self.G, self.B)
+        y2 = complex(self.G2, self.B2)
+
+        a = np.exp(1j * np.pi * 2 / 3)
+        a2 = np.exp(-1j * np.pi * 2 / 3)
+
+        self.Zabc = np.array([[z0 + z1 + z2,            z0 + a * z1 + a2 * z2,  z0 + a2 * z1 + a * z2],
+                              [z0 + a2 * z1 + a * z2,   z0 + z1 + z2,           z0 + a * z1 + a2 * z2],
+                              [z0 + a * z1 + a2 * z2,   z0 + a2 * z1 + a * z2,  z0 + z1 + z2]])
+
+        self.Yabc = np.array([[y0 + y1 + y2,            y0 + a * y1 + a2 * y2,  y0 + a2 * y1 + a * y2],
+                              [y0 + a2 * y1 + a * y2,   y0 + y1 + y2,           y0 + a * y1 + a2 * y2],
+                              [y0 + a * y1 + a2 * y2,   y0 + a2 * y1 + a * y2,  y0 + y1 + y2]])
+
 
     @property
     def R_corrected(self):
@@ -586,7 +657,7 @@ class Branch(EditableDevice):
         else:
             return 1.0, 1.0
 
-    def apply_template(self, obj, Sbase, logger=list()):
+    def apply_template(self, template, Sbase, logger=list()):
         """
         Apply a branch template to this object
 
@@ -600,15 +671,15 @@ class Branch(EditableDevice):
 
         """
 
-        if type(obj) is TransformerType:
+        if type(template) is TransformerType:
 
             if self.branch_type == BranchType.Transformer:
 
                 # get the transformer impedance in the base of the transformer
-                z_series, zsh = obj.get_impedances()
+                z_series, zsh = template.get_impedances()
 
                 # Change the impedances to the system base
-                base_change = Sbase / obj.rating
+                base_change = Sbase / template.rating
                 z_series *= base_change
                 zsh *= base_change
 
@@ -623,78 +694,117 @@ class Branch(EditableDevice):
                 self.G = np.round(y_shunt.real, 6)
                 self.B = np.round(y_shunt.imag, 6)
 
-                self.rate = obj.rating
+                self.rate = template.rating
 
-                if obj != self.template:
-                    self.template = obj
+                if template != self.template:
+                    self.template = template
                     self.branch_type = BranchType.Transformer
             else:
                 raise Exception('You are trying to apply a transformer type to a non-transformer branch')
 
-        elif type(obj) is Tower:
+        elif type(template) is Tower:
 
             if self.branch_type == BranchType.Line:
+
                 Vn = self.bus_to.Vnom
                 Zbase = (Vn * Vn) / Sbase
                 Ybase = 1 / Zbase
 
-                z = obj.z_series() * self.length / Zbase
-                y = obj.y_shunt() * self.length / Ybase
+                self.R = template.R1 * self.length / Zbase
+                self.X = template.X1 * self.length / Zbase
+                self.G = template.Gsh1 * self.length / Ybase
+                self.B = template.Bsh1 * self.length / Ybase
 
-                self.R = np.round(z.real, 6)
-                self.X = np.round(z.imag, 6)
-                self.G = np.round(y.real, 6)
-                self.B = np.round(y.imag, 6)
+                self.R0 = template.R0 * self.length / Zbase
+                self.X0 = template.X0 * self.length / Zbase
+                self.G0 = template.Gsh0 * self.length / Ybase
+                self.B0 = template.Bsh0 * self.length / Ybase
+
+                self.R2 = template.R2 * self.length / Zbase
+                self.X2 = template.X2 * self.length / Zbase
+                self.G2 = template.Gsh2 * self.length / Ybase
+                self.B2 = template.Bsh2 * self.length / Ybase
+
+                # assign the 3x3 matrices
+                self.Zabc = template.z_abc * self.length / Zbase
+                self.Yabc = template.y_abc * self.length / Ybase
 
                 # get the rating in MVA = kA * kV
-                self.rate = obj.rating * Vn * SQRT3
+                self.rate = template.rating * Vn * SQRT3
 
-                if obj != self.template:
-                    self.template = obj
+                if template != self.template:
+                    self.template = template
                     self.branch_type = BranchType.Line
             else:
                 raise Exception('You are trying to apply an Overhead line type to a non-line branch')
 
-        elif type(obj) is UndergroundLineType:
+        elif type(template) is UndergroundLineType:
             Vn = self.bus_to.Vnom
             Zbase = (Vn * Vn) / Sbase
             Ybase = 1 / Zbase
 
-            z = obj.z_series() * self.length / Zbase
-            y = obj.y_shunt() * self.length / Ybase
+            self.R = template.R * self.length / Zbase
+            self.X = template.X * self.length / Zbase
+            self.G = template.G * self.length / Ybase
+            self.B = template.B * self.length / Ybase
 
-            self.R = np.round(z.real, 6)
-            self.X = np.round(z.imag, 6)
-            self.G = np.round(y.real, 6)
-            self.B = np.round(y.imag, 6)
+            self.R0 = template.R0 * self.length / Zbase
+            self.X0 = template.X0 * self.length / Zbase
+            self.G0 = template.G0 * self.length / Ybase
+            self.B0 = template.B0 * self.length / Ybase
+
+            self.R2 = template.R2 * self.length / Zbase
+            self.X2 = template.X2 * self.length / Zbase
+            self.G2 = template.G2 * self.length / Ybase
+            self.B2 = template.B2 * self.length / Ybase
 
             # get the rating in MVA = kA * kV
-            self.rate = obj.rating * Vn * SQRT3
+            self.rate = template.rating * Vn * SQRT3
 
-            if obj != self.template:
-                self.template = obj
+            # build the 3x3 matrices
+            self.make_zy_from_sequence_components()
+
+            if template != self.template:
+                self.template = template
                 self.branch_type = BranchType.Line
 
-        elif type(obj) is SequenceLineType:
+        elif type(template) is SequenceLineType:
 
             Vn = self.bus_to.Vnom
             Zbase = (Vn * Vn) / Sbase
             Ybase = 1 / Zbase
 
-            self.R = np.round(obj.R * self.length / Zbase, 6)
-            self.X = np.round(obj.X * self.length / Zbase, 6)
-            self.G = np.round(obj.G * self.length / Ybase, 6)
-            self.B = np.round(obj.B * self.length / Ybase, 6)
+            self.R = template.R * self.length / Zbase
+            self.X = template.X * self.length / Zbase
+            self.G = template.G * self.length / Ybase
+            self.B = template.B * self.length / Ybase
+
+            self.R0 = template.R0 * self.length / Zbase
+            self.X0 = template.X0 * self.length / Zbase
+            self.G0 = template.G0 * self.length / Ybase
+            self.B0 = template.B0 * self.length / Ybase
+
+            self.R2 = template.R2 * self.length / Zbase
+            self.X2 = template.X2 * self.length / Zbase
+            self.G2 = template.G2 * self.length / Ybase
+            self.B2 = template.B2 * self.length / Ybase
 
             # get the rating in MVA = kA * kV
-            self.rate = obj.rating * Vn * SQRT3
+            self.rate = template.rating * Vn * SQRT3
 
-            if obj != self.template:
-                self.template = obj
+            # build the 3x3 matrices
+            self.make_zy_from_sequence_components()
+
+            if template != self.template:
+                self.template = template
                 self.branch_type = BranchType.Line
-        elif type(obj) is BranchTemplate:
+
+        elif type(template) is BranchTemplate:
             # this is the default template that does nothing
-            pass
+
+            # build the 3x3 matrices
+            self.make_zy_from_sequence_components()
+
         else:
             logger.append(self.name + ' the object type template was not recognised')
 
