@@ -4960,6 +4960,10 @@ points from time series</string>
    </property>
   </action>
   <action name="actionOnline_documentation">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/Icons/icons/doc.svg</normaloff>:/Icons/icons/doc.svg</iconset>
+   </property>
    <property name="text">
     <string>Online documentation</string>
    </property>

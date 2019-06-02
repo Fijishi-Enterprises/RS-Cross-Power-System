@@ -19,45 +19,86 @@ class PandasModel(QtCore.QAbstractTableModel):
     Class to populate a Qt table view with a pandas data frame
     """
     def __init__(self, data, parent=None):
+        """
+
+        :param data:
+        :param parent:
+        """
         QtCore.QAbstractTableModel.__init__(self, parent)
         self._data = np.array(data.values)
         self._cols = data.columns
-        self.index = data.index.values
+        self._index = data.index.values
         self.r, self.c = np.shape(self._data)
         self.isDate = False
 
-        if len(self.index) > 0:
-            if isinstance(self.index[0], np.datetime64):
-                self.index = pd.to_datetime(self.index)
+        if len(self._index) > 0:
+            if isinstance(self._index[0], np.datetime64):
+                self._index = pd.to_datetime(self._index)
                 self.isDate = True
 
         self.formatter = lambda x: "%.2f" % x
 
     def rowCount(self, parent=None):
+        """
+
+        :param parent:
+        :return:
+        """
         return self.r
 
     def columnCount(self, parent=None):
+        """
+
+        :param parent:
+        :return:
+        """
         return self.c
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
+        """
+
+        :param index:
+        :param role:
+        :return:
+        """
         if index.isValid():
+
             if role == QtCore.Qt.DisplayRole:
+
                 # return self.formatter(self._data[index.row(), index.column()])
                 return str(self._data[index.row(), index.column()])
+
         return None
 
     def headerData(self, p_int, orientation, role):
+        """
+
+        :param p_int:
+        :param orientation:
+        :param role:
+        :return:
+        """
         if role == QtCore.Qt.DisplayRole:
+
             if orientation == QtCore.Qt.Horizontal:
                 return self._cols[p_int]
+
             elif orientation == QtCore.Qt.Vertical:
-                if self.index is None:
+
+                if self._index is None:
+
                     return p_int
+
                 else:
+
                     if self.isDate:
-                        return self.index[p_int].strftime('%Y/%m/%d  %H:%M.%S')
+
+                        return self._index[p_int].strftime('%Y/%m/%d  %H:%M.%S')
+
                     else:
-                        return str(self.index[p_int])
+
+                        return str(self._index[p_int])
+
         return None
 
 
@@ -227,20 +268,24 @@ class ProfileInputGUI(QtWidgets.QDialog):
         if len(filename) > 0:
 
             # select the sheet from the file
-            window = ExcelDialog(self, filename)
-            window.exec_()
-            sheet_index = window.excel_sheet
+            # window = ExcelDialog(self, filename)
+            # window.exec_()
+            # sheet_index = window.excel_sheet
+
+            sheet_index = excel_dialogue_show(filename)
 
             if sheet_index is not None:
                 # get the filename extension
                 name, file_extension = os.path.splitext(filename)
 
                 # Depending on the extension load the file
+                print('loading...', end='')
                 if file_extension == '.csv':
                     self.original_data_frame = pd.read_csv(filename, index_col=0)
 
                 elif file_extension in ['.xlsx', '.xls']:
                     self.original_data_frame = pd.read_excel(filename, sheet_name=sheet_index, index_col=0)
+                print('ok')
 
                 # try to format the data
                 try:

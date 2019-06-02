@@ -7,23 +7,25 @@ if __name__ == '__main__':
     # pyrcc5 icons.qrc -o icons_rc.py
     # pyuic5 -x MainWindow.ui -o MainWindow.py
 
-    filename = 'gui.py'
-    filename_ui = 'gui.ui'
+    filenames = ['gui.py', 'excel_sheet_selection.py']
+    filename_uis = ['gui.ui', 'excel_sheet_selection.ui']
 
-    # update icon/images resources
-    call(['pyside2-rcc', 'icons.qrc', '-o', 'icons_rc.py'])
+    for filename, filename_ui in zip(filenames, filename_uis):
 
-    # update ui handler file
-    call(['pyside2-uic', '-x', filename_ui, '-o', filename])
+        # update icon/images resources
+        call(['pyside2-rcc', 'icons.qrc', '-o', 'icons_rc.py'])
 
-    # replace annoying text import
-    # Read in the file
-    with open(filename, 'r') as file:
-        file_data = file.read()
+        # update ui handler file
+        call(['pyside2-uic', '-x', filename_ui, '-o', filename])
 
-    # Replace the target string
-    file_data = file_data.replace('import icons_rc', 'from .icons_rc import *')
+        # replace annoying text import
+        # Read in the file
+        with open(filename, 'r') as file:
+            file_data = file.read()
 
-    # Write the file out again
-    with open(filename, 'w') as file:
-        file.write(file_data)
+        # Replace the target string
+        file_data = file_data.replace('import icons_rc', 'from .icons_rc import *')
+
+        # Write the file out again
+        with open(filename, 'w') as file:
+            file.write(file_data)

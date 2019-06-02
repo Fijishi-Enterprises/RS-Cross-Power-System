@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="Icons">
+    <file>icons/doc.svg</file>
     <file>icons/SE_Listen.svg</file>
     <file>icons/SE.svg</file>
     <file>icons/measurement.svg</file>

@@ -3,7 +3,7 @@
 # Form implementation generated from reading ui file 'MainWindow.ui',
 # licensing of 'MainWindow.ui' applies.
 #
-# Created: Sun May 26 21:48:47 2019
+# Created: Tue May 28 20:01:05 2019
 #      by: pyside2-uic  running on PySide2 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -1936,20 +1936,23 @@ class Ui_mainWindow(object):
         self.actionLaunch_data_analysis_tool.setIcon(icon10)
         self.actionLaunch_data_analysis_tool.setObjectName("actionLaunch_data_analysis_tool")
         self.actionOnline_documentation = QtWidgets.QAction(mainWindow)
+        icon63 = QtGui.QIcon()
+        icon63.addPixmap(QtGui.QPixmap(":/Icons/icons/doc.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionOnline_documentation.setIcon(icon63)
         self.actionOnline_documentation.setObjectName("actionOnline_documentation")
         self.actionExport_all_results = QtWidgets.QAction(mainWindow)
-        icon63 = QtGui.QIcon()
-        icon63.addPixmap(QtGui.QPixmap(":/Icons/icons/export_pickle.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.actionExport_all_results.setIcon(icon63)
+        icon64 = QtGui.QIcon()
+        icon64.addPixmap(QtGui.QPixmap(":/Icons/icons/export_pickle.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionExport_all_results.setIcon(icon64)
         self.actionExport_all_results.setObjectName("actionExport_all_results")
         self.actionSave_as = QtWidgets.QAction(mainWindow)
         self.actionSave_as.setIcon(icon31)
         self.actionSave_as.setObjectName("actionSave_as")
         self.action3_phase_mode = QtWidgets.QAction(mainWindow)
         self.action3_phase_mode.setCheckable(True)
-        icon64 = QtGui.QIcon()
-        icon64.addPixmap(QtGui.QPixmap(":/Icons/icons/3phase.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.action3_phase_mode.setIcon(icon64)
+        icon65 = QtGui.QIcon()
+        icon65.addPixmap(QtGui.QPixmap(":/Icons/icons/3phase.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.action3_phase_mode.setIcon(icon65)
         self.action3_phase_mode.setObjectName("action3_phase_mode")
         self.menuProject.addAction(self.actionNew_project)
         self.menuProject.addAction(self.actionOpen_file)
