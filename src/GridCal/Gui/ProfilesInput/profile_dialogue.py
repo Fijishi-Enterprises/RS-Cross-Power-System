@@ -268,11 +268,9 @@ class ProfileInputGUI(QtWidgets.QDialog):
         if len(filename) > 0:
 
             # select the sheet from the file
-            # window = ExcelDialog(self, filename)
-            # window.exec_()
-            # sheet_index = window.excel_sheet
-
-            sheet_index = excel_dialogue_show(filename)
+            window = ExcelDialog(filename)
+            window.exec_()
+            sheet_index = window.excel_sheet
 
             if sheet_index is not None:
                 # get the filename extension
