@@ -49,9 +49,9 @@ class ExcelDialog(QtWidgets.QDialog):
         QtCore.QMetaObject.connectSlotsByName(self)
 
         # click
-        self.acceptButton.clicked.connect(self.accepted)
-        self.cancelButton.clicked.connect(self.rejected)
-        self.sheets_list.doubleClicked.connect(self.accepted)
+        self.acceptButton.clicked.connect(self.accepted_action)
+        self.cancelButton.clicked.connect(self.rejected_action)
+        self.sheets_list.doubleClicked.connect(self.accepted_action)
 
         self.excel_sheet = None
 
@@ -78,7 +78,7 @@ class ExcelDialog(QtWidgets.QDialog):
             if len(self.sheet_names) > 0:
                 self.excel_sheet = 0
 
-    def accepted(self):
+    def accepted_action(self):
         """
 
         :return:
@@ -89,7 +89,7 @@ class ExcelDialog(QtWidgets.QDialog):
 
         self.close()
 
-    def rejected(self):
+    def rejected_action(self):
         """
 
         :return:
