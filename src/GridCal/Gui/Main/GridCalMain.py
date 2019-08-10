@@ -69,6 +69,8 @@ except:
 
 __author__ = 'Santiago Peñate Vera'
 
+
+
 """
 This class is the handler of the main gui of GridCal.
 """
@@ -1016,10 +1018,13 @@ class MainGUI(QMainWindow):
         # files_types = ''
         # call dialog to select the file
 
-        filename, type_selected = QtWidgets.QFileDialog.getOpenFileName(parent=self,
-                                                                        caption='Open file',
-                                                                        directory=self.project_directory,
-                                                                        filter=files_types)
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+
+        filename, type_selected = QFileDialog.getOpenFileName(self,
+                                                              caption='Open file',
+                                                              filter=files_types,
+                                                              options=options)
 
         if len(filename) > 0:
 
@@ -1135,7 +1140,11 @@ class MainGUI(QMainWindow):
             # if the global file_name is empty, ask where to save
             fname = os.path.join(self.project_directory, self.grid_editor.name_label.text())
 
-            filename, type_selected = QFileDialog.getSaveFileName(self, 'Save file',  fname, files_types)
+            options = QFileDialog.Options()
+            options |= QFileDialog.DontUseNativeDialog
+
+            filename, type_selected = QFileDialog.getSaveFileName(self, 'Save file',  fname, files_types,
+                                                                  options=options)
 
             if filename != '':
 
