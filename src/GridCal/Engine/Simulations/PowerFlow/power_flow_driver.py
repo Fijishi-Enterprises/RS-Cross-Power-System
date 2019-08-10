@@ -14,11 +14,7 @@
 # along with GridCal.  If not, see <http://www.gnu.org/licenses/>.
 
 from enum import Enum
-from warnings import warn
-# from numpy import complex, zeros, conj, ndarray, delete, where, r_, maximum, array
-# from numpy import exp
 import numpy as np
-# from timeit import default_timer as timer
 from PySide2.QtCore import QRunnable
 
 
@@ -40,25 +36,25 @@ class SolverType(Enum):
     algorithms supported by **GridCal**.
     """
 
-    NR = 1
-    NRFD_XB = 2
-    NRFD_BX = 3
-    GAUSS = 4
-    DC = 5,
-    HELM = 6,
-    ZBUS = 7,
-    IWAMOTO = 8,
-    CONTINUATION_NR = 9,
-    HELMZ = 10,
-    LM = 11  # Levenberg-Marquardt
-    FASTDECOUPLED = 12,
-    LACPF = 13,
-    DC_OPF = 14,
-    AC_OPF = 15,
-    NRI = 16,
-    DYCORS_OPF = 17,
-    GA_OPF = 18,
-    NELDER_MEAD_OPF = 19
+    NR = 'Newton Raphson'
+    NRFD_XB = 'Fast decoupled XB'
+    NRFD_BX = 'Fast decoupled BX'
+    GAUSS = 'Gauss-Seidel'
+    DC = 'Linear DC'
+    HELM = 'Holomorphic Embedding'
+    ZBUS = 'Z-Gauss-Seidel'
+    IWAMOTO = 'Iwamoto-Newton-Raphson'
+    CONTINUATION_NR = 'Continuation-Newton-Raphson'
+    HELMZ = 'HELM-Z'
+    LM = 'Levenberg-Marquardt'
+    FASTDECOUPLED = 'Fast decoupled'
+    LACPF = 'Linear AC'
+    DC_OPF = 'Linear DC OPF'
+    AC_OPF = 'Linear AC OPF'
+    NRI = 'Newton-Raphson in current'
+    DYCORS_OPF = 'DYCORS OPF'
+    GA_OPF = 'Genetic Algorithm OPF'
+    NELDER_MEAD_OPF = 'Nelder Mead OPF'
 
 
 class ReactivePowerControlMode(Enum):
@@ -162,13 +158,13 @@ class ReactivePowerControlMode(Enum):
 class TapsControlMode(Enum):
     """
     The :ref:`TapsControlMode<taps_control>` offers 3 modes to control how
-    :ref:`transformers<transformer_type>`' :ref:`tap changer<tap_changer>` regulate
+    :ref:`transformers<transformer>`' :ref:`tap changer<tap_changer>` regulate
     voltage on their regulated :ref:`bus<bus>`:
 
-    **NoControl**: In this mode, the :ref:`transformers<transformer_type>` don't try to
+    **NoControl**: In this mode, the :ref:`transformers<transformer>` don't try to
     regulate the voltage at their :ref:`bus<bus>`.
 
-    **Direct**: In this mode, the :ref:`transformers<transformer_type>` try to regulate
+    **Direct**: In this mode, the :ref:`transformers<transformer>` try to regulate
     the voltage at their bus. **GridCal** does so by jumping straight to the tap that
     corresponds to the desired transformation ratio, or the highest or lowest tap if
     the desired ratio is outside of the tap range.
@@ -183,12 +179,12 @@ class TapsControlMode(Enum):
     **Iterative**: As mentioned above, the **Direct** control mode may not yield
     satisfying results in some isolated cases. The **Direct** control mode tries to
     jump to the final solution in a single or few iterations, but in grids where a
-    significant change of tap at one :ref:`transformer<transformer_type>` has a
-    significant impact on other :ref:`transformers<transformer_type>`, additional
+    significant change of tap at one :ref:`transformer<transformer>` has a
+    significant impact on other :ref:`transformers<transformer>`, additional
     iterations may be required to reach a satisfying solution.
 
     Instead of trying to jump to the final solution, the **Iterative** mode raises or
-    lowers each :ref:`transformer's<transformer_type>` tap incrementally.
+    lowers each :ref:`transformer's<transformer>` tap incrementally.
     """
 
     NoControl = "NoControl"
@@ -346,7 +342,6 @@ class PowerFlowMP:
 
             if len(pv) == 0:  # there are no pv neither -> blackout grid
 
-                warn('There are no slack nodes selected')
                 logger.append('There are no slack nodes selected')
 
             else:  # select the first PV generator as the slack
@@ -449,15 +444,14 @@ class PowerFlowMP:
 
         # Levenberg-Marquardt
         elif solver_type == SolverType.LM:
-            V0, converged, normF, Scalc, it, el = LevenbergMarquardtPF(
-                Ybus=Ybus,
-                Sbus=Sbus,
-                V0=V0,
-                Ibus=Ibus,
-                pv=pv,
-                pq=pq,
-                tol=tolerance,
-                max_it=max_iter)
+            V0, converged, normF, Scalc, it, el = LevenbergMarquardtPF(Ybus=Ybus,
+                                                                       Sbus=Sbus,
+                                                                       V0=V0,
+                                                                       Ibus=Ibus,
+                                                                       pv=pv,
+                                                                       pq=pq,
+                                                                       tol=tolerance,
+                                                                       max_it=max_iter)
 
         # Fast decoupled
         elif solver_type == SolverType.FASTDECOUPLED:
@@ -592,7 +586,6 @@ class PowerFlowMP:
                 Scalc = Sbus.copy()
                 any_q_control_issue = False
                 converged = True
-                warn('Not solving power flow because there is no slack bus')
                 self.logger.append('Not solving power flow because there is no slack bus')
             else:
 
@@ -722,7 +715,7 @@ class PowerFlowMP:
             print("Stabilized in {} iteration(s) (outer control loop)".format(outer_it))
 
         # Compute the branches power and the slack buses power
-        Sbranch, Ibranch, loading, losses, \
+        Sbranch, Ibranch, Vbranch, loading, losses, \
             flow_direction, Sbus = self.power_flow_post_process(calculation_inputs=circuit, V=voltage_solution)
 
         # voltage, Sbranch, loading, losses, error, converged, Qpv
@@ -730,6 +723,7 @@ class PowerFlowMP:
                                    voltage=voltage_solution,
                                    Sbranch=Sbranch,
                                    Ibranch=Ibranch,
+                                   Vbranch=Vbranch,
                                    loading=loading,
                                    losses=losses,
                                    flow_direction=flow_direction,
@@ -964,15 +958,20 @@ class PowerFlowMP:
 
         if not only_power:
             # Branches current, loading, etc
+            Vf = calculation_inputs.C_branch_bus_f * V
+            Vt = calculation_inputs.C_branch_bus_t * V
             If = calculation_inputs.Yf * V
             It = calculation_inputs.Yt * V
-            Sf = (calculation_inputs.C_branch_bus_f * V) * np.conj(If)
-            St = (calculation_inputs.C_branch_bus_t * V) * np.conj(It)
+            Sf = Vf * np.conj(If)
+            St = Vt * np.conj(It)
 
             # Branch losses in MVA
             losses = (Sf + St) * calculation_inputs.Sbase
 
             flow_direction = Sf.real / np.abs(Sf + 1e-20)
+
+            # branch voltage increment
+            Vbranch = Vf - Vt
 
             # Branch current in p.u.
             Ibranch = np.maximum(If, It)
@@ -983,12 +982,12 @@ class PowerFlowMP:
             # Branch loading in p.u.
             loading = Sbranch / (calculation_inputs.branch_rates + 1e-9)
 
-            return Sbranch, Ibranch, loading, losses, flow_direction, Sbus
+            return Sbranch, Ibranch, Vbranch, loading, losses, flow_direction, Sbus
 
         else:
             no_val = np.zeros(calculation_inputs.nbr, dtype=complex)
             flow_direction = np.ones(calculation_inputs.nbr, dtype=complex)
-            return no_val, no_val, no_val, no_val, flow_direction, Sbus
+            return no_val, no_val, no_val, no_val, no_val, flow_direction, Sbus
 
     @staticmethod
     def control_q_direct(V, Vset, Q, Qmax, Qmin, types, original_types, verbose):
@@ -1363,7 +1362,7 @@ class PowerFlowMP:
 
         Arguments:
 
-            **circuit** (:ref:`CalculationInputs<calc_inputs>`): CalculationInputs
+            **circuit** (:ref:`CalculationInputs<calculation_inputs>`): CalculationInputs
             instance
 
             **Vbus** (list): Initial voltage at each bus in complex per unit
@@ -1374,7 +1373,7 @@ class PowerFlowMP:
 
         Returns:
 
-            :ref:`PowerFlowResults<pf_results>` instance
+            :ref:`PowerFlowResults<power_flow_results>` instance
         """
 
         # Retry with another solver
@@ -1429,7 +1428,7 @@ class PowerFlowMP:
             solver_idx += 1
 
         if not worked:
-            warn('Did not converge, even after retry!, Error:', results.error)
+            self.logger.append('Did not converge, even after retry!, Error:' + str(results.error))
             return results
 
         else:
@@ -1448,13 +1447,11 @@ class PowerFlowMP:
 
             return results
 
-    def run_multi_island(self, numerical_circuit, calculation_inputs, Vbus, Sbus, Ibus):
+    def run_multi_island(self, calculation_inputs, Vbus, Sbus, Ibus):
         """
         Power flow execution for optimization purposes.
 
         Arguments:
-
-            **numerical_circuit**:
 
             **calculation_inputs**:
 
@@ -1494,7 +1491,6 @@ class PowerFlowMP:
                     results.apply_from_island(res, bus_original_idx, branch_original_idx)
 
                 else:
-                    warn('There are no slack nodes in the island ' + str(i))
                     self.logger.append('There are no slack nodes in the island ' + str(i))
         else:
 
@@ -1520,7 +1516,6 @@ class PowerFlowMP:
         # self.progress_signal.emit(0.0)
 
         # columns of the report
-        col = ['Method', 'Converged?', 'Error', 'Elapsed (s)', 'Iterations']
         self.convergence_reports.clear()
 
         # print('Compiling...', end='')
@@ -1543,8 +1538,6 @@ class PowerFlowMP:
                     # run circuit power flow
                     res = self.run_pf(calculation_input, Vbus, Sbus, Ibus)
 
-                    # bus_original_idx = numerical_circuit.islands[i]
-                    # branch_original_idx = numerical_circuit.island_branches[i]
                     bus_original_idx = calculation_input.original_bus_idx
                     branch_original_idx = calculation_input.original_branch_idx
 
@@ -1556,7 +1549,6 @@ class PowerFlowMP:
                     # # build the report
                     self.convergence_reports.append(res.get_report_dataframe())
                 else:
-                    warn('There are no slack nodes in the island ' + str(i))
                     self.logger.append('There are no slack nodes in the island ' + str(i))
         else:
 
@@ -1572,15 +1564,14 @@ class PowerFlowMP:
                 # build the report
                 self.convergence_reports.append(results.get_report_dataframe())
             else:
-                warn('There are no slack nodes')
                 self.logger.append('There are no slack nodes')
 
         self.last_V = results.voltage  # done inside single_power_flow
 
         # check the limits
-        sum_dev = results.check_limits(F=numerical_circuit.F, T=numerical_circuit.T,
-                                       Vmax=numerical_circuit.Vmax, Vmin=numerical_circuit.Vmin,
-                                       wo=1, wv1=1, wv2=1)
+        results.check_limits(F=numerical_circuit.F, T=numerical_circuit.T,
+                             Vmax=numerical_circuit.Vmax, Vmin=numerical_circuit.Vmin,
+                             wo=1, wv1=1, wv2=1)
 
         self.results = results
 

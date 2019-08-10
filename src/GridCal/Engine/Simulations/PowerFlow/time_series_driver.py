@@ -13,9 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with GridCal.  If not, see <http://www.gnu.org/licenses/>.
 
-import pickle as pkl
+import json
 import pandas as pd
 from numpy import complex, zeros, ones, array, zeros_like
+import numpy as np
 import multiprocessing
 from matplotlib import pyplot as plt
 
@@ -58,6 +59,8 @@ class TimeSeriesResults(PowerFlowResults):
 
             self.Ibranch = zeros((nt, m), dtype=complex)
 
+            self.Vbranch = zeros((nt, m), dtype=complex)
+
             self.loading = zeros((nt, m), dtype=complex)
 
             self.losses = zeros((nt, m), dtype=complex)
@@ -67,8 +70,6 @@ class TimeSeriesResults(PowerFlowResults):
             self.error = zeros(nt)
 
             self.converged = ones(nt, dtype=bool)  # guilty assumption
-
-            # self.Qpv = Qpv
 
             self.overloads = [None] * nt
 
@@ -93,6 +94,8 @@ class TimeSeriesResults(PowerFlowResults):
 
             self.Ibranch = None
 
+            self.Vbranch = None
+
             self.loading = None
 
             self.losses = None
@@ -102,8 +105,6 @@ class TimeSeriesResults(PowerFlowResults):
             self.error = None
 
             self.converged = None
-
-            # self.Qpv = Qpv
 
             self.overloads = None
 
@@ -119,13 +120,16 @@ class TimeSeriesResults(PowerFlowResults):
 
             self.buses_useful_for_storage = None
 
-        self.available_results = [ResultTypes.BusVoltage,
+        self.available_results = [ResultTypes.BusVoltageModule,
+                                  ResultTypes.BusVoltageAngle,
                                   ResultTypes.BusActivePower,
                                   ResultTypes.BusReactivePower,
                                   ResultTypes.BranchPower,
                                   ResultTypes.BranchCurrent,
                                   ResultTypes.BranchLoading,
                                   ResultTypes.BranchLosses,
+                                  ResultTypes.BranchVoltage,
+                                  ResultTypes.BranchAngles,
                                   ResultTypes.SimulationError]
 
     def set_at(self, t, results: PowerFlowResults):
@@ -143,6 +147,8 @@ class TimeSeriesResults(PowerFlowResults):
 
         self.Ibranch[t, :] = results.Ibranch
 
+        self.Vbranch[t, :] = results.Vbranch
+
         self.loading[t, :] = results.loading
 
         self.losses[t, :] = results.losses
@@ -152,8 +158,6 @@ class TimeSeriesResults(PowerFlowResults):
         self.error[t] = max(results.error)
 
         self.converged[t] = min(results.converged)
-
-        # self.Qpv = Qpv
 
         self.overloads[t] = results.overloads
 
@@ -204,6 +208,8 @@ class TimeSeriesResults(PowerFlowResults):
 
         self.Ibranch[:, br_idx] = results.Ibranch
 
+        self.Vbranch[:, br_idx] = results.Ibranch
+
         self.loading[:, br_idx] = results.loading
 
         self.losses[:, br_idx] = results.losses
@@ -220,21 +226,26 @@ class TimeSeriesResults(PowerFlowResults):
         Returns a dictionary with the results sorted in a dictionary
         :return: dictionary of 2D numpy arrays (probably of complex numbers)
         """
-        data = {'V': self.voltage,
-                'S': self.S,
-                'Sbr': self.Sbranch,
-                'Ibr': self.Ibranch,
-                'loading': self.loading,
-                'losses': self.losses}
+        data = {'Vm': np.abs(self.voltage).tolist(),
+                'Va': np.angle(self.voltage).tolist(),
+                'P': self.S.real.tolist(),
+                'Q': self.S.imag.tolist(),
+                'Sbr_real': self.Sbranch.real.tolist(),
+                'Sbr_imag': self.Sbranch.imag.tolist(),
+                'Ibr_real': self.Ibranch.real.tolist(),
+                'Ibr_imag': self.Ibranch.imag.tolist(),
+                'loading': np.abs(self.loading).tolist(),
+                'losses': np.abs(self.losses).tolist()}
         return data
 
     def save(self, fname):
         """
-        Export as pickle
+        Export as json
         """
 
         with open(fname, "wb") as output_file:
-            pkl.dump(self.get_results_dict(), output_file)
+            json_str = json.dumps(self.get_results_dict())
+            output_file.write(json_str)
 
     def analyze(self):
         """
@@ -275,9 +286,14 @@ class TimeSeriesResults(PowerFlowResults):
 
             labels = names[indices]
 
-            if result_type == ResultTypes.BusVoltage:
-                data = self.voltage[:, indices]
+            if result_type == ResultTypes.BusVoltageModule:
+                data = np.abs(self.voltage[:, indices])
                 y_label = '(p.u.)'
+                title = 'Bus voltage '
+
+            elif result_type == ResultTypes.BusVoltageAngle:
+                data = np.angle(self.voltage[:, indices], deg=True)
+                y_label = '(Deg)'
                 title = 'Bus voltage '
 
             elif result_type == ResultTypes.BusActivePower:
@@ -309,6 +325,16 @@ class TimeSeriesResults(PowerFlowResults):
                 data = self.losses[:, indices]
                 y_label = '(MVA)'
                 title = 'Branch losses'
+
+            elif result_type == ResultTypes.BranchVoltage:
+                data = np.abs(self.Vbranch[:, indices])
+                y_label = '(p.u.)'
+                title = result_type.value[0]
+
+            elif result_type == ResultTypes.BranchAngles:
+                data = np.angle(self.Vbranch[:, indices], deg=True)
+                y_label = '(deg)'
+                title = result_type.value[0]
 
             elif result_type == ResultTypes.BatteryPower:
                 data = zeros_like(self.losses[:, indices])
@@ -579,6 +605,8 @@ class TimeSeries(QThread):
                             Ysh = calculation_input.Ysh_prof[:, t]
                             I = calculation_input.Ibus_prof[:, t]
                             S = calculation_input.Sbus_prof[:, t]
+
+                            self.progress_text.emit('Time series at circuit ' + str(island_index) + '...')
 
                             # run power flow at the circuit
                             p = multiprocessing.Process(target=power_flow_worker, args=(t, self.options,

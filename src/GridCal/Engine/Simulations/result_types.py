@@ -26,6 +26,8 @@ class ResultTypes(Enum):
     BranchPower = 'Branch power', DeviceType.BranchDevice
     BranchCurrent = 'Branch current', DeviceType.BranchDevice
     BranchLoading = 'Branch loading', DeviceType.BranchDevice
+    BranchVoltage = 'Branch voltage drop', DeviceType.BranchDevice
+    BranchAngles = 'Branch voltage angles', DeviceType.BranchDevice
     BranchLosses = 'Branch losses', DeviceType.BranchDevice
     BatteryPower = 'Battery power', DeviceType.BatteryDevice
     BatteryEnergy = 'Battery energy', DeviceType.BatteryDevice
@@ -49,6 +51,7 @@ class ResultTypes(Enum):
     BusVoltageModule = 'Bus voltage module', DeviceType.BusDevice
     BusVoltageAngle = 'Bus voltage angle', DeviceType.BusDevice
     BusPower = 'Bus power', DeviceType.BusDevice
+    ShadowPrices = 'Bus shadow prices', DeviceType.BusDevice
     BranchOverloads = 'Branch overloads', DeviceType.BranchDevice
     LoadShedding = 'Load shedding', DeviceType.LoadDevice
     ControlledGeneratorShedding = 'Controlled generator shedding', DeviceType.GeneratorDevice

@@ -1,4 +1,9 @@
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/75e794c9bcfd49bda1721b9ba8f6c790)](https://app.codacy.com/app/SanPen/GridCal?utm_source=github.com&utm_medium=referral&utm_content=SanPen/GridCal&utm_campaign=Badge_Grade_Dashboard)
+[![Documentation Status](https://readthedocs.org/projects/gridcal/badge/?version=latest)](https://gridcal.readthedocs.io/en/latest/?badge=latest) [![Build Status](https://travis-ci.org/SanPen/GridCal.svg?branch=master)](https://travis-ci.org/SanPen/GridCal)
+
 ![](https://github.com/SanPen/GridCal/blob/master/pics/GridCal_banner.png)
+
+
 
 # What is this?
 
@@ -15,6 +20,7 @@ Try: `pip install GridCal`
 For more options, follow the
 [installation instructions](https://gridcal.readthedocs.io/en/latest/getting_started/install.html)
 from the project's documentation.
+
 
 # Execution
 
@@ -49,6 +55,12 @@ In an effort to ease the simulation and construction of grids, We have included 
 
 Examples are included in [Tutorials](https://github.com/SanPen/GridCal/tree/master/Tutorials) folder of the GitHub repository. In addition, the
 tests under [src/tests](https://github.com/SanPen/GridCal/tree/master/src/tests) may serve as valuable examples.
+
+# Testing GridCal
+
+    python3 -m venv venv
+    venv/bin/python -m pip install --upgrade -r requirements_venv.txt
+    venv/bin/python -m tox
 
 # Features overview
 
@@ -102,8 +114,14 @@ Some of the features you'll find already are:
 
 - Export the schematic in SVG and PNG formats.
 
-Visit the [Wiki](https://github.com/SanPen/GridCal/wiki) and the
-[check out the documentation](https://gridcal.readthedocs.io) to learn more and to
-get started.
+[Check out the documentation](https://gridcal.readthedocs.io) to learn more and to get started.
+
+# Citing GridCal
+
+If you need to cite GridCal, we now provide a DOI reference:
+
+[![DOI](https://www.zenodo.org/badge/49583206.svg)](https://www.zenodo.org/badge/latestdoi/49583206)
+
+# Contact
 
 Send feedback and requests to santiago.penate.vera@gmail.com.

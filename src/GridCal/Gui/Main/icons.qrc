@@ -1,6 +1,11 @@
 <RCC>
   <qresource prefix="Icons">
-    <file>icons/doc.svg</file>
+    <file>icons/delete3.svg</file>
+    <file>icons/highlight2.svg</file>
+    <file>icons/unhighlight.svg</file>
+    <file>icons/highlight.svg</file>
+    <file>icons/magnifying_glass2.svg</file>
+    <file>icons/delete2.svg</file>
     <file>icons/SE_Listen.svg</file>
     <file>icons/SE.svg</file>
     <file>icons/measurement.svg</file>
@@ -69,7 +74,6 @@
     <file>icons/grid_icon.svg</file>
     <file>icons/pf.svg</file>
     <file>icons/short_circuit.svg</file>
-    <file>icons/3phase.svg</file>
     <file>icons/stochastic_power_flow.svg</file>
     <file>icons/pf_ts.svg</file>
   </qresource>

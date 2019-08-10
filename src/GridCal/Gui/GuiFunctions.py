@@ -541,12 +541,12 @@ class ObjectsModel(QtCore.QAbstractTableModel):
                 delegate = ComboDelegate(self.parent, [True, False], ['True', 'False'])
                 F(i, delegate)
 
-            if tpe is BranchType:
+            elif tpe is BranchType:
                 conv = BranchTypeConverter(None)
                 delegate = ComboDelegate(self.parent, conv.values, conv.options)
                 F(i, delegate)
 
-            if tpe is BranchTemplate:
+            elif tpe is BranchTemplate:
                 F(i, None)
 
             elif tpe is float:
@@ -688,6 +688,8 @@ class ObjectsModel(QtCore.QAbstractTableModel):
                     setattr(self.objects[obj_idx], self.attributes[attr_idx], value)
             else:
                 pass  # the column cannot be edited
+
+        return True
 
     def attr_taken(self, attr, val):
         """
@@ -1033,9 +1035,10 @@ class ProfilesModel(QtCore.QAbstractTableModel):
         :return:
         """
         c = index.column()
+        r = index.row()
         if c not in self.non_editable_indices:
             profile_property = self.elements[c].properties_with_profile[self.magnitude]
-            getattr(self.elements[c], profile_property)[c] = value
+            getattr(self.elements[c], profile_property)[r] = value
 
             self.add_state(columns=[c], action_name='')
         else:

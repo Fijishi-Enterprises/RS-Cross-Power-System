@@ -23,7 +23,7 @@ from PIL.ImageQt import ImageQt
 
 from GridCal.Engine.Devices import *
 from GridCal.Gui.GuiFunctions import *
-from GridCal.Engine.Simulations.Topology.topology_driver import reduce_grid_brute
+from GridCal.Engine.Simulations.Topology.topology_driver import reduce_grid_brute, reduce_buses
 from GridCal.Engine.Core.multi_circuit import MultiCircuit
 '''
 Dependencies:
@@ -2063,9 +2063,10 @@ class BusGraphicItem(QGraphicsRectItem):
         Args:
             color: Qt Color ot the marker
         """
-        self.big_marker = QGraphicsEllipseItem(0, 0, 180, 180, parent=self)
-        self.big_marker.setBrush(color)
-        self.big_marker.setOpacity(0.5)
+        if self.big_marker is None:
+            self.big_marker = QGraphicsEllipseItem(0, 0, 180, 180, parent=self)
+            self.big_marker.setBrush(color)
+            self.big_marker.setOpacity(0.5)
 
     def delete_big_marker(self):
         """
@@ -2204,6 +2205,9 @@ class BusGraphicItem(QGraphicsRectItem):
         da = menu.addAction('Delete')
         da.triggered.connect(self.remove)
 
+        re = menu.addAction('Reduce')
+        re.triggered.connect(self.reduce)
+
         menu.addSeparator()
 
         al = menu.addAction('Add load')
@@ -2236,6 +2240,15 @@ class BusGraphicItem(QGraphicsRectItem):
     def delete_all_connections(self):
 
         self.terminal.remove_all_connections()
+
+    def reduce(self):
+        """
+        Reduce this bus
+        :return:
+        """
+        reduce_buses(self.diagramScene.circuit, [self.api_object])
+
+        self.remove()
 
     def remove(self):
         """

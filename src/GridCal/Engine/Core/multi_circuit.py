@@ -550,7 +550,7 @@ class MultiCircuit:
         matrices and vectors for calculation. This method returns the numerical
         circuit, but it also assigns it to **self.numerical_circuit**, which is used
         when the :ref:`MultiCircuit<multicircuit>` object is passed onto a
-        :ref:`driver<drivers>`, for example:
+        :ref:`simulation driver<gridcal_engine_simulations>`, for example:
 
         .. code:: ipython3
 
@@ -641,6 +641,7 @@ class MultiCircuit:
                 circuit.load_active[i_ld] = elm.active
                 circuit.load_mttf[i_ld] = elm.mttf
                 circuit.load_mttr[i_ld] = elm.mttr
+                circuit.load_cost[i_ld] = elm.Cost
 
                 circuit.load_a[i_ld] = elm.a
                 circuit.load_b[i_ld] = elm.b
@@ -651,6 +652,7 @@ class MultiCircuit:
                     circuit.load_current_profile[:, i_ld] = elm.Ir_prof + 1j * elm.Ii_prof
                     circuit.load_admittance_profile[:, i_ld] = elm.G_prof + 1j * elm.B_prof
                     circuit.load_active_prof[:, i_ld] = elm.active_prof
+                    circuit.load_cost_prof[:, i_ld] = elm.Cost_prof
 
                     circuit.load_a_profile[:, i_ld] = elm.a_prof
                     circuit.load_b_profile[:, i_ld] = elm.b_prof
@@ -698,6 +700,7 @@ class MultiCircuit:
                 circuit.generator_dispatchable[i_gen] = elm.enabled_dispatch
                 circuit.generator_mttf[i_gen] = elm.mttf
                 circuit.generator_mttr[i_gen] = elm.mttr
+                circuit.generator_cost[i_gen] = elm.Cost
 
                 circuit.generator_a[i_gen] = elm.a
                 circuit.generator_b[i_gen] = elm.b
@@ -706,8 +709,7 @@ class MultiCircuit:
                 if n_time > 0:
                     # power profile
                     if use_opf_vals:
-                        circuit.generator_power_profile[:, i_gen] = \
-                            opf_time_series_results.controlled_generator_power[:, i_gen]
+                        circuit.generator_power_profile[:, i_gen] = opf_time_series_results.controlled_generator_power[:, i_gen]
                     else:
                         circuit.generator_power_profile[:, i_gen] = elm.P_prof
 
@@ -722,6 +724,8 @@ class MultiCircuit:
                     circuit.generator_a_prof[:, i_gen] = elm.a_prof
                     circuit.generator_b_prof[:, i_gen] = elm.b_prof
                     circuit.generator_c_prof[:, i_gen] = elm.c_prof
+
+                    circuit.generator_cost_profile[:, i_gen] = elm.Cost_prof
 
                 circuit.C_gen_bus[i_gen, i] = 1
                 circuit.V0[i] *= elm.Vset
@@ -740,6 +744,7 @@ class MultiCircuit:
                 circuit.battery_dispatchable[i_batt] = elm.enabled_dispatch
                 circuit.battery_mttf[i_batt] = elm.mttf
                 circuit.battery_mttr[i_batt] = elm.mttr
+                circuit.battery_cost[i_batt] = elm.Cost
 
                 circuit.battery_pmin[i_batt] = elm.Pmin
                 circuit.battery_pmax[i_batt] = elm.Pmax
@@ -757,8 +762,7 @@ class MultiCircuit:
                 if n_time > 0:
                     # power profile
                     if use_opf_vals:
-                        circuit.battery_power_profile[:, i_batt] = \
-                            opf_time_series_results.battery_power[:, i_batt]
+                        circuit.battery_power_profile[:, i_batt] = opf_time_series_results.battery_power[:, i_batt]
                     else:
                         circuit.battery_power_profile[:, i_batt] = elm.P_prof
                     # Voltage profile
@@ -769,6 +773,8 @@ class MultiCircuit:
                     circuit.battery_c_prof[:, i_batt] = elm.c_prof
 
                 circuit.battery_active_prof[:, i_batt] = elm.active_prof
+
+                circuit.battery_cost_profile[:, i_batt] = elm.Cost_prof
 
                 circuit.C_batt_bus[i_batt, i] = 1
                 circuit.V0[i] *= elm.Vset
@@ -815,6 +821,7 @@ class MultiCircuit:
             circuit.branch_active[i] = branch.active
             circuit.br_mttf[i] = branch.mttf
             circuit.br_mttr[i] = branch.mttr
+            circuit.branch_cost[i] = branch.Cost
 
             # impedance and tap
             circuit.R[i] = branch.R
@@ -843,6 +850,7 @@ class MultiCircuit:
             if n_time > 0:
                 circuit.branch_active_prof[:, i] = branch.active_prof
                 circuit.temp_oper_prof[:, i] = branch.temp_oper_prof
+                circuit.branch_cost_profile[:, i] = branch.Cost_prof
 
             # switches
             if branch.branch_type == BranchType.Switch:
@@ -993,7 +1001,9 @@ class MultiCircuit:
                 self.branches.pop(i)
 
         # remove the bus itself
-        self.buses.remove(obj)
+        if obj in self.buses:
+            print('Deleted', obj.name)
+            self.buses.remove(obj)
 
     def add_branch(self, obj: Branch):
         """

@@ -24,16 +24,18 @@ from GridCal.Gui.Analysis.AnalysisDialogue import GridAnalysisGUI
 from GridCal.Gui.TowerBuilder.LineBuilderDialogue import TowerBuilderGUI
 from GridCal.Gui.GeneralDialogues import *
 from GridCal.Gui.GuiFunctions import *
+# from GridCal.Gui.Main.smart_search_dialogue import *
 
 # Engine imports
 # from GridCal.Engine.OptimizationDriver import *
 # from GridCal.Engine.StateEstimationDriver import *
+from GridCal.Engine.basic_structures import TimeGrouping, MIPSolvers
 from GridCal.Engine.Simulations.Stochastic.monte_carlo_driver import *
 from GridCal.Engine.Simulations.Stochastic.lhs_driver import *
 from GridCal.Engine.Simulations.PowerFlow.time_series_driver import *
 from GridCal.Engine.Simulations.Dynamics.transient_stability_driver import *
 from GridCal.Engine.Simulations.ContinuationPowerFlow.voltage_collapse_driver import *
-from GridCal.Engine.Simulations.Topology.topology_driver import TopologyReduction, TopologyReductionOptions
+from GridCal.Engine.Simulations.Topology.topology_driver import TopologyReduction, TopologyReductionOptions, reduce_buses
 from GridCal.Engine.Simulations.Topology.topology_driver import select_branches_to_reduce
 from GridCal.Engine.grid_analysis import TimeSeriesResultsAnalysis
 from GridCal.Engine.Devices import Tower, Wire, TransformerType, SequenceLineType, UndergroundLineType
@@ -51,6 +53,7 @@ import os.path
 import platform
 import sys
 import datetime
+import codecs
 from collections import OrderedDict
 from matplotlib.colors import LinearSegmentedColormap
 from multiprocessing import cpu_count
@@ -97,14 +100,14 @@ class MainGUI(QMainWindow):
 
         # solvers dictionary
         self.solvers_dict = OrderedDict()
-        self.solvers_dict['Newton-Raphson in power'] = SolverType.NR
-        self.solvers_dict['Newton-Raphson in current'] = SolverType.NRI
-        self.solvers_dict['Newton-Raphson-Iwamoto'] = SolverType.IWAMOTO
-        self.solvers_dict['Levenberg-Marquardt'] = SolverType.LM
-        self.solvers_dict['Fast-Decoupled'] = SolverType.FASTDECOUPLED
-        self.solvers_dict['Holomorphic embedding [HELM]'] = SolverType.HELM
-        self.solvers_dict['Linear AC approximation'] = SolverType.LACPF
-        self.solvers_dict['DC approximation'] = SolverType.DC
+        self.solvers_dict[SolverType.NR.value] = SolverType.NR
+        self.solvers_dict[SolverType.NRI.value] = SolverType.NRI
+        self.solvers_dict[SolverType.IWAMOTO.value] = SolverType.IWAMOTO
+        self.solvers_dict[SolverType.LM.value] = SolverType.LM
+        self.solvers_dict[SolverType.FASTDECOUPLED.value] = SolverType.FASTDECOUPLED
+        self.solvers_dict[SolverType.HELM.value] = SolverType.HELM
+        self.solvers_dict[SolverType.LACPF.value] = SolverType.LACPF
+        self.solvers_dict[SolverType.DC.value] = SolverType.DC
 
         lst = list(self.solvers_dict.keys())
         mdl = get_list_model(lst)
@@ -156,14 +159,26 @@ class MainGUI(QMainWindow):
         mdl = get_list_model(BranchTypeConverter(BranchType.Branch).options, checks=True)
         self.ui.removeByTypeListView.setModel(mdl)
 
-        # solvers dictionary
+        # opf solvers dictionary
         self.lp_solvers_dict = OrderedDict()
-        self.lp_solvers_dict['DC OPF'] = SolverType.DC_OPF
-        self.lp_solvers_dict['AC OPF'] = SolverType.AC_OPF
-        # self.lp_solvers_dict['DYCORS OPF'] = SolverType.DYCORS_OPF
-        self.lp_solvers_dict['Nelder-Mead feasibility dispatch'] = SolverType.NELDER_MEAD_OPF
-
+        self.lp_solvers_dict[SolverType.DC_OPF.value] = SolverType.DC_OPF
+        self.lp_solvers_dict[SolverType.AC_OPF.value] = SolverType.AC_OPF
         self.ui.lpf_solver_comboBox.setModel(get_list_model(list(self.lp_solvers_dict.keys())))
+
+        self.opf_time_groups = OrderedDict()
+        self.opf_time_groups[TimeGrouping.NoGrouping.value] = TimeGrouping.NoGrouping
+        self.opf_time_groups[TimeGrouping.Monthly.value] = TimeGrouping.Monthly
+        self.opf_time_groups[TimeGrouping.Weekly.value] = TimeGrouping.Weekly
+        self.opf_time_groups[TimeGrouping.Daily.value] = TimeGrouping.Daily
+        self.opf_time_groups[TimeGrouping.Hourly.value] = TimeGrouping.Hourly
+        self.ui.opf_time_grouping_comboBox.setModel(get_list_model(list(self.opf_time_groups.keys())))
+
+        self.mip_solvers_dict = OrderedDict()
+        self.mip_solvers_dict[MIPSolvers.CBC.value] = MIPSolvers.CBC
+        self.mip_solvers_dict[MIPSolvers.CPLEX.value] = MIPSolvers.CPLEX
+        self.mip_solvers_dict[MIPSolvers.GUROBI.value] = MIPSolvers.GUROBI
+        self.mip_solvers_dict[MIPSolvers.XPRESS.value] = MIPSolvers.XPRESS
+        self.ui.mip_solver_comboBox.setModel(get_list_model(list(self.mip_solvers_dict.keys())))
 
         # voltage collapse mode (full, nose)
         self.ui.vc_stop_at_comboBox.setModel(get_list_model([VCStopAt.Nose.value, VCStopAt.Full.value]))
@@ -238,6 +253,9 @@ class MainGUI(QMainWindow):
 
         self.results_df = None
 
+        # list of all the objects of the selected type under the Objects tab
+        self.type_objects_list = list()
+
         self.buses_for_storage = None
 
         self.available_results_dict = None
@@ -258,7 +276,7 @@ class MainGUI(QMainWindow):
                                                   "plt: matplotlib\n"
                                                   "app: This instance of GridCal\n\n")
         # add the console widget to the user interface
-        self.ui.console_tab.layout().addWidget(self.console)
+        self.ui.main_console_tab.layout().addWidget(self.console)
 
         # push some variables to the console
         self.console.push_vars({"hlp": self.print_console_help,
@@ -325,6 +343,8 @@ class MainGUI(QMainWindow):
 
         self.ui.actionExport_all_results.triggered.connect(self.export_all)
 
+        self.ui.actionDelete_selected.triggered.connect(self.delete_selected_from_the_schematic)
+
         # Buttons
 
         self.ui.cancelButton.clicked.connect(self.set_cancel_state)
@@ -360,6 +380,8 @@ class MainGUI(QMainWindow):
         self.ui.exportSimulationDataButton.clicked.connect(self.export_simulation_data)
 
         self.ui.view_map_pushButton.clicked.connect(self.update_map)
+
+        self.ui.filter_pushButton.clicked.connect(self.smart_search)
 
         self.ui.location_search_pushButton.clicked.connect(self.search_location)
 
@@ -411,6 +433,16 @@ class MainGUI(QMainWindow):
 
         self.ui.redo_pushButton.clicked.connect(self.redo)
 
+        self.ui.delete_selected_objects_pushButton.clicked.connect(self.delete_selected_objects)
+
+        self.ui.delete_and_reduce_pushButton.clicked.connect(self.delete_and_reduce_selected_objects)
+
+        self.ui.highlight_selection_buses_pushButton.clicked.connect(self.highlight_selection_buses)
+
+        self.ui.clear_highlight_pushButton.clicked.connect(self.clear_big_bus_markers)
+
+        self.ui.highlight_by_property_pushButton.clicked.connect(self.highlight_based_on_property)
+
         # node size
         self.ui.actionBigger_nodes.triggered.connect(self.bigger_nodes)
 
@@ -450,6 +482,9 @@ class MainGUI(QMainWindow):
         self.ui.sbase_doubleSpinBox.valueChanged.connect(self.change_circuit_base)
 
         self.ui.explosion_factor_doubleSpinBox.valueChanged.connect(self.explosion_factor_change)
+
+        # line edit enter
+        self.ui.smart_search_lineEdit.returnPressed.connect(self.smart_search)
 
         ################################################################################################################
         # Color maps
@@ -789,9 +824,12 @@ class MainGUI(QMainWindow):
 
     def console_msg(self, msg_):
         """
-        Print in the console some message
-        Args:
-            msg_: Test message
+        Print some message in the console.
+
+        Arguments:
+
+            **msg_** (str): Message
+
         """
         dte = datetime.datetime.now().strftime("%b %d %Y %H:%M:%S")
         self.console.print_text('\n' + dte + '->' + msg_)
@@ -1245,7 +1283,7 @@ class MainGUI(QMainWindow):
         # set grid name
         self.circuit.name = self.grid_editor.name_label.text()
 
-        files_types = "Python pickle (*.pkl)"
+        files_types = "Json (*.json)"
 
         fname = os.path.join(self.project_directory, 'Results of ' + self.grid_editor.name_label.text())
 
@@ -1267,10 +1305,10 @@ class MainGUI(QMainWindow):
                 if self.monte_carlo.results is not None:
                     data['mc'] = self.monte_carlo.results.get_results_dict()
 
-            with open(fname, "wb") as output_file:
-                pkl.dump(data, output_file)
+            json.dump(data, codecs.open(filename, 'w', encoding='utf-8'),
+                      separators=(',', ':'), sort_keys=True, indent=4)
 
-            print('Check the pickle at', output_file)
+            print('Check the json at', filename)
 
     def export_simulation_data(self):
         """
@@ -1474,8 +1512,10 @@ class MainGUI(QMainWindow):
             mdl = ObjectsModel(elements, elm.editable_headers,
                                parent=self.ui.dataStructureTableView, editable=True,
                                non_editable_attributes=elm.non_editable_attributes)
-
+        self.type_objects_list = elements
         self.ui.dataStructureTableView.setModel(mdl)
+        self.ui.property_comboBox.clear()
+        self.ui.property_comboBox.addItems(mdl.attributes)
         self.view_templates(False)
 
     def fill_catalogue_tree_view(self):
@@ -2010,12 +2050,12 @@ class MainGUI(QMainWindow):
                 self.console_msg(msg_)
 
         else:
-            if len(self.power_flow.pf.logger) > 0:
-                dlg = LogsDialogue('Power flow', self.power_flow.pf.logger)
-                dlg.exec_()
-
             self.msg('There are no power flow results.\nIs there any slack bus or generator?', 'Power flow')
             QtGui.QGuiApplication.processEvents()
+
+        if len(self.power_flow.pf.logger) > 0:
+            dlg = LogsDialogue('Power flow', self.power_flow.pf.logger)
+            dlg.exec_()
 
         if len(self.stuff_running_now) == 0:
             self.UNLOCK()
@@ -2268,13 +2308,20 @@ class MainGUI(QMainWindow):
                     if self.optimal_power_flow_time_series is None:
                         if use_opf_vals:
                             use_opf_vals = False
-                            self.msg('There are not OPF time series, '
-                                     'therefore this operation will continue with the profile stored values.')
+                            self.msg('There are no OPF time series, '
+                                     'therefore this operation will not use OPF information.')
                             self.ui.actionUse_OPF_in_TS.setChecked(False)
 
                         opf_time_series_results = None
                     else:
-                        opf_time_series_results = self.optimal_power_flow_time_series.results
+                        if self.optimal_power_flow_time_series.results is not None:
+                            opf_time_series_results = self.optimal_power_flow_time_series.results
+                        else:
+                            self.msg('There are no OPF time series results, '
+                                     'therefore this operation will not use OPF information.')
+                            self.ui.actionUse_OPF_in_TS.setChecked(False)
+                            opf_time_series_results = None
+                            use_opf_vals = False
 
                     options = self.get_selected_power_flow_options()
                     start = self.ui.profile_start_slider.value()
@@ -2587,21 +2634,11 @@ class MainGUI(QMainWindow):
                 self.LOCK()
 
                 # get the power flow options from the GUI
-                load_shedding = self.ui.load_shedding_checkBox.isChecked()
-                realistic_results = self.ui.show_real_values_for_lp_checkBox.isChecked()
-                generation_shedding = self.ui.generation_shedding_CheckBox.isChecked()
                 solver = self.lp_solvers_dict[self.ui.lpf_solver_comboBox.currentText()]
-                control_batteries = self.ui.control_batteries_checkBox.isChecked()
-                load_shedding_w = self.ui.load_shedding_weight_spinBox.value()
-                gen_shedding_w = self.ui.generation_shedding_weight_spinBox.value()
+                mip_solver = self.mip_solvers_dict[self.ui.mip_solver_comboBox.currentText()]
                 pf_options = self.get_selected_power_flow_options()
-                options = OptimalPowerFlowOptions(load_shedding=load_shedding,
-                                                  generation_shedding=generation_shedding,
-                                                  solver=solver,
-                                                  realistic_results=realistic_results,
-                                                  control_batteries=control_batteries,
-                                                  load_shedding_weight=load_shedding_w,
-                                                  generation_shedding_weight=gen_shedding_w,
+                options = OptimalPowerFlowOptions(solver=solver,
+                                                  mip_solver=mip_solver,
                                                   power_flow_options=pf_options)
 
                 self.ui.progress_label.setText('Running optimal power flow...')
@@ -2609,15 +2646,12 @@ class MainGUI(QMainWindow):
                 # set power flow object instance
                 self.optimal_power_flow = OptimalPowerFlow(self.circuit, options)
 
-                # self.power_flow.progress_signal.connect(self.ui.progressBar.setValue)
-                # self.power_flow.progress_text.connect(self.ui.progress_label.setText)
-                # self.power_flow.done_signal.connect(self.UNLOCK)
-                # self.power_flow.done_signal.connect(self.post_power_flow)
+                self.optimal_power_flow.progress_signal.connect(self.ui.progressBar.setValue)
+                self.optimal_power_flow.progress_text.connect(self.ui.progress_label.setText)
+                self.optimal_power_flow.done_signal.connect(self.UNLOCK)
+                self.optimal_power_flow.done_signal.connect(self.post_opf)
 
-                # self.power_flow.run()
-                self.threadpool.start(self.optimal_power_flow)
-                self.threadpool.waitForDone()
-                self.post_opf()
+                self.optimal_power_flow.start()
 
             else:
                 self.msg('Another OPF is being run...')
@@ -2670,27 +2704,21 @@ class MainGUI(QMainWindow):
                     QtGui.QGuiApplication.processEvents()
 
                     # get the power flow options from the GUI
-                    load_shedding = self.ui.load_shedding_checkBox.isChecked()
-                    realistic_results = self.ui.show_real_values_for_lp_checkBox.isChecked()
-                    generation_shedding = self.ui.generation_shedding_CheckBox.isChecked()
                     solver = self.lp_solvers_dict[self.ui.lpf_solver_comboBox.currentText()]
-                    control_batteries = self.ui.control_batteries_checkBox.isChecked()
-                    load_shedding_w = self.ui.load_shedding_weight_spinBox.value()
-                    gen_shedding_w = self.ui.generation_shedding_weight_spinBox.value()
+                    mip_solver = self.mip_solvers_dict[self.ui.mip_solver_comboBox.currentText()]
+                    grouping = self.opf_time_groups[self.ui.opf_time_grouping_comboBox.currentText()]
                     pf_options = self.get_selected_power_flow_options()
-                    options = OptimalPowerFlowOptions(load_shedding=load_shedding,
-                                                      generation_shedding=generation_shedding,
-                                                      solver=solver,
-                                                      realistic_results=realistic_results,
-                                                      control_batteries=control_batteries,
-                                                      load_shedding_weight=load_shedding_w,
-                                                      generation_shedding_weight=gen_shedding_w,
+
+                    options = OptimalPowerFlowOptions(solver=solver,
+                                                      grouping=grouping,
+                                                      mip_solver=mip_solver,
                                                       power_flow_options=pf_options)
 
                     start = self.ui.profile_start_slider.value()
                     end = self.ui.profile_end_slider.value() + 1
 
                     # create the OPF time series instance
+                    # if non_sequential:
                     self.optimal_power_flow_time_series = OptimalPowerFlowTimeSeries(grid=self.circuit,
                                                                                      options=options,
                                                                                      start_=start,
@@ -2709,7 +2737,7 @@ class MainGUI(QMainWindow):
                     self.msg('There are no time series.\nLoad time series are needed for this simulation.')
 
             else:
-                self.msg('Another OPF time series is being run...')
+                self.msg('Another OPF time series is running already...')
 
         else:
             pass
@@ -2721,16 +2749,22 @@ class MainGUI(QMainWindow):
         """
         if self.optimal_power_flow_time_series is not None:
 
+            if len(self.optimal_power_flow_time_series.logger) > 0:
+                dlg = LogsDialogue('logger', self.optimal_power_flow_time_series.logger)
+                dlg.exec_()
+
+            # remove from the current simulations
             self.remove_simulation(SimulationTypes.OPFTimeSeries_run)
 
-            voltage = self.optimal_power_flow_time_series.results.voltage.max(axis=0)
-            loading = self.optimal_power_flow_time_series.results.loading.max(axis=0)
-            Sbranch = self.optimal_power_flow_time_series.results.Sbranch.max(axis=0)
+            if self.optimal_power_flow_time_series.results is not None:
+                voltage = self.optimal_power_flow_time_series.results.voltage.max(axis=0)
+                loading = self.optimal_power_flow_time_series.results.loading.max(axis=0)
+                Sbranch = self.optimal_power_flow_time_series.results.Sbranch.max(axis=0)
 
-            self.color_based_of_pf(s_bus=None, s_branch=Sbranch, voltages=voltage, loadings=loading,
-                                   types=self.optimal_power_flow_time_series.results.bus_types)
+                self.color_based_of_pf(s_bus=None, s_branch=Sbranch, voltages=voltage, loadings=loading,
+                                       types=self.optimal_power_flow_time_series.results.bus_types)
 
-            self.update_available_results()
+                self.update_available_results()
 
         else:
             pass
@@ -3329,40 +3363,69 @@ class MainGUI(QMainWindow):
             self.results_df = None
 
             if study == 'Power Flow':
-                self.results_df = self.power_flow.results.plot(result_type=study_type,
-                                                               ax=ax, indices=indices, names=names)
+                if self.power_flow.results is not None:
+                    self.results_df = self.power_flow.results.plot(result_type=study_type,
+                                                                   ax=ax, indices=indices, names=names)
+                else:
+                    self.msg('There seem to be no results :(')
 
             elif study == 'Time Series':
-                self.results_df = self.time_series.results.plot(result_type=study_type,
-                                                                ax=ax, indices=indices, names=names)
+                if self.time_series.results is not None:
+                    self.results_df = self.time_series.results.plot(result_type=study_type,
+                                                                    ax=ax, indices=indices, names=names)
+                else:
+                    self.msg('There seem to be no results :(')
 
             elif study == 'Voltage Stability':
-                self.results_df = self.voltage_stability.results.plot(result_type=study_type,
-                                                                      ax=ax, indices=indices, names=names)
+                if self.voltage_stability.results is not None:
+                    self.results_df = self.voltage_stability.results.plot(result_type=study_type,
+                                                                          ax=ax, indices=indices, names=names)
+                else:
+                    self.msg('There seem to be no results :(')
 
             elif study == 'Monte Carlo':
-                self.results_df = self.monte_carlo.results.plot(result_type=study_type,
-                                                                ax=ax, indices=indices, names=names)
+                if self.monte_carlo.results is not None:
+                    self.results_df = self.monte_carlo.results.plot(result_type=study_type,
+                                                                    ax=ax, indices=indices, names=names)
+                else:
+                    self.msg('There seem to be no results :(')
 
             elif study == 'Latin Hypercube':
-                self.results_df = self.latin_hypercube_sampling.results.plot(result_type=study_type,
-                                                                             ax=ax, indices=indices, names=names)
+                if self.latin_hypercube_sampling.results is not None:
+                    self.results_df = self.latin_hypercube_sampling.results.plot(result_type=study_type,
+                                                                                 ax=ax, indices=indices, names=names)
+                else:
+                    self.msg('There seem to be no results :(')
 
             elif study == 'Short Circuit':
-                self.results_df = self.short_circuit.results.plot(result_type=study_type,
-                                                                  ax=ax, indices=indices, names=names)
+                if self.short_circuit.results is not None:
+                    self.results_df = self.short_circuit.results.plot(result_type=study_type,
+                                                                      ax=ax, indices=indices, names=names)
+                else:
+                    self.msg('There seem to be no results :(')
 
             elif study == 'Optimal power flow':
-                self.results_df = self.optimal_power_flow.results.plot(result_type=study_type,
-                                                                       ax=ax, indices=indices, names=names)
+                if self.optimal_power_flow.results is not None:
+                    self.results_df = self.optimal_power_flow.results.plot(result_type=study_type,
+                                                                           ax=ax, indices=indices, names=names)
+                else:
+                    self.msg('There seem to be no results :(')
 
             elif study == 'Optimal power flow time series':
-                self.results_df = self.optimal_power_flow_time_series.results.plot(result_type=study_type,
-                                                                                   ax=ax, indices=indices, names=names)
+                if self.optimal_power_flow_time_series.results is not None:
+                    self.results_df = self.optimal_power_flow_time_series.results.plot(result_type=study_type,
+                                                                                       ax=ax, indices=indices,
+                                                                                       names=names)
+                else:
+                    self.msg('There seem to be no results :(')
 
             elif study == 'Transient stability':
-                self.results_df = self.transient_stability.results.plot(result_type=study_type,
-                                                                        ax=ax, indices=indices, names=names)
+                if self.transient_stability.results is not None:
+                    self.results_df = self.transient_stability.results.plot(result_type=study_type,
+                                                                            ax=ax, indices=indices,
+                                                                            names=names)
+                else:
+                    self.msg('There seem to be no results :(')
 
             if self.results_df is not None:
                 # set the table model
@@ -3916,6 +3979,423 @@ class MainGUI(QMainWindow):
         model = self.ui.profiles_tableView.model()
         if model is not None:
             model.redo()
+        else:
+            pass
+
+    def display_filter(self, elements):
+        """
+        Display a list of elements that comes from a filter
+        :param elements:
+        :return:
+        """
+        if len(elements) > 0:
+
+            elm = elements[0]
+
+            if elm.device_type in [DeviceType.BranchDevice, DeviceType.SequenceLineDevice,
+                                   DeviceType.UnderGroundLineDevice]:
+
+                mdl = BranchObjectModel(elements, elm.editable_headers,
+                                        parent=self.ui.dataStructureTableView, editable=True,
+                                        non_editable_attributes=elm.non_editable_attributes)
+            else:
+
+                mdl = ObjectsModel(elements, elm.editable_headers,
+                                   parent=self.ui.dataStructureTableView, editable=True,
+                                   non_editable_attributes=elm.non_editable_attributes)
+
+            self.ui.dataStructureTableView.setModel(mdl)
+
+        else:
+
+            self.ui.dataStructureTableView.setModel(None)
+
+    def smart_search(self):
+        """
+        Filter
+        """
+
+        if len(self.type_objects_list) > 0:
+            command = self.ui.smart_search_lineEdit.text().lower()
+            attr = self.ui.property_comboBox.currentText()
+
+            elm = self.type_objects_list[0]
+            tpe = elm.editable_headers[attr].tpe
+
+            filtered_objects = list()
+
+            if command.startswith('>') and not command.startswith('>='):
+                # greater than selection
+                args = command.replace('>', '').strip()
+
+                try:
+                    args = tpe(args)
+                except:
+                    self.msg('Could not parse the argument for the data type')
+                    return
+
+                filtered_objects = [x for x in self.type_objects_list if getattr(x, attr) > args]
+
+            elif command.startswith('<') and not command.startswith('<='):
+                # "less than" selection
+                args = command.replace('<', '').strip()
+
+                try:
+                    args = tpe(args)
+                except:
+                    self.msg('Could not parse the argument for the data type')
+                    return
+
+                filtered_objects = [x for x in self.type_objects_list if getattr(x, attr) < args]
+
+            elif command.startswith('>='):
+                # greater or equal than selection
+                args = command.replace('>=', '').strip()
+
+                try:
+                    args = tpe(args)
+                except:
+                    self.msg('Could not parse the argument for the data type')
+                    return
+
+                filtered_objects = [x for x in self.type_objects_list if getattr(x, attr) >= args]
+
+            elif command.startswith('<='):
+                # "less or equal than" selection
+                args = command.replace('<=', '').strip()
+
+                try:
+                    args = tpe(args)
+                except:
+                    self.msg('Could not parse the argument for the data type')
+                    return
+
+                filtered_objects = [x for x in self.type_objects_list if getattr(x, attr) <= args]
+
+            elif command.startswith('*'):
+                # "like" selection
+                args = command.replace('*', '').strip()
+
+                if tpe == str:
+
+                    try:
+                        args = tpe(args)
+                    except:
+                        self.msg('Could not parse the argument for the data type')
+                        return
+
+                    filtered_objects = [x for x in self.type_objects_list if args in getattr(x, attr).lower()]
+
+                elif tpe == Bus:
+                    filtered_objects = [x for x in self.type_objects_list if args in getattr(x, attr).name.lower()]
+
+                else:
+                    self.msg('This filter type is only valid for strings')
+
+            elif command.startswith('='):
+                # Exact match
+                args = command.replace('=', '').strip()
+
+                if tpe == str:
+
+                    try:
+                        args = tpe(args)
+                    except:
+                        self.msg('Could not parse the argument for the data type')
+                        return
+
+                    filtered_objects = [x for x in self.type_objects_list if getattr(x, attr).lower() == args]
+
+                elif tpe == Bus:
+                    filtered_objects = [x for x in self.type_objects_list if args == getattr(x, attr).name.lower()]
+
+                else:
+                    filtered_objects = [x for x in self.type_objects_list if getattr(x, attr) == args]
+
+            elif command.startswith('!='):
+                # Exact match
+                args = command.replace('==', '').strip()
+
+                if tpe == str:
+
+                    try:
+                        args = tpe(args)
+                    except:
+                        self.msg('Could not parse the argument for the data type')
+                        return
+
+                    filtered_objects = [x for x in self.type_objects_list if getattr(x, attr).lower() != args]
+
+                elif tpe == Bus:
+                    filtered_objects = [x for x in self.type_objects_list if args != getattr(x, attr).name.lower()]
+
+                else:
+                    filtered_objects = [x for x in self.type_objects_list if getattr(x, attr) != args]
+
+            else:
+                filtered_objects = self.type_objects_list
+
+            self.display_filter(filtered_objects)
+
+        else:
+            # nothing to search
+            pass
+
+    def delete_and_reduce_selected_objects(self):
+        """
+        Delete and reduce the buses
+        This function removes the buses but whenever a bus is removed, the devices connected to it
+        are inherited by the bus of higher voltage that is connected.
+        If the bus is isolated, those devices are lost.
+        """
+        model = self.ui.dataStructureTableView.model()
+
+        if model is not None:
+            sel_idx = self.ui.dataStructureTableView.selectedIndexes()
+            objects = model.objects
+
+            if len(objects) > 0:
+
+                if objects[0].device_type == DeviceType.BusDevice:
+
+                    if len(sel_idx) > 0:
+
+                        reply = QMessageBox.question(self, 'Message',
+                                                     'Are you sure that you want to delete and reduce the selected elements?',
+                                                     QMessageBox.Yes, QMessageBox.No)
+
+                        if reply == QMessageBox.Yes:
+
+                            # get the selected buses
+                            buses = list()
+                            for idx in sel_idx:
+                                buses.append(objects[idx.row()])
+
+                            buses_merged = reduce_buses(circuit=self.circuit, buses_to_reduce=buses)
+
+                            for bus in buses_merged:
+                                bus.graphic_obj.create_children_icons()
+                                bus.graphic_obj.arrange_children()
+
+                            self.create_schematic_from_api(explode_factor=1)
+
+                            self.clear_results()
+                        else:
+                            # selected QMessageBox.No
+                            pass
+
+                    else:
+                        # no selection
+                        pass
+
+                else:
+                    self.msg('This function is only applicable to buses')
+
+            else:
+                # no objects
+                pass
+        else:
+            pass
+
+    def delete_selected_objects(self):
+        """
+        Delete selection
+        """
+
+        model = self.ui.dataStructureTableView.model()
+
+        if model is not None:
+            sel_idx = self.ui.dataStructureTableView.selectedIndexes()
+            objects = model.objects
+
+            if len(sel_idx) > 0:
+
+                reply = QMessageBox.question(self, 'Message', 'Are you sure that you want to delete the selected elements?',
+                                             QMessageBox.Yes, QMessageBox.No)
+
+                if reply == QMessageBox.Yes:
+
+                    # get the unique rows
+                    unique = set()
+                    for idx in sel_idx:
+                        unique.add(idx.row())
+
+                    unique = list(unique)
+                    unique.sort(reverse=True)
+                    for r in unique:
+                        obj = objects.pop(r)
+
+                        if obj.graphic_obj is not None:
+                            # this is a more complete function than the circuit one because it removes the
+                            # graphical items too, and for loads and generators it deletes them properly
+                            obj.graphic_obj.remove()
+
+                    # update the view
+                    self.display_filter(objects)
+                else:
+                    pass
+            else:
+                self.msg('Select some cells')
+        else:
+            pass
+
+    def clear_big_bus_markers(self):
+        """
+        clears all the buses "big marker"
+        """
+        for bus in self.circuit.buses:
+            bus.graphic_obj.delete_big_marker()
+
+    def set_big_bus_marker(self, buses, color: QColor):
+        """
+        Set a big marker at the selected buses
+        :param buses: list of Bus objects
+        :param color: colour to use
+        """
+        for bus in buses:
+            bus.graphic_obj.add_big_marker(color=color)
+            bus.graphic_obj.setSelected(True)
+
+    def highlight_selection_buses(self):
+        """
+        Highlight and select the buses of the selected objects
+        """
+
+        model = self.ui.dataStructureTableView.model()
+
+        if model is not None:
+
+            sel_idx = self.ui.dataStructureTableView.selectedIndexes()
+            objects = model.objects
+
+            if len(objects) > 0:
+
+                if len(sel_idx) > 0:
+
+                    unique = set()
+                    for idx in sel_idx:
+                        unique.add(idx.row())
+                    sel_obj = list()
+                    for idx in unique:
+                        sel_obj.append(objects[idx])
+
+                    elm = objects[0]
+
+                    self.clear_big_bus_markers()
+                    color = QColor(55, 200, 171, 180)
+
+                    if elm.device_type == DeviceType.BusDevice:
+
+                        self.set_big_bus_marker(buses=sel_obj, color=color)
+
+                    elif elm.device_type == DeviceType.BranchDevice:
+                        buses = list()
+                        for br in sel_obj:
+                            buses.append(br.bus_from)
+                            buses.append(br.bus_to)
+                        self.set_big_bus_marker(buses=buses, color=color)
+
+                    else:
+                        buses = list()
+                        for elm in sel_obj:
+                            buses.append(elm.bus)
+                        self.set_big_bus_marker(buses=buses, color=color)
+
+                else:
+                    self.msg('Select some elements to highlight', 'Highlight')
+            else:
+                pass
+
+    def highlight_based_on_property(self):
+        """
+        Highlight and select the buses of the selected objects
+        """
+
+        model = self.ui.dataStructureTableView.model()
+
+        if model is not None:
+            objects = model.objects
+
+            if len(objects) > 0:
+
+                elm = objects[0]
+                attr = self.ui.property_comboBox.currentText()
+                tpe = elm.editable_headers[attr].tpe
+
+                if tpe in [float, int]:
+
+                    self.clear_big_bus_markers()
+
+                    if elm.device_type == DeviceType.BusDevice:
+                        # buses
+                        buses = objects
+                        values = [getattr(elm, attr) for elm in objects]
+
+                    elif elm.device_type == DeviceType.BranchDevice:
+                        # branches
+                        buses = list()
+                        values = list()
+                        for br in objects:
+                            buses.append(br.bus_from)
+                            buses.append(br.bus_to)
+                            val = getattr(br, attr)
+                            values.append(val)
+                            values.append(val)
+
+                    else:
+                        # loads, generators, etc...
+                        buses = [elm.bus for elm in objects]
+                        values = [getattr(elm, attr) for elm in objects]
+
+                    # build the color map
+                    seq = [(0.0, 'gray'),
+                           (0.5, 'orange'),
+                           (1, 'red')]
+                    cmap = LinearSegmentedColormap.from_list('lcolors', seq)
+                    mx = max(values)
+
+                    if mx != 0:
+                        # color based on the value
+                        for bus, value in zip(buses, values):
+                            r, g, b, a = cmap(value / mx)
+                            color = QColor(r * 255, g * 255, b * 255, a * 255)
+                            bus.graphic_obj.add_big_marker(color=color)
+                    else:
+                        self.msg('The maximum value is 0, so the coloring cannot be applied',
+                                 'Highlight based on property')
+                else:
+                    self.msg('The selected property must be of a numeric type',
+                             'Highlight based on property')
+
+            else:
+                pass
+
+    def delete_selected_from_the_schematic(self):
+        """
+        Prompt to delete the selected buses from the schematic
+        """
+        if len(self.circuit.buses) > 0:
+
+            # get the selected buses
+            selected = [bus for bus in self.circuit.buses if bus.graphic_obj.isSelected()]
+
+            if len(selected) > 0:
+                reply = QMessageBox.question(self, 'Delete',
+                                             'Are you sure that you want to delete the selected elements?',
+                                             QMessageBox.Yes, QMessageBox.No)
+
+                if reply == QMessageBox.Yes:
+
+                    # remove the buses (from the schematic and the circuit)
+                    for bus in selected:
+                        if bus.graphic_obj is not None:
+                            # this is a more complete function than the circuit one because it removes the
+                            # graphical items too, and for loads and generators it deletes them properly
+                            bus.graphic_obj.remove()
+                else:
+                    pass
+            else:
+                self.msg('Select some elements from the schematic', 'Delete buses')
         else:
             pass
 

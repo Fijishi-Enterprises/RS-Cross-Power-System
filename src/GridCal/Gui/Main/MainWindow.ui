@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1194</width>
+    <width>1231</width>
     <height>799</height>
    </rect>
   </property>
@@ -638,8 +638,30 @@
                  <enum>QFrame::Raised</enum>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_16">
-                 <item row="0" column="2">
-                  <spacer name="horizontalSpacer_3">
+                 <item row="0" column="4">
+                  <widget class="QLineEdit" name="smart_search_lineEdit">
+                   <property name="minimumSize">
+                    <size>
+                     <width>120</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="toolTip">
+                    <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Write search criteria. i.e.:&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&amp;gt;=20: Is greater or equal to 20&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;==bus1: Is exacty equal to bus1&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&amp;gt;Bus2: Is greater than Bus2&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;== 30: Is equal to 30&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;*bus : Contains the word bus&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="13">
+                  <spacer name="horizontalSpacer_6">
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -651,7 +673,21 @@
                    </property>
                   </spacer>
                  </item>
-                 <item row="0" column="4">
+                 <item row="0" column="12">
+                  <widget class="QPushButton" name="setValueToColumnButton">
+                   <property name="toolTip">
+                    <string>Set value to column</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="icons.qrc">
+                     <normaloff>:/Icons/icons/copy2down.svg</normaloff>:/Icons/icons/copy2down.svg</iconset>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="14">
                   <widget class="QPushButton" name="processTemplatesPushButton">
                    <property name="toolTip">
                     <string>Process templates</string>
@@ -665,10 +701,38 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="1" column="0" colspan="6">
+                 <item row="1" column="0" colspan="16">
                   <widget class="QTableView" name="dataStructureTableView"/>
                  </item>
-                 <item row="0" column="5">
+                 <item row="0" column="6">
+                  <widget class="QPushButton" name="delete_selected_objects_pushButton">
+                   <property name="toolTip">
+                    <string>Delete selection</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="icons.qrc">
+                     <normaloff>:/Icons/icons/delete.svg</normaloff>:/Icons/icons/delete.svg</iconset>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="7">
+                  <widget class="QPushButton" name="delete_and_reduce_pushButton">
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Delete and reduce.&lt;/p&gt;&lt;p&gt;Applicable to buses, it removes a bus and places its objects (loads, generators, etc.) into the next feasible bus of higher voltage.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="icons.qrc">
+                     <normaloff>:/Icons/icons/schematic.svg</normaloff>:/Icons/icons/schematic.svg</iconset>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="15">
                   <widget class="QPushButton" name="viewTemplatesButton">
                    <property name="toolTip">
                     <string>View templates catalogue</string>
@@ -682,17 +746,69 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="0" column="0">
-                  <widget class="QPushButton" name="setValueToColumnButton">
+                 <item row="0" column="5">
+                  <widget class="QPushButton" name="filter_pushButton">
                    <property name="toolTip">
-                    <string>Set value to column</string>
+                    <string>Smart filter</string>
                    </property>
                    <property name="text">
                     <string/>
                    </property>
                    <property name="icon">
                     <iconset resource="icons.qrc">
-                     <normaloff>:/Icons/icons/copy2down.svg</normaloff>:/Icons/icons/copy2down.svg</iconset>
+                     <normaloff>:/Icons/icons/magnifying_glass.svg</normaloff>:/Icons/icons/magnifying_glass.svg</iconset>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="0" colspan="3">
+                  <widget class="QComboBox" name="property_comboBox">
+                   <property name="minimumSize">
+                    <size>
+                     <width>120</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="8">
+                  <widget class="QPushButton" name="highlight_selection_buses_pushButton">
+                   <property name="toolTip">
+                    <string>Highlight the buses of the selected elements</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="icons.qrc">
+                     <normaloff>:/Icons/icons/highlight.svg</normaloff>:/Icons/icons/highlight.svg</iconset>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="9">
+                  <widget class="QPushButton" name="highlight_by_property_pushButton">
+                   <property name="toolTip">
+                    <string>Highlight the schematic buses based on the values of the selected property</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="icons.qrc">
+                     <normaloff>:/Icons/icons/highlight2.svg</normaloff>:/Icons/icons/highlight2.svg</iconset>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="10">
+                  <widget class="QPushButton" name="clear_highlight_pushButton">
+                   <property name="toolTip">
+                    <string>Clear the bus highlight</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="icons.qrc">
+                     <normaloff>:/Icons/icons/unhighlight.svg</normaloff>:/Icons/icons/unhighlight.svg</iconset>
                    </property>
                   </widget>
                  </item>
@@ -1685,7 +1801,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="console_tab">
+      <widget class="QWidget" name="main_console_tab">
        <attribute name="icon">
         <iconset resource="icons.qrc">
          <normaloff>:/Icons/icons/console.svg</normaloff>:/Icons/icons/console.svg</iconset>
@@ -1693,7 +1809,20 @@
        <attribute name="title">
         <string>Console</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_22"/>
+       <layout class="QVBoxLayout" name="verticalLayout_22">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+       </layout>
       </widget>
       <widget class="QWidget" name="SettingsTab">
        <attribute name="icon">
@@ -2359,100 +2488,57 @@
                 </widget>
                </item>
                <item>
-                <widget class="QLabel" name="label_42">
-                 <property name="text">
-                  <string>Solver</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QComboBox" name="lpf_solver_comboBox"/>
-               </item>
-               <item>
-                <widget class="QFrame" name="frame_41">
+                <widget class="QFrame" name="frame_2">
                  <property name="frameShape">
                   <enum>QFrame::NoFrame</enum>
                  </property>
                  <property name="frameShadow">
                   <enum>QFrame::Raised</enum>
                  </property>
-                 <layout class="QVBoxLayout" name="verticalLayout_38">
-                  <item>
-                   <widget class="QCheckBox" name="load_shedding_checkBox">
+                 <layout class="QGridLayout" name="gridLayout_3">
+                  <item row="0" column="1">
+                   <widget class="QComboBox" name="lpf_solver_comboBox">
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When activated, the loading is always below 100%.&lt;/p&gt;&lt;p&gt;This is achieved by decreasing the load amount.&lt;/p&gt;&lt;p&gt;This is also called load shedding.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="text">
-                     <string>Load shedding</string>
+                     <string>Choose the optimal power flow method</string>
                     </property>
                    </widget>
                   </item>
-                  <item>
-                   <widget class="QSpinBox" name="load_shedding_weight_spinBox">
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="label_4">
+                    <property name="text">
+                     <string>Time grouping</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_42">
+                    <property name="text">
+                     <string>Method</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QComboBox" name="opf_time_grouping_comboBox">
                     <property name="toolTip">
-                     <string>Load shedding weight in the optimization</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose the time grouping to possibly shorten the solution time.&lt;/p&gt;&lt;p&gt;This splits the time series by week, month, etc. and the subproblems are solved sequentially.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
-                    <property name="maximum">
-                     <number>999999999</number>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="label_10">
+                    <property name="text">
+                     <string>MIP solver</string>
                     </property>
-                    <property name="value">
-                     <number>10000</number>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="QComboBox" name="mip_solver_comboBox">
+                    <property name="toolTip">
+                     <string>Choose the external mixed integer programming solver</string>
                     </property>
                    </widget>
                   </item>
                  </layout>
-                </widget>
-               </item>
-               <item>
-                <widget class="QFrame" name="frame_42">
-                 <property name="frameShape">
-                  <enum>QFrame::NoFrame</enum>
-                 </property>
-                 <property name="frameShadow">
-                  <enum>QFrame::Raised</enum>
-                 </property>
-                 <layout class="QVBoxLayout" name="verticalLayout_39">
-                  <item>
-                   <widget class="QCheckBox" name="generation_shedding_CheckBox">
-                    <property name="text">
-                     <string>Generation shedding</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QSpinBox" name="generation_shedding_weight_spinBox">
-                    <property name="toolTip">
-                     <string>Generation shedding weight in the optimization</string>
-                    </property>
-                    <property name="maximum">
-                     <number>999999999</number>
-                    </property>
-                    <property name="value">
-                     <number>10000</number>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-               </item>
-               <item>
-                <widget class="QCheckBox" name="show_real_values_for_lp_checkBox">
-                 <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The linear program will produce a linearized solution for the loading that might not be the real associated loading values that correspond to the found voltage solution. This check allows you to see the real associated values.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                 </property>
-                 <property name="text">
-                  <string>Show the real associated values</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QCheckBox" name="control_batteries_checkBox">
-                 <property name="text">
-                  <string>Control batteries</string>
-                 </property>
-                 <property name="checked">
-                  <bool>true</bool>
-                 </property>
                 </widget>
                </item>
               </layout>
@@ -4283,7 +4369,7 @@ points from time series</string>
        <enum>QFrame::Raised</enum>
       </property>
       <layout class="QGridLayout" name="gridLayout_7">
-       <item row="1" column="2">
+       <item row="1" column="1">
         <widget class="QProgressBar" name="progressBar">
          <property name="value">
           <number>0</number>
@@ -4307,7 +4393,7 @@ points from time series</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="2">
+       <item row="0" column="1">
         <widget class="QLabel" name="progress_label">
          <property name="text">
           <string/>
@@ -4324,7 +4410,7 @@ points from time series</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1194</width>
+     <width>1231</width>
      <height>22</height>
     </rect>
    </property>
@@ -4413,13 +4499,12 @@ points from time series</string>
    <addaction name="actionCenter_view"/>
    <addaction name="actionAutoatic_layout"/>
    <addaction name="actionShow_map"/>
+   <addaction name="actionDelete_selected"/>
    <addaction name="separator"/>
    <addaction name="actionDetect_transformers"/>
    <addaction name="actionAuto_rate_branches"/>
    <addaction name="actionStorage_location_suggestion"/>
    <addaction name="actionGrid_Reduction"/>
-   <addaction name="separator"/>
-   <addaction name="action3_phase_mode"/>
    <addaction name="separator"/>
   </widget>
   <action name="actionLine">
@@ -4700,6 +4785,10 @@ points from time series</string>
    </property>
   </action>
   <action name="actionAbout">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/Program icon/GridCal_icon.svg</normaloff>:/Program icon/GridCal_icon.svg</iconset>
+   </property>
    <property name="text">
     <string>About</string>
    </property>
@@ -4962,7 +5051,7 @@ points from time series</string>
   <action name="actionOnline_documentation">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/Icons/icons/doc.svg</normaloff>:/Icons/icons/doc.svg</iconset>
+     <normaloff>:/Icons/icons/new.svg</normaloff>:/Icons/icons/new.svg</iconset>
    </property>
    <property name="text">
     <string>Online documentation</string>
@@ -4992,16 +5081,19 @@ points from time series</string>
     <string>Save as</string>
    </property>
   </action>
-  <action name="action3_phase_mode">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
+  <action name="actionDelete_selected">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/Icons/icons/3phase.svg</normaloff>:/Icons/icons/3phase.svg</iconset>
+     <normaloff>:/Icons/icons/delete3.svg</normaloff>:/Icons/icons/delete3.svg</iconset>
    </property>
    <property name="text">
-    <string>3-phase mode</string>
+    <string>Delete selected</string>
+   </property>
+   <property name="toolTip">
+    <string>Delete selected objects</string>
+   </property>
+   <property name="shortcut">
+    <string>Del</string>
    </property>
   </action>
  </widget>

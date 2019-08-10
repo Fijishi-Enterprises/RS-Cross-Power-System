@@ -36,12 +36,15 @@ there is a careful equilibrium between usability and performance.
 
 .. figure:: ../figures/CompilationProcess.png
     :alt: Compilation process
-    :width: 1004px
-    :height: 562px
-    :scale: 70%
 
     Objects compilation process
- 
+
+The simulations are handled by a driver. The driver accepts a MultiCircuit object as input.
+The driver has a `run` method that compiles the `MultiCircuit` into a `NumericalCircuit` and then
+the different topological partitions (islands) `CalculationInputs` are derived. Then the `run` method
+passes each island to the numerical simulation, gathering the numerical results for the island and
+merging the results into a general results object for all the islands. This is a powerful way to deal with topological changes.
+
 MultiCircuit
 ^^^^^^^^^^^^
 The multi-circuit, or asset manager is the main object in GridCal. 

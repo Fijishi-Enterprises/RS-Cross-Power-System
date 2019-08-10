@@ -221,17 +221,17 @@ class Branch(EditableDevice):
     The **Branch** class represents the connections between nodes (i.e.
     :ref:`buses<bus>`) in **GridCal**. A branch is an element (cable, line, capacitor,
     transformer, etc.) with an electrical impedance. The basic **Branch** class
-    includes basic electrical attributes for most passive elements, but other
-    :ref:`device types<device_types>` may be passed to the **Branch** constructor to
-    configure it as a specific type.
+    includes basic electrical attributes for most passive elements, but other device
+    types may be passed to the **Branch** constructor to configure it as a specific
+    type.
 
     For example, a transformer may be created with the following code:
 
     .. code:: ipython3
 
         from GridCal.Engine.Core.multi_circuit import MultiCircuit
-        from GridCal.Engine.devices import *
-        from GridCal.Engine.device_types import *
+        from GridCal.Engine.Devices import *
+        from GridCal.Engine.Devices.types import *
 
         # Create grid
         grid = MultiCircuit()
@@ -268,8 +268,8 @@ class Branch(EditableDevice):
         # Add transformer to grid
         grid.add_branch(X_C3)
 
-    Refer to the :ref:`TapChanger<tap_changer>` class for an example using a
-    voltage regulator.
+    Refer to the :class:`GridCal.Engine.Devices.branch.TapChanger` class for an example
+    using a voltage regulator.
 
     Arguments:
 
@@ -326,7 +326,7 @@ class Branch(EditableDevice):
 
         **fault_pos** (float, 0.0): Mid-line fault position in per unit (0.0 = `bus_from`, 0.5 = middle, 1.0 = `bus_to`)
 
-        **branch_type** (BranchType, BranchType.Line): Device type enumeration (ex.: :ref:`BranchType.Transformer<transformer_type>`)
+        **branch_type** (BranchType, BranchType.Line): Device type enumeration (ex.: :class:`GridCal.Engine.Devices.transformer.TransformerType`)
 
         **length** (float, 0.0): Length of the branch in km
 
@@ -405,6 +405,8 @@ class Branch(EditableDevice):
                                                                   'Annealed copper @ 20ºC: 0.00393,\n'
                                                                   'Aluminum @ 20ºC: 0.004308,\n'
                                                                   'Aluminum @ 75ºC: 0.00330'),
+                                                  'Cost': GCProp('e/MWh', float,
+                                                                 'Cost of overloads. Used in OPF.'),
                                                   'r_fault': GCProp('p.u.', float, 'Resistance of the mid-line fault.\n'
                                                                     'Used in short circuit studies.'),
                                                   'x_fault': GCProp('p.u.', float, 'Reactance of the mid-line fault.\n'
@@ -417,7 +419,8 @@ class Branch(EditableDevice):
                                                   'template': GCProp('', BranchTemplate, '')},
                                 non_editable_attributes=['bus_from', 'bus_to', 'template'],
                                 properties_with_profile={'active': 'active_prof',
-                                                         'temp_oper': 'temp_oper_prof'})
+                                                         'temp_oper': 'temp_oper_prof',
+                                                         'Cost': 'Cost_prof'})
 
         # connectivity
         self.bus_from = bus_from
@@ -461,6 +464,10 @@ class Branch(EditableDevice):
 
         self.mttf = mttf
         self.mttr = mttr
+
+        self.Cost = cost
+
+        self.Cost_prof = None
 
         # Conductor base and operating temperatures in ºC
         self.temp_base = temp_base
@@ -611,7 +618,7 @@ class Branch(EditableDevice):
 
         Argument:
 
-            **tap_changer** (:ref:`TapChanger<tap_changer>`): Tap changer object
+            **tap_changer** (:class:`GridCal.Engine.Devices.branch.TapChanger`): Tap changer object
 
         """
         self.tap_changer = tap_changer
@@ -625,7 +632,8 @@ class Branch(EditableDevice):
         """
         Get the branch virtual taps
 
-        The virtual taps generate when a transformer nominal winding voltage differs from the bus nominal voltage
+        The virtual taps generate when a transformer nominal winding voltage differs
+        from the bus nominal voltage.
 
         Returns:
 
@@ -815,15 +823,31 @@ class Branch(EditableDevice):
         """
         conv = BranchTypeConverter(None)
 
-        if self.template is None:
-            template = ''
-        else:
-            template = str(self.template)
+        # if self.template is None:
+        #     template = ''
+        # else:
+        #     template = str(self.template)
+        #
+        # return [self.name, self.bus_from.name, self.bus_to.name, self.active, self.rate, self.mttf, self.mttr,
+        #         self.R, self.X, self.G, self.B, self.tolerance, self.length, self.tap_module, self.angle,
+        #         self.bus_to_regulated, self.vset, self.temp_base, self.temp_oper, self.alpha, self.r_fault,
+        #         self.x_fault, self.fault_pos, conv.inv_conv[self.branch_type], template]
 
-        return [self.name, self.bus_from.name, self.bus_to.name, self.active, self.rate, self.mttf, self.mttr,
-                self.R, self.X, self.G, self.B, self.tolerance, self.length, self.tap_module, self.angle,
-                self.bus_to_regulated,  self.vset, self.temp_base, self.temp_oper, self.alpha, self.r_fault,
-                self.x_fault, self.fault_pos, conv.inv_conv[self.branch_type], template]
+        data = list()
+        for name, properties in self.editable_headers.items():
+            obj = getattr(self, name)
+
+            if properties.tpe == BranchType:
+                obj = conv.inv_conv[self.branch_type]
+            elif properties.tpe == BranchTemplate:
+                if obj is None:
+                    obj = ''
+                else:
+                    obj = str(obj)
+            elif properties.tpe not in [str, float, int, bool]:
+                obj = str(obj)
+            data.append(obj)
+        return data
 
     def get_json_dict(self, id, bus_dict):
         """

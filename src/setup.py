@@ -19,47 +19,60 @@ from GridCal.__version__ import __GridCal_VERSION__
 here = os.path.abspath(os.path.dirname(__file__))
 
 # Get the long description from the README file
-with open(os.path.join(here, '..', 'README.md'), encoding='utf-8') as f:
-    long_description = f.read()
+if os.path.exists(os.path.join(here, '..', 'README.md')):
+    with open(os.path.join(here, '..', 'README.md'), encoding='utf-8') as f:
+        long_description = f.read()
+else:
+    long_description = ''
 
-with open(os.path.join(here, '..', 'doc', 'about.rst'), encoding='utf-8') as f:
-    description = f.read()
+if os.path.exists(os.path.join(here, '..', 'doc', 'about.rst')):
+    with open(os.path.join(here, '..', 'doc', 'about.rst'), encoding='utf-8') as f:
+        description = f.read()
+else:
+    description = ''
 
-# create the file MANIFEST.in
-# f = open("MANIFEST.in", "w")
-# for root, dirs, files in os.walk(os.path.join('src', 'GridCal')):
-#     # path = root.split(os.sep)
-#     for file in files:
-#         print(len(root) * '---', file)
-#         if file.endswith('.bim') or 'docs_build' in root:
-#             line = 'include ' + os.path.join(root, file)
-#             f.write(line + '\n')
-# f.close()
 
 base_path = os.path.join('GridCal')
 
-packages = find_packages(where=base_path, exclude=['docs', 'test'])
-packages = [os.path.join(base_path, p) for p in packages]
+# packages = find_packages(where=base_path, exclude=['docs', 'test'])
+packages = find_packages(exclude=['docs', 'test', 'research', 'tests'])
+# packages = [os.path.join(p) for p in packages]
 
 
-dependencies = ["numpy>=1.14.0",
+package_data = {'GridCal': ['*.md'],
+                'GridCal.ThirdParty.pulp': ["AUTHORS", "LICENSE",
+                                            "pulp.cfg.linux",
+                                            "pulp.cfg.win",
+                                            "pulp.cfg.osx",
+                                            "LICENSE.CoinMP.txt",
+                                            "AUTHORS.CoinMP.txt",
+                                            "README.CoinMP.txt"],
+                'GridCal.ThirdParty.pulp.solverdir.cbc.linux.32': ['*', '*.*'],
+                'GridCal.ThirdParty.pulp.solverdir.cbc.linux.64': ['*', '*.*'],
+                'GridCal.ThirdParty.pulp.solverdir.cbc.win.32': ['*', '*.*'],
+                'GridCal.ThirdParty.pulp.solverdir.cbc.win.64': ['*', '*.*'],
+                'GridCal.ThirdParty.pulp.solverdir.cbc.osx.64': ['*', '*.*'],
+                }
+
+dependencies = ["PySide2>=5.11",
+                "numpy>=1.14.0",
                 "scipy>=1.0.0",
                 "networkx>=2.1",
                 "pandas>=0.22",
                 "xlwt>=1.3.0",
                 "xlrd>=1.1.0",
-                "PySide2>=5.11",
                 "matplotlib>=2.1.1",
                 "qtconsole>=4.3.1",
                 "pyDOE>=0.3.8",
                 "pySOT>=0.2.1",
                 "openpyxl>=2.4.9",
-                "pulp>=1.6.8",
+                # "pulp>=1.6.8",
                 "smopy>=0.0.6",
                 "chardet>=3.0.4",
                 "scikit-learn>=0.18",
                 "geopy>=1.16",
-                "pytest>=3.8"]
+                "pytest>=3.8",
+                "h5py>=2.9.0"]
 
 # Arguments marked as "Required" below must be included for upload to PyPI.
 # Fields marked as "Optional" may be commented out.
@@ -204,7 +217,7 @@ setup(
     #
     # If using Python 2.6 or earlier, then these have to be included in
     # MANIFEST.in as well.
-    # package_data=package_data,
+    package_data=package_data,
 
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages. See:

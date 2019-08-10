@@ -72,7 +72,7 @@ class Load(EditableDevice):
 
     """
 
-    def __init__(self, name='Load', G=0.0, B=0.0, Ir=0.0, Ii=0.0, P=0.0, Q=0.0, a=1.0, b=1.0, c=1.0,
+    def __init__(self, name='Load', G=0.0, B=0.0, Ir=0.0, Ii=0.0, P=0.0, Q=0.0, a=1.0, b=1.0, c=1.0, cost=0.0,
                  G_prof=None, B_prof=None, Ir_prof=None, Ii_prof=None, P_prof=None, Q_prof=None,
                  a_prof=None, b_prof=None, c_prof=None,  active=True, mttf=0.0, mttr=0.0):
 
@@ -100,7 +100,9 @@ class Load(EditableDevice):
                                                    'b': GCProp('p.u.', float,
                                                                'phase B share of the declared power'),
                                                    'c': GCProp('p.u.', float,
-                                                               'phase C share of the declared power')
+                                                               'phase C share of the declared power'),
+                                                   'Cost': GCProp('e/MWh', float,
+                                                                  'Cost of not served energy. Used in OPF.')
                                                   },
                                 non_editable_attributes=list(),
                                 properties_with_profile={'P': 'P_prof',
@@ -111,7 +113,8 @@ class Load(EditableDevice):
                                                          'B': 'B_prof',
                                                          'a': 'a_prof',
                                                          'b': 'b_prof',
-                                                         'c': 'c_prof'})
+                                                         'c': 'c_prof',
+                                                         'Cost': 'Cost_prof'})
 
         # connection bus
         self.bus = None
@@ -122,6 +125,11 @@ class Load(EditableDevice):
         # mean time to repair
         self.mttr = mttr
 
+        self.Cost = cost
+
+        self.Cost_prof = None
+
+        # Impedance in equivalent MVA
         # active and reactive admittance in MW and MVAr at v=1.0 p.u
         self.G = G
         self.B = B

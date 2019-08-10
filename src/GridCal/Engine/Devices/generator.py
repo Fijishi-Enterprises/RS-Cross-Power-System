@@ -14,16 +14,18 @@
 # along with GridCal.  If not, see <http://www.gnu.org/licenses/>.
 
 import pandas as pd
-import pulp
+
 import numpy as np
 from GridCal.Engine.Devices.meta_devices import EditableDevice, DeviceType, GCProp
 
 
 class Generator(EditableDevice):
     """
-    Voltage controlled generator. This generators supports several
-    :ref:`reactive power control modes<q_control>` to regulate the voltage on its
-    :ref:`bus` during :ref:`power flow simulations<pf_driver>`.
+    Voltage controlled generator. This generators supports several reactive power
+    control modes (see
+    :class:`GridCal.Engine.Simulations.PowerFlow.power_flow_driver.ReactivePowerControlMode`)
+    to regulate the voltage on its :ref:`bus` during
+    :ref:`power flow simulations<gridcal_engine_simulations_PowerFlow>`.
 
     Arguments:
 
@@ -84,6 +86,9 @@ class Generator(EditableDevice):
                  Qmin=-9999, Qmax=9999, Snom=9999, power_prof=None, power_factor_prof=None, vset_prof=None, active=True,
                  p_min=0.0, p_max=9999.0, op_cost=1.0, Sbase=100, enabled_dispatch=True, mttf=0.0, mttr=0.0,
                  a=1.0, b=1.0, c=1.0, a_prof=None, b_prof=None, c_prof=None):
+                 Qmin=-9999, Qmax=9999, Snom=9999, power_prof=None, power_factor_prof=None, vset_prof=None,
+                 Cost_prof=None, active=True,
+                 p_min=0.0, p_max=9999.0, op_cost=1.0, Sbase=100, enabled_dispatch=True, mttf=0.0, mttr=0.0):
 
         EditableDevice.__init__(self,
                                 name=name,
@@ -122,10 +127,11 @@ class Generator(EditableDevice):
                                 properties_with_profile={'P': 'P_prof',
                                                          'Pf': 'Pf_prof',
                                                          'Vset': 'Vset_prof',
+                                                         'Cost': 'Cost_prof',
                                                          'a': 'a_prof',
                                                          'b': 'b_prof',
                                                          'c': 'c_prof'})
-        
+
         # connection bus
         self.bus = None
 
@@ -187,6 +193,8 @@ class Generator(EditableDevice):
         self.b_prof = b_prof
         self.c_prof = c_prof
 
+        self.Cost_prof = Cost_prof
+
         # Dynamic vars
         # self.Ra = Ra
         # self.Xa = Xa
@@ -206,15 +214,6 @@ class Generator(EditableDevice):
 
         # system base power MVA
         self.Sbase = Sbase
-
-        # Linear problem generator dispatch power variable (in p.u.)
-        self.lp_name = self.type_name + '_' + self.name + str(id(self))
-
-        # variable to dispatch the power in a Linear program
-        self.LPVar_P = pulp.LpVariable(self.lp_name + '_P', self.Pmin / self.Sbase, self.Pmax / self.Sbase)
-
-        # list of variables of active power dispatch in a series of linear programs
-        self.LPVar_P_prof = None
 
     def copy(self):
         """
@@ -292,45 +291,4 @@ class Generator(EditableDevice):
                 'Pmin': self.Pmin,
                 'Pmax': self.Pmax,
                 'Cost': self.Cost}
-
-    def initialize_lp_vars(self):
-        """
-        Initialize the LP variables
-        """
-        self.lp_name = self.type_name + '_' + self.name + str(id(self))
-
-        self.LPVar_P = pulp.LpVariable(self.lp_name + '_P', self.Pmin / self.Sbase, self.Pmax / self.Sbase)
-
-    def get_lp_var_profile(self, index):
-        """
-        Get the profile of the LP solved values into a Numpy array
-        :param index: time index
-        :return: DataFrame with the LP values
-        """
-        dta = [x.value() for x in self.LPVar_P_prof]
-        return pd.DataFrame(data=dta, index=index, columns=[self.name])
-
-    def apply_lp_vars(self, at=None):
-        """
-        Set the LP vars to the main value or the profile
-        """
-        if self.LPVar_P is not None:
-            if at is None:
-                self.P = self.LPVar_P.value()
-            else:
-                self.P_prof.values[at] = self.LPVar_P.value()
-
-    def apply_lp_profile(self, Sbase):
-        """
-        Set LP profile to the regular profile
-        :return:
-        """
-        n = self.P_prof.shape[0]
-        if self.active and self.enabled_dispatch:
-            for i in range(n):
-                self.P_prof.values[i] = self.LPVar_P_prof[i].value() * Sbase
-        else:
-            # there are no values in the LP vars because this generator is deactivated,
-            # therefore fill the profiles with zeros when asked to copy the lp vars to the power profiles
-            self.P_prof.values = np.zeros(self.P_prof.shape[0])
 
