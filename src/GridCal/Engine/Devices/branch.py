@@ -345,7 +345,7 @@ class Branch(EditableDevice):
 
     def __init__(self, bus_from: Bus, bus_to: Bus, name='Branch', r=1e-20, x=1e-20, g=1e-20, b=1e-20,
                  r0=1e-20, x0=1e-20, g0=1e-20, b0=1e-20, r2=1e-20, x2=1e-20, g2=1e-20, b2=1e-20,
-                 rate=1.0, tap=1.0, shift_angle=0, active=True, tolerance=0,
+                 rate=1.0, tap=1.0, shift_angle=0, active=True, cost=1, tolerance=0,
                  mttf=0, mttr=0, r_fault=0.0, x_fault=0.0, fault_pos=0.5,
                  branch_type: BranchType = BranchType.Line, length=1, vset=1.0,
                  temp_base=20, temp_oper=20, alpha=0.00330,

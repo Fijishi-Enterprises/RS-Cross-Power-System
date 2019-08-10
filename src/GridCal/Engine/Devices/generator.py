@@ -83,12 +83,10 @@ class Generator(EditableDevice):
     """
 
     def __init__(self, name='gen', active_power=0.0, power_factor=0.8, voltage_module=1.0, is_controlled=True,
-                 Qmin=-9999, Qmax=9999, Snom=9999, power_prof=None, power_factor_prof=None, vset_prof=None, active=True,
+                 Qmin=-9999, Qmax=9999, Snom=9999, power_prof=None, power_factor_prof=None,
+                 vset_prof=None, active=True, Cost_prof=None,
                  p_min=0.0, p_max=9999.0, op_cost=1.0, Sbase=100, enabled_dispatch=True, mttf=0.0, mttr=0.0,
                  a=1.0, b=1.0, c=1.0, a_prof=None, b_prof=None, c_prof=None):
-                 Qmin=-9999, Qmax=9999, Snom=9999, power_prof=None, power_factor_prof=None, vset_prof=None,
-                 Cost_prof=None, active=True,
-                 p_min=0.0, p_max=9999.0, op_cost=1.0, Sbase=100, enabled_dispatch=True, mttf=0.0, mttr=0.0):
 
         EditableDevice.__init__(self,
                                 name=name,
