@@ -113,7 +113,7 @@ class Opf:
         return the branch loading (time, device)
         :return: 2D array
         """
-        return self.extract(self.s_from, make_abs=True) / self.rating
+        return self.extract(self.s_from, make_abs=True) / (self.rating + 1e-12)
 
     def get_branch_power(self):
         """
@@ -157,7 +157,8 @@ class Opf:
         """
         val = np.zeros(self.nodal_restrictions.shape)
         for i in range(val.shape[0]):
-            val[i] = - self.nodal_restrictions[i].pi
+            if self.nodal_restrictions[i].pi is not None:
+                val[i] = - self.nodal_restrictions[i].pi
         return val.transpose()
 
     def converged(self):

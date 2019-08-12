@@ -69,8 +69,6 @@ except:
 
 __author__ = 'Santiago Peñate Vera'
 
-
-
 """
 This class is the handler of the main gui of GridCal.
 """
@@ -82,7 +80,7 @@ This class is the handler of the main gui of GridCal.
 
 class MainGUI(QMainWindow):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, use_native_dialogues=True):
         """
 
         @param parent:
@@ -92,6 +90,8 @@ class MainGUI(QMainWindow):
         QMainWindow.__init__(self, parent)
         self.ui = Ui_mainWindow()
         self.ui.setupUi(self)
+
+        self.use_native_dialogues = use_native_dialogues
 
         # Declare circuit
         self.circuit = MultiCircuit()
@@ -1019,12 +1019,14 @@ class MainGUI(QMainWindow):
         # call dialog to select the file
 
         options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
+        if self.use_native_dialogues:
+            options |= QFileDialog.DontUseNativeDialog
 
-        filename, type_selected = QFileDialog.getOpenFileName(self,
-                                                              caption='Open file',
-                                                              filter=files_types,
-                                                              options=options)
+        filename, type_selected = QtWidgets.QFileDialog.getOpenFileName(parent=self,
+                                                                        caption='Open file',
+                                                                        directory=self.project_directory,
+                                                                        filter=files_types,
+                                                                        options=options)
 
         if len(filename) > 0:
 
@@ -1141,7 +1143,8 @@ class MainGUI(QMainWindow):
             fname = os.path.join(self.project_directory, self.grid_editor.name_label.text())
 
             options = QFileDialog.Options()
-            options |= QFileDialog.DontUseNativeDialog
+            if self.use_native_dialogues:
+                options |= QFileDialog.DontUseNativeDialog
 
             filename, type_selected = QFileDialog.getSaveFileName(self, 'Save file',  fname, files_types,
                                                                   options=options)
@@ -1244,7 +1247,12 @@ class MainGUI(QMainWindow):
 
             fname = os.path.join(self.project_directory, 'power flow results of ' + self.grid_editor.name_label.text())
 
-            filename, type_selected = QFileDialog.getSaveFileName(self, 'Save file', fname, files_types)
+            options = QFileDialog.Options()
+            if self.use_native_dialogues:
+                options |= QFileDialog.DontUseNativeDialog
+
+            filename, type_selected = QFileDialog.getSaveFileName(self, 'Save file', fname, files_types,
+                                                                  options=options)
 
             if filename is not "":
                 if not filename.endswith('.xlsx'):
@@ -1273,7 +1281,12 @@ class MainGUI(QMainWindow):
 
             fname = os.path.join(self.project_directory, 'profiles of ' + self.grid_editor.name_label.text())
 
-            filename, type_selected = QFileDialog.getSaveFileName(self, 'Save file', fname, files_types)
+            options = QFileDialog.Options()
+            if self.use_native_dialogues:
+                options |= QFileDialog.DontUseNativeDialog
+
+            filename, type_selected = QFileDialog.getSaveFileName(self, 'Save file', fname, files_types,
+                                                                  options=options)
 
             if filename is not "":
                 if not filename.endswith('.xlsx'):
@@ -1296,7 +1309,12 @@ class MainGUI(QMainWindow):
 
         fname = os.path.join(self.project_directory, 'Results of ' + self.grid_editor.name_label.text())
 
-        filename, type_selected = QFileDialog.getSaveFileName(self, 'Save file', fname, files_types)
+        options = QFileDialog.Options()
+        if self.use_native_dialogues:
+            options |= QFileDialog.DontUseNativeDialog
+
+        filename, type_selected = QFileDialog.getSaveFileName(self, 'Save file', fname, files_types,
+                                                              options=options)
 
         if filename is not "":
 
@@ -1335,7 +1353,12 @@ class MainGUI(QMainWindow):
 
         fname = os.path.join(self.project_directory, self.grid_editor.name_label.text())
 
-        filename, type_selected = QFileDialog.getSaveFileName(self, 'Save file', fname, files_types)
+        options = QFileDialog.Options()
+        if self.use_native_dialogues:
+            options |= QFileDialog.DontUseNativeDialog
+
+        filename, type_selected = QFileDialog.getSaveFileName(self, 'Save file', fname, files_types,
+                                                              options=options)
 
         if filename is not "":
             if not filename.endswith('.xlsx'):
@@ -1356,8 +1379,13 @@ class MainGUI(QMainWindow):
 
             fname = os.path.join(self.project_directory, self.grid_editor.name_label.text())
 
+            options = QFileDialog.Options()
+            if self.use_native_dialogues:
+                options |= QFileDialog.DontUseNativeDialog
+
             # call dialog to select the file
-            filename, type_selected = QFileDialog.getSaveFileName(self, 'Save file', fname, files_types)
+            filename, type_selected = QFileDialog.getSaveFileName(self, 'Save file', fname, files_types,
+                                                                  options=options)
 
             if filename is not "":
 
@@ -1673,7 +1701,8 @@ class MainGUI(QMainWindow):
         if len(objects) > 0:
             dialogue = ProfileInputGUI(parent=self,
                                        list_of_objects=objects,
-                                       magnitudes=[magnitude])
+                                       magnitudes=[magnitude],
+                                       use_native_dialogues=self.use_native_dialogues)
             dialogue.resize(int(1.61 * 600.0), 550)  # golden ratio
             dialogue.exec()  # exec leaves the parent on hold
 
@@ -3460,7 +3489,13 @@ class MainGUI(QMainWindow):
         mdl = self.ui.resultsTableView.model()
         mode = self.ui.export_mode_comboBox.currentText()
         if mdl is not None:
-            file = QFileDialog.getSaveFileName(self, "Save to Excel", '', filter="Excel files (*.xlsx)")
+
+            options = QFileDialog.Options()
+            if self.use_native_dialogues:
+                options |= QFileDialog.DontUseNativeDialog
+
+            file = QFileDialog.getSaveFileName(self, "Save to Excel", '', filter="Excel files (*.xlsx)",
+                                               options=options)
 
             if file[0] != '':
 
@@ -4409,13 +4444,13 @@ class MainGUI(QMainWindow):
             pass
 
 
-def run():
+def run(use_native_dialogues=True):
     """
     Main function to run the GUI
     :return:
     """
     app = QApplication(sys.argv)
-    window = MainGUI()
+    window = MainGUI(use_native_dialogues=use_native_dialogues)
     window.resize(int(1.61 * 700.0), 700)  # golden ratio :)
     window.show()
     sys.exit(app.exec_())
