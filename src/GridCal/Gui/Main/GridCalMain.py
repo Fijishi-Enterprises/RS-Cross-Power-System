@@ -301,6 +301,9 @@ class MainGUI(QMainWindow):
         self.ui.results_splitter.setStretchFactor(0, 2)
         self.ui.results_splitter.setStretchFactor(1, 4)
 
+        self.ui.mainSplitter.setStretchFactor(0, 300)
+        self.ui.mainSplitter.setStretchFactor(1, 2)
+
         self.lock_ui = False
         self.ui.progress_frame.setVisible(self.lock_ui)
 
@@ -381,7 +384,7 @@ class MainGUI(QMainWindow):
 
         self.ui.actionPower_flow_Stochastic.triggered.connect(self.run_stochastic)
 
-        self.ui.actionBlackout_cascade.triggered.connect(self.view_cascade_menu)
+        # self.ui.actionBlackout_cascade.triggered.connect(self.view_cascade_menu)
 
         self.ui.actionOPF.triggered.connect(self.run_opf)
 
@@ -433,8 +436,6 @@ class MainGUI(QMainWindow):
 
         self.ui.actionSet_OPF_generation_to_profiles.triggered.connect(self.copy_opf_to_profiles)
 
-        self.ui.actionShow_color_controls.triggered.connect(self.set_colouring_frame_state)
-
         self.ui.actionSync.triggered.connect(self.file_sync_toggle)
 
         self.ui.actionDrawSchematic.triggered.connect(self.draw_schematic)
@@ -483,11 +484,11 @@ class MainGUI(QMainWindow):
 
         self.ui.setValueToColumnButton.clicked.connect(self.set_value_to_column)
 
-        self.ui.run_cascade_pushButton.clicked.connect(self.run_cascade)
-
-        self.ui.clear_cascade_pushButton.clicked.connect(self.clear_cascade)
-
-        self.ui.run_cascade_step_pushButton.clicked.connect(self.run_cascade_step)
+        # self.ui.run_cascade_pushButton.clicked.connect(self.run_cascade)
+        #
+        # self.ui.clear_cascade_pushButton.clicked.connect(self.clear_cascade)
+        #
+        # self.ui.run_cascade_step_pushButton.clicked.connect(self.run_cascade_step)
 
         self.ui.exportSimulationDataButton.clicked.connect(self.export_simulation_data)
 
@@ -595,7 +596,7 @@ class MainGUI(QMainWindow):
         self.ui.results_treeView.clicked.connect(self.results_tree_view_click)
 
         # Table clicks
-        self.ui.cascade_tableView.clicked.connect(self.cascade_table_click)
+        # self.ui.cascade_tableView.clicked.connect(self.cascade_table_click)
 
         # combobox
         self.ui.profile_device_type_comboBox.currentTextChanged.connect(self.profile_device_type_changed)
@@ -604,11 +605,12 @@ class MainGUI(QMainWindow):
 
         self.ui.plt_style_comboBox.currentTextChanged.connect(self.plot_style_change)
 
-        self.ui.available_results_to_color_comboBox.currentTextChanged.connect(self.update_available_steps_to_color)
+        # self.ui.available_results_to_color_comboBox.currentTextChanged.connect(self.update_available_steps_to_color)
 
         # sliders
         self.ui.profile_start_slider.valueChanged.connect(self.profile_sliders_changed)
         self.ui.profile_end_slider.valueChanged.connect(self.profile_sliders_changed)
+        self.ui.objectsTimeSlider.valueChanged.connect(self.objects_time_slider_change)
 
         # doubleSpinBox
         self.ui.fbase_doubleSpinBox.valueChanged.connect(self.change_circuit_base)
@@ -627,17 +629,17 @@ class MainGUI(QMainWindow):
         self.ui.proportionalRedispatchRadioButton.clicked.connect(self.default_options_opf_ntc_proportional)
         self.ui.optimalRedispatchRadioButton.clicked.connect(self.default_options_opf_ntc_optimal)
 
+        # indices mode
+        self.ui.timeStepsListView.pressed.connect(lambda: self.colour_now(False))
+        self.ui.timeStepsListView.clicked.connect(lambda: self.colour_now(False))
+
         ################################################################################################################
         # Other actions
         ################################################################################################################
 
-        self.ui.grid_colouring_frame.setVisible(False)
-
         # template
         self.view_templates(False)
         self.view_template_controls(False)
-
-        self.view_cascade_menu()
 
         self.clear_results()
 
@@ -876,13 +878,6 @@ class MainGUI(QMainWindow):
             self.view_templates(False)
         else:
             self.view_templates(True)
-
-    def view_cascade_menu(self):
-        """
-        show/hide the cascade simulation menu
-        """
-        self.ui.cascade_menu.setVisible(self.ui.actionBlackout_cascade.isChecked())
-        self.ui.cascade_grid_splitter.setStretchFactor(1, 4)
 
     def about_box(self):
         """
@@ -1348,6 +1343,7 @@ class MainGUI(QMainWindow):
         else:
             mdl = QStandardItemModel()
         self.ui.profile_time_selection_comboBox.setModel(mdl)
+        self.ui.timeStepsListView.setModel(mdl)
         self.ui.vs_departure_comboBox.setModel(mdl)
         self.ui.vs_target_comboBox.setModel(mdl)
 
@@ -4678,17 +4674,6 @@ class MainGUI(QMainWindow):
         self.ui.available_results_to_color_comboBox.setModel(get_list_model(lst))
         self.ui.resultsTableView.setModel(None)
 
-        if len(lst) > 1 or max_steps > 0:
-            self.ui.actionShow_color_controls.setChecked(True)
-            self.set_colouring_frame_state()
-
-    def set_colouring_frame_state(self):
-        """
-        Set the colouring frame visibility according to the check button
-        """
-        state = self.ui.actionShow_color_controls.isChecked()
-        self.ui.grid_colouring_frame.setVisible(state)
-
     def clear_results(self):
         """
         Clear the results tab
@@ -4703,7 +4688,6 @@ class MainGUI(QMainWindow):
         self.available_results_dict = dict()
         self.ui.resultsTableView.setModel(None)
         self.ui.available_results_to_color_comboBox.model().clear()
-        self.ui.simulation_results_step_comboBox.model().clear()
         self.ui.results_treeView.setModel(None)
 
         self.ui.catalogueTableView.setModel(None)
@@ -4742,7 +4726,7 @@ class MainGUI(QMainWindow):
         if self.ui.available_results_to_color_comboBox.currentIndex() > -1:
 
             current_study = self.ui.available_results_to_color_comboBox.currentText()
-            current_step = self.ui.simulation_results_step_comboBox.currentIndex()
+            current_step = self.ui.timeStepsListView.currentIndex().row()
             use_flow_based_width = self.ui.branch_width_based_on_flow_checkBox.isChecked()
             min_branch_width = self.ui.min_branch_size_spinBox.value()
             max_branch_width = self.ui.max_branch_size_spinBox.value()
@@ -4965,8 +4949,8 @@ class MainGUI(QMainWindow):
         """
         Next colour step
         """
-        current_step = self.ui.simulation_results_step_comboBox.currentIndex()
-        count = self.ui.simulation_results_step_comboBox.count()
+        current_step = self.ui.timeStepsListView.currentIndex().row()
+        count = self.circuit.get_time_number()
 
         if count > 0:
             nxt = current_step + 1
@@ -4974,7 +4958,8 @@ class MainGUI(QMainWindow):
             if nxt >= count:
                 nxt = count - 1
 
-            self.ui.simulation_results_step_comboBox.setCurrentIndex(nxt)
+            index = self.ui.timeStepsListView.model().index(nxt,0)
+            self.ui.timeStepsListView.setCurrentIndex(index)
 
             self.colour_now()
 
@@ -4982,8 +4967,8 @@ class MainGUI(QMainWindow):
         """
         Prev colour step
         """
-        current_step = self.ui.simulation_results_step_comboBox.currentIndex()
-        count = self.ui.simulation_results_step_comboBox.count()
+        current_step = self.ui.timeStepsListView.currentIndex().row()
+        count = self.circuit.get_time_number()
 
         if count > 0:
             prv = current_step - 1
@@ -4991,22 +4976,22 @@ class MainGUI(QMainWindow):
             if prv < 0:
                 prv = 0
 
-            self.ui.simulation_results_step_comboBox.setCurrentIndex(prv)
+            index = self.ui.timeStepsListView.model().index(prv, 0)
+            self.ui.timeStepsListView.setCurrentIndex(index)
 
             self.colour_now()
 
-    def update_available_steps_to_color(self):
-        """
-        Update the available simulation steps in the combo box
-        """
-        if self.ui.available_results_to_color_comboBox.currentIndex() > -1:
-            current_study = self.ui.available_results_to_color_comboBox.currentText()
-
-            lst = self.available_results_steps_dict[current_study]
-
-            mdl = get_list_model(lst)
-
-            self.ui.simulation_results_step_comboBox.setModel(mdl)
+    # def update_available_steps_to_color(self):
+    #     """
+    #     Update the available simulation steps in the combo box
+    #     """
+    #     if self.ui.available_results_to_color_comboBox.currentIndex() > -1:
+    #         current_study = self.ui.available_results_to_color_comboBox.currentText()
+    #
+    #         lst = self.available_results_steps_dict[current_study]
+    #
+    #         mdl = get_list_model(lst)
+    #         self.ui.simulation_results_step_comboBox.setModel(mdl)
 
     def results_tree_view_click(self, index):
         """
@@ -5212,6 +5197,12 @@ class MainGUI(QMainWindow):
             self.ui.profile_end_slider.setMinimum(0)
             self.ui.profile_end_slider.setMaximum(t)
             self.ui.profile_end_slider.setValue(t)
+
+            self.ui.objectsTimeSlider.setMinimum(0)
+            self.ui.objectsTimeSlider.setMaximum(t)
+            self.ui.objectsTimeSlider.setValue(0)
+            self.objects_time_slider_change()
+
         else:
             pass
 
@@ -5249,6 +5240,14 @@ class MainGUI(QMainWindow):
             t1 = pd.to_datetime(t1).strftime('%d/%m/%Y %H:%M')
             t2 = pd.to_datetime(t2).strftime('%d/%m/%Y %H:%M')
             self.ui.profile_label.setText(str(t1) + ' -> ' + str(t2))
+
+    def objects_time_slider_change(self):
+        start = self.ui.objectsTimeSlider.value()
+
+        if self.circuit.time_profile is not None:
+            t1 = self.circuit.time_profile[start]
+            t1 = pd.to_datetime(t1).strftime('%d/%m/%Y %H:%M')
+            self.ui.objectsTimeLabel.setText(str(t1))
 
     def add_to_catalogue(self):
         """
