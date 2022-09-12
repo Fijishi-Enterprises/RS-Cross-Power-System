@@ -55,7 +55,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="devel_REE" />
+        <entry key="$PROJECT_DIR$" value="full_alpha_n1" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -260,9 +260,9 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.ExecuteGridCal" />
-        <item itemvalue="Python.setup" />
         <item itemvalue="Python.update_gui_file" />
         <item itemvalue="Python.update" />
+        <item itemvalue="Python.setup" />
         <item itemvalue="Python.opf_ntc_ts_driver" />
       </list>
     </recent_temporary>
@@ -1351,7 +1351,19 @@
           <line>310</line>
           <option name="timeStamp" value="758" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/GridCal/Engine/Simulations/OPF/ntc_opf.py</url>
+          <line>2027</line>
+          <option name="timeStamp" value="761" />
+        </line-breakpoint>
       </breakpoints>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
     </breakpoint-manager>
   </component>
 </project>
