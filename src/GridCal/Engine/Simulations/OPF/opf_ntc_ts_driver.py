@@ -540,7 +540,7 @@ class OptimalNetTransferCapacityTimeSeriesDriver(TimeSeriesDriverTemplate):
                 max_report_elements=self.options.max_report_elements,
                 ntc_load_rule=self.options.ntc_load_rule)
 
-        if self.options.sensitivity_mode.value == AvailableTransferMode.InstalledPower:
+        if self.options.sensitivity_mode == AvailableTransferMode.InstalledPower:
             self.installed_alpha, self.installed_alpha_n1 = self.compute_exchange_sensitivity(
                 linear=linear,
                 numerical_circuit=nc,
