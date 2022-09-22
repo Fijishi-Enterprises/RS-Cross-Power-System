@@ -23,9 +23,12 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="903393a6-e011-4cf7-964c-90325cdcb845" name="Default Changelist" comment="little fix to fix active power">
+    <list default="true" id="903393a6-e011-4cf7-964c-90325cdcb845" name="Default Changelist" comment="- Add ask_before confirmation">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCal/Gui/Main/GridCalMain.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/Gui/Main/GridCalMain.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCal/__version__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/__version__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCal/snp_ntc_opf.lp" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/snp_ntc_opf.lp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/build/lib/GridCal/Gui/Main/GridCalMain.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/build/lib/GridCal/Gui/Main/GridCalMain.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/build/lib/GridCal/__version__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/build/lib/GridCal/__version__.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -716,13 +719,6 @@
       <workItem from="1646596754247" duration="5002000" />
       <workItem from="1646637733706" duration="432000" />
     </task>
-    <task id="LOCAL-00247" summary="Updated to LGPL">
-      <created>1642155667785</created>
-      <option name="number" value="00247" />
-      <option name="presentableId" value="LOCAL-00247" />
-      <option name="project" value="LOCAL" />
-      <updated>1642155667785</updated>
-    </task>
     <task id="LOCAL-00248" summary="Updated to LGPL">
       <created>1642155751834</created>
       <option name="number" value="00248" />
@@ -1059,7 +1055,14 @@
       <option name="project" value="LOCAL" />
       <updated>1662983124717</updated>
     </task>
-    <option name="localTasksCounter" value="296" />
+    <task id="LOCAL-00296" summary="- Add ask_before confirmation">
+      <created>1663173160636</created>
+      <option name="number" value="00296" />
+      <option name="presentableId" value="LOCAL-00296" />
+      <option name="project" value="LOCAL" />
+      <updated>1663173160637</updated>
+    </task>
+    <option name="localTasksCounter" value="297" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -1093,7 +1096,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="moved the dc lines compilation right after the ac lines" />
     <MESSAGE value="Added Highs for linux&#10;Added a button to copy the compiled arrays as numpy&#10;started a file on derivatives research" />
     <MESSAGE value="Research of flow derivatives" />
     <MESSAGE value="minimal test" />
@@ -1118,7 +1120,8 @@
     <MESSAGE value="- Fix only once alpha computation for installed power mode" />
     <MESSAGE value="- little fix (installed alphas)" />
     <MESSAGE value="new version 4.6.1a2:&#10;- improved computation time for alpha and alpha n-1 with installed power mode" />
-    <option name="LAST_COMMIT_MESSAGE" value="new version 4.6.1a2:&#10;- improved computation time for alpha and alpha n-1 with installed power mode" />
+    <MESSAGE value="- Add ask_before confirmation" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Add ask_before confirmation" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1353,6 +1356,23 @@
           <url>file://$PROJECT_DIR$/src/GridCal/Engine/Simulations/InputsAnalysis/inputs_analysis_driver.py</url>
           <line>252</line>
           <option name="timeStamp" value="759" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/GridCal/Engine/Core/multi_circuit.py</url>
+          <line>91</line>
+          <option name="timeStamp" value="760" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <condition expression="'DAMBRP7_380.0' in branch_names[m] and 'VERGEP7_380' in branch_names[m]" language="Python" />
+          <url>file://$PROJECT_DIR$/src/GridCal/Engine/Simulations/OPF/ntc_opf.py</url>
+          <line>928</line>
+          <option name="timeStamp" value="761" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <condition expression="'DAMBRP7_380.0' in branch_names[c] and 'VERGEP7_380' in branch_names[c] and 'DAMBRP7_380.0' in branch_names[m] and 'VERGEP7_380' in branch_names[m]" language="Python" />
+          <url>file://$PROJECT_DIR$/src/GridCal/Engine/Simulations/OPF/ntc_opf.py</url>
+          <line>1100</line>
+          <option name="timeStamp" value="765" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
