@@ -489,6 +489,7 @@ def power_flow_post_process(calculation_inputs: SnapshotData, Sbus, V, branch_ra
         Stb = Sf * calculation_inputs.Sbase
         If = Sf / (Vf + 1e-20)
         It = -If
+        # losses are not considered in the power flow computation
         losses = If * If * calculation_inputs.branch_data.R * calculation_inputs.Sbase
 
     # Branch loading in p.u.
