@@ -1096,7 +1096,7 @@ def formulate_contingency(solver: pywraplp.Solver, ContingencyRates, Sbase, bran
 
             c1 = m != c
             c2 = LODF[m, c] > branch_sensitivity_threshold
-            c3 = alpha_n1[m, c] > branch_sensitivity_threshold
+            c3 = np.abs(alpha_n1[m, c]) > branch_sensitivity_threshold
 
             if c1 and c2 and c3:
 
