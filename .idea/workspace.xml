@@ -23,12 +23,10 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="903393a6-e011-4cf7-964c-90325cdcb845" name="Default Changelist" comment="Merged ntc changes&#10;Merged DC losses estimation&#10;Added full fubm jacobian at the compiled arrays">
-      <change afterPath="$PROJECT_DIR$/Grids_and_profiles/grids/fubm_caseHVDC_vt.gridcal" afterDir="false" />
+    <list default="true" id="903393a6-e011-4cf7-964c-90325cdcb845" name="Default Changelist" comment="Merged DC losses estimation&#10;More cosmetic changes">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCal/Engine/Core/admittance_matrices.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/Engine/Core/admittance_matrices.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GridCal/Engine/Core/snapshot_pf_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/Engine/Core/snapshot_pf_data.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCal/Engine/Simulations/PowerFlow/power_flow_worker.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/Engine/Simulations/PowerFlow/power_flow_worker.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/acdc_jacobian.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/acdc_jacobian.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,7 +54,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="master" />
+        <entry key="$PROJECT_DIR$" value="devel" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -1047,14 +1045,7 @@
       <workItem from="1664046715381" duration="543000" />
       <workItem from="1664054498583" duration="8000" />
       <workItem from="1664183988758" duration="1712000" />
-      <workItem from="1664186234445" duration="9289000" />
-    </task>
-    <task id="LOCAL-00303" summary="Minimal bug fixes">
-      <created>1654855224670</created>
-      <option name="number" value="00303" />
-      <option name="presentableId" value="LOCAL-00303" />
-      <option name="project" value="LOCAL" />
-      <updated>1654855224671</updated>
+      <workItem from="1664186234445" duration="13722000" />
     </task>
     <task id="LOCAL-00304" summary="Added the phase shift injections in the OPF model">
       <created>1654954291994</created>
@@ -1392,7 +1383,14 @@
       <option name="project" value="LOCAL" />
       <updated>1664199004222</updated>
     </task>
-    <option name="localTasksCounter" value="352" />
+    <task id="LOCAL-00352" summary="Merged DC losses estimation&#10;More cosmetic changes">
+      <created>1664202812566</created>
+      <option name="number" value="00352" />
+      <option name="presentableId" value="LOCAL-00352" />
+      <option name="project" value="LOCAL" />
+      <updated>1664202812566</updated>
+    </task>
+    <option name="localTasksCounter" value="353" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -1426,7 +1424,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Added sequence components to the generator and battery&#10;Modelled the south island of new zealand as per arrillaga's book" />
     <MESSAGE value="Fixed the matpower expression making the new derivatives exact as matpowers'" />
     <MESSAGE value="Merged the unbalanced short circuit and removed the sympy import" />
     <MESSAGE value="Integrated the new short circuit logic in the GUI" />
@@ -1451,7 +1448,8 @@
     <MESSAGE value="updated version" />
     <MESSAGE value="fixed minimal bug when generating the auto contingencies" />
     <MESSAGE value="Merged ntc changes&#10;Merged DC losses estimation&#10;Added full fubm jacobian at the compiled arrays" />
-    <option name="LAST_COMMIT_MESSAGE" value="Merged ntc changes&#10;Merged DC losses estimation&#10;Added full fubm jacobian at the compiled arrays" />
+    <MESSAGE value="Merged DC losses estimation&#10;More cosmetic changes" />
+    <option name="LAST_COMMIT_MESSAGE" value="Merged DC losses estimation&#10;More cosmetic changes" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -2026,7 +2024,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/acdc_jacobian.py</url>
-          <line>761</line>
+          <line>760</line>
           <option name="timeStamp" value="1215" />
         </line-breakpoint>
       </breakpoints>

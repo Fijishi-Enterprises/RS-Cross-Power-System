@@ -357,8 +357,7 @@ def fill_acdc_jacobian_data(Jx, Ji, Jp, Yp, Yi, Ys,
     if nBeqz + nBeqv:
         indices = np.concatenate((iBeqz, iBeqv))
         dSbus_dBeq_data, dSbus_dBeq_indices, dSbus_dBeq_indptr, \
-        dSf_dBeqx_data, dSf_dBeqx_indices, dSf_dBeqx_indptr = deriv.derivatives_Beq_csc_numba(indices,
-                                                                                              F, V, ma, k2)
+        dSf_dBeqx_data, dSf_dBeqx_indices, dSf_dBeqx_indptr = deriv.derivatives_Beq_csc_numba(indices, F, V, ma, k2)
 
         for j in range(nBeqz + nBeqv):  # sliced columns
 

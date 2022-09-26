@@ -1343,6 +1343,8 @@ class SnapshotData:
         elif structure_type == 'Jacobian':
 
             pvpq = np.r_[self.pv, self.pq]
+            i2 = np.r_[self.pq, self.VfBeqbus, self.Vtmabus]
+            i4 = np.r_[self.iQfma, self.iBeqz]
 
             cols = ['1) dVa {0}'.format(i) for i in pvpq]
             cols += ['2) dVm {0}'.format(i) for i in self.pq]
@@ -1355,7 +1357,7 @@ class SnapshotData:
             cols += ['9) dPfdp {0}'.format(i) for i in self.iPfdp]
 
             rows = ['1) dP {0}'.format(i) for i in pvpq]
-            rows += ['2) dQ {0}'.format(i) for i in self.pq]
+            rows += ['2) dQ {0}'.format(i) for i in i2]
             rows += ['3) dQ {0}'.format(i) for i in self.iBeqv]
             rows += ['4) dQ {0}'.format(i) for i in self.iVtma]
             rows += ['5) dPf {0}'.format(i) for i in self.iPfsh]
