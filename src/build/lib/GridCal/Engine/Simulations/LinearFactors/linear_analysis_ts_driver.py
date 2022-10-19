@@ -32,6 +32,7 @@ from GridCal.Engine.Core.time_series_pf_data import compile_time_circuit
 from GridCal.Engine.Simulations.driver_types import SimulationTypes
 from GridCal.Engine.Simulations.results_template import ResultsTemplate
 from GridCal.Engine.Simulations.driver_template import TimeSeriesDriverTemplate
+import GridCal.Engine.Simulations.group_post_process as group_pp
 
 
 class LinearAnalysisTimeSeriesResults(ResultsTemplate):
@@ -45,10 +46,20 @@ class LinearAnalysisTimeSeriesResults(ResultsTemplate):
         """
         ResultsTemplate.__init__(self,
                                  name='Linear Analysis time series',
-                                 available_results=[ResultTypes.BusActivePower,
-                                                    ResultTypes.BranchActivePowerFrom,
-                                                    ResultTypes.BranchLoading
+                                 available_results={ResultTypes.BusResults: [
+                                                        ResultTypes.BusActivePower
                                                     ],
+                                                    ResultTypes.BranchResults: [
+                                                        ResultTypes.BranchActivePowerFrom,
+                                                        ResultTypes.BranchLoading,
+                                                        ResultTypes.BranchLosses
+                                                    ],
+                                                    ResultTypes.AreaResults: [
+                                                        ResultTypes.InterAreaExchange,
+                                                        ResultTypes.ActivePowerFlowPerArea,
+                                                        ResultTypes.LossesPerArea,
+                                                        ResultTypes.LossesPercentPerArea
+                                                    ]},
                                  data_variables=['bus_names',
                                                  'bus_types',
                                                  'time',
@@ -63,6 +74,16 @@ class LinearAnalysisTimeSeriesResults(ResultsTemplate):
         self.m = m
         self.n = n
         self.time = time_array
+
+        self.F = None
+        self.T = None
+        self.hvdc_F = None
+        self.hvdc_T = None
+        self.bus_area_indices = None
+        self.area_names = None
+        self.hvdc_Pf = None
+        self.hvdc_Pt = None
+        self.hvdc_losses = None
 
         self.bus_names = bus_names
 
@@ -84,6 +105,39 @@ class LinearAnalysisTimeSeriesResults(ResultsTemplate):
         rates = nc.Rates.T
         self.loading = self.Sf / (rates + 1e-9)
 
+    def get_inter_area_flows(self):
+        return group_pp.get_inter_area_flows_ts(
+            F=self.F,
+            T=self.T,
+            Sf=self.Sf,
+            hvdc_F=self.hvdc_F,
+            hvdc_T=self.hvdc_T,
+            hvdc_Pf=self.hvdc_Pf,
+            area_names=self.area_names,
+            bus_area_indices=self.bus_area_indices,
+            time=self.time
+        )
+
+    def get_branch_values_per_area(self, branch_values: np.ndarray):
+        return group_pp.get_branch_values_per_area_ts(
+            branch_values=branch_values,
+            F=self.F,
+            T=self.T,
+            area_names=self.area_names,
+            bus_area_indices=self.bus_area_indices,
+            time=self.time
+        )
+
+    def get_hvdc_values_per_area(self, hvdc_values: np.ndarray):
+        return group_pp.get_hvdc_values_per_area_ts(
+            hvdc_values=hvdc_values,
+            hvdc_F=self.hvdc_F,
+            hvdc_T=self.hvdc_T,
+            area_names=self.area_names,
+            bus_area_indices=self.bus_area_indices,
+            time=self.time
+        )
+
     def get_results_dict(self):
         """
         Returns a dictionary with the results sorted in a dictionary
@@ -96,6 +150,8 @@ class LinearAnalysisTimeSeriesResults(ResultsTemplate):
                 'Sbr_imag': self.Sf.imag.tolist(),
                 'loading': np.abs(self.loading).tolist()}
         return data
+
+
 
     def mdl(self, result_type: ResultTypes) -> "ResultsTable":
         """
@@ -133,6 +189,47 @@ class LinearAnalysisTimeSeriesResults(ResultsTemplate):
             data = self.voltage
             y_label = '(p.u.)'
             title = 'Bus voltage'
+
+        elif result_type == ResultTypes.InterAreaExchange:
+
+            labels = group_pp.get_ordered_area_names(self.area_names)
+
+            data = self.get_inter_area_flows().real
+
+            y_label = '(MW)'
+            title = result_type.value[0]
+
+        elif result_type == ResultTypes.LossesPercentPerArea:
+            labels = group_pp.get_ordered_area_names(self.area_names)
+
+            Pf = self.get_branch_values_per_area(np.abs(self.Sf.real)) + \
+                 self.get_hvdc_values_per_area(np.abs(self.hvdc_Pf))
+
+            Pl = self.get_branch_values_per_area(np.abs(self.losses.real)) + \
+                 self.get_hvdc_values_per_area(np.abs(self.hvdc_losses))
+
+            data = Pl / (Pf + 1e-20) * 100.0
+
+            y_label = '(%)'
+            title = result_type.value[0]
+
+        elif result_type == ResultTypes.LossesPerArea:
+            labels = group_pp.get_ordered_area_names(self.area_names)
+
+            data = self.get_branch_values_per_area(np.abs(self.losses.real)) + \
+                   self.get_hvdc_values_per_area(np.abs(self.hvdc_losses))
+
+            y_label = '(MW)'
+            title = result_type.value[0]
+
+        elif result_type == ResultTypes.ActivePowerFlowPerArea:
+            labels = group_pp.get_ordered_area_names(self.area_names)
+
+            data = self.get_branch_values_per_area(np.abs(self.Sf.real)) + \
+                   self.get_hvdc_values_per_area(np.abs(self.hvdc_Pf))
+
+            y_label = '(MW)'
+            title = result_type.value[0]
 
         else:
             raise Exception('Result type not understood:' + str(result_type))
@@ -181,6 +278,9 @@ class LinearAnalysisTimeSeries(TimeSeriesDriverTemplate):
 
         if self.end_ is None:
             self.end_ = len(self.grid.time_profile)
+
+        self.progress_text.emit('Compiling data...')
+
         time_indices = np.arange(self.start_, self.end_ + 1)
 
         ts_numeric_circuit = compile_time_circuit(self.grid)
@@ -208,6 +308,19 @@ class LinearAnalysisTimeSeries(TimeSeriesDriverTemplate):
         # compute post process
         self.results.loading = self.results.Sf / (ts_numeric_circuit.Rates[:, time_indices].T + 1e-9)
         self.results.S = Pbus_0.T
+        self.results.losses = linear_analysis.get_losses(Sf=self.results.Sf)
+
+        # set the inter-area variables
+        self.results.F = ts_numeric_circuit.F
+        self.results.T = ts_numeric_circuit.T
+        self.results.hvdc_F = ts_numeric_circuit.hvdc_data.get_bus_indices_f()
+        self.results.hvdc_T = ts_numeric_circuit.hvdc_data.get_bus_indices_t()
+        self.results.bus_area_indices = ts_numeric_circuit.bus_data.areas
+        self.results.area_names = [a.name for a in self.grid.areas]
+
+        self.results.hvdc_Pf = -ts_numeric_circuit.hvdc_Pf.T
+        self.results.hvdc_Pt = -ts_numeric_circuit.hvdc_Pt.T
+        self.results.hvdc_losses = self.results.hvdc_Pf + self.results.hvdc_Pt
 
         self.elapsed = time.time() - a
 

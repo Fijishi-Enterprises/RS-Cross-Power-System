@@ -26,13 +26,13 @@ from GridCal.Engine.Simulations.results_table import ResultsTable
 from GridCal.Engine.Simulations.driver_types import SimulationTypes
 from GridCal.Engine.Simulations.driver_template import DriverTemplate
 import GridCal.Engine.basic_structures as bs
+import GridCal.Engine.Simulations.group_post_process as group_pp
 
 
 class TimeSeriesResults(PowerFlowResults):
 
     def __init__(self, n, m, n_tr, n_hvdc, bus_names, branch_names, transformer_names, hvdc_names,
-                 time_array, bus_types,
-                 area_names=None):
+                 time_array, bus_types, area_names=None):
         """
         TimeSeriesResults constructor
         :param n: number of buses
@@ -261,61 +261,39 @@ class TimeSeriesResults(PowerFlowResults):
             json_str = json.dumps(self.get_results_dict())
             output_file.write(json_str)
 
-    def get_ordered_area_names(self):
-        na = len(self.area_names)
-        x = [''] * (na * na)
-        for i, a in enumerate(self.area_names):
-            for j, b in enumerate(self.area_names):
-                x[i * na + j] = a + '->' + b
-        return x
 
     def get_inter_area_flows(self):
-
-        na = len(self.area_names)
-        nt = len(self.time)
-        x = np.zeros((nt, na * na), dtype=complex)
-
-        for f, t, flow in zip(self.F, self.T, self.Sf.T):
-            a1 = self.bus_area_indices[f]
-            a2 = self.bus_area_indices[t]
-            if a1 != a2:
-                x[:, a1 * na + a2] += flow
-                x[:, a2 * na + a1] -= flow
-
-        for f, t, flow in zip(self.hvdc_F, self.hvdc_T, self.hvdc_Pf.T):
-            a1 = self.bus_area_indices[f]
-            a2 = self.bus_area_indices[t]
-            if a1 != a2:
-                x[:, a1 * na + a2] += flow
-                x[:, a2 * na + a1] -= flow
-
-        return x
+        return group_pp.get_inter_area_flows_ts(
+            F=self.F,
+            T=self.T,
+            Sf=self.Sf,
+            hvdc_F=self.hvdc_F,
+            hvdc_T=self.hvdc_T,
+            hvdc_Pf=self.hvdc_Pf,
+            area_names=self.area_names,
+            bus_area_indices=self.bus_area_indices,
+            time=self.time
+        )
 
     def get_branch_values_per_area(self, branch_values: np.ndarray):
-
-        na = len(self.area_names)
-        nt = len(self.time)
-        x = np.zeros((nt, na * na), dtype=branch_values.dtype)
-
-        for f, t, val in zip(self.F, self.T, branch_values.T):
-            a1 = self.bus_area_indices[f]
-            a2 = self.bus_area_indices[t]
-            x[:, a1 * na + a2] += val
-
-        return x
+        return group_pp.get_branch_values_per_area_ts(
+            branch_values=branch_values,
+            F=self.F,
+            T=self.T,
+            area_names=self.area_names,
+            bus_area_indices=self.bus_area_indices,
+            time=self.time
+        )
 
     def get_hvdc_values_per_area(self, hvdc_values: np.ndarray):
-
-        na = len(self.area_names)
-        nt = len(self.time)
-        x = np.zeros((nt, na * na), dtype=hvdc_values.dtype)
-
-        for f, t, val in zip(self.hvdc_F, self.hvdc_T, hvdc_values.T):
-            a1 = self.bus_area_indices[f]
-            a2 = self.bus_area_indices[t]
-            x[:, a1 * na + a2] += val
-
-        return x
+        return group_pp.get_hvdc_values_per_area_ts(
+            hvdc_values=hvdc_values,
+            hvdc_F=self.hvdc_F,
+            hvdc_T=self.hvdc_T,
+            area_names=self.area_names,
+            bus_area_indices=self.bus_area_indices,
+            time=self.time
+        )
 
     def mdl(self, result_type: ResultTypes) -> "ResultsTable":
         """
@@ -439,30 +417,37 @@ class TimeSeriesResults(PowerFlowResults):
             title = result_type.value
 
         elif result_type == ResultTypes.InterAreaExchange:
-            labels = self.get_ordered_area_names()
+            labels = group_pp.get_ordered_area_names(self.area_names)
             data = self.get_inter_area_flows().real
             y_label = '(MW)'
             title = result_type.value[0]
 
         elif result_type == ResultTypes.LossesPercentPerArea:
-            labels = self.get_ordered_area_names()
-            Pf = self.get_branch_values_per_area(np.abs(self.Sf.real)) + self.get_hvdc_values_per_area(np.abs(self.hvdc_Pf))
-            Pl = self.get_branch_values_per_area(np.abs(self.losses.real)) + self.get_hvdc_values_per_area(np.abs(self.hvdc_losses))
+            labels = group_pp.get_ordered_area_names(self.area_names)
+
+            Pf = self.get_branch_values_per_area(np.abs(self.Sf.real)) + \
+                 self.get_hvdc_values_per_area(np.abs(self.hvdc_Pf))
+            Pl = self.get_branch_values_per_area(np.abs(self.losses.real)) + \
+                 self.get_hvdc_values_per_area(np.abs(self.hvdc_losses))
 
             data = Pl / (Pf + 1e-20) * 100.0
             y_label = '(%)'
             title = result_type.value[0]
 
         elif result_type == ResultTypes.LossesPerArea:
-            labels = self.get_ordered_area_names()
-            data = self.get_branch_values_per_area(np.abs(self.losses.real)) + self.get_hvdc_values_per_area(np.abs(self.hvdc_losses))
+            labels = group_pp.get_ordered_area_names(self.area_names)
+
+            data = self.get_branch_values_per_area(np.abs(self.losses.real)) + \
+                   self.get_hvdc_values_per_area(np.abs(self.hvdc_losses))
 
             y_label = '(MW)'
             title = result_type.value[0]
 
         elif result_type == ResultTypes.ActivePowerFlowPerArea:
-            labels = self.get_ordered_area_names()
-            data = self.get_branch_values_per_area(np.abs(self.Sf.real)) + self.get_hvdc_values_per_area(np.abs(self.hvdc_Pf))
+            labels = group_pp.get_ordered_area_names(self.area_names)
+
+            data = self.get_branch_values_per_area(np.abs(self.Sf.real)) + \
+                   self.get_hvdc_values_per_area(np.abs(self.hvdc_Pf))
 
             y_label = '(MW)'
             title = result_type.value[0]

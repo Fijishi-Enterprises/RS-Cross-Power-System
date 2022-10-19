@@ -2543,3 +2543,27 @@ class MultiCircuit:
             bus.y = y[i]
             if bus.graphic_obj is not None:
                 bus.graphic_obj.set_position(x[i], y[i])
+
+    def get_grouping_info(self):
+        area_dict = {elm: i for i, elm in enumerate(self.get_areas())}
+        bus_dict = self.get_bus_index_dict()
+
+        area_names = [a.name for a in self.get_areas()]
+        bus_area_indices = np.array([area_dict[b.area] for b in self.buses])
+
+        branches = self.get_branches_wo_hvdc()
+        F = np.zeros(len(branches), dtype=int)
+        T = np.zeros(len(branches), dtype=int)
+        for k, elm in enumerate(branches):
+            F[k] = bus_dict[elm.bus_from]
+            T[k] = bus_dict[elm.bus_to]
+
+        hvdc = self.get_hvdc()
+        hvdc_F = np.zeros(len(hvdc), dtype=int)
+        hvdc_T = np.zeros(len(hvdc), dtype=int)
+
+        for k, elm in enumerate(hvdc):
+            hvdc_F[k] = bus_dict[elm.bus_from]
+            hvdc_T[k] = bus_dict[elm.bus_to]
+
+        return area_names, bus_area_indices, F, T, hvdc_F, hvdc_T
