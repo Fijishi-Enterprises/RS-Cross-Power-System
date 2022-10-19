@@ -2217,7 +2217,7 @@ class OpfNTC(Opf):
         else:
             con_br_idx = list()
             n1flow_f = list()
-            alpha_n1_list = list()
+            con_brn_alpha = list()
 
         if self.consider_gen_contingencies and self.generation_contingency_threshold != 0:
             # formulate the generator contingencies
@@ -2240,6 +2240,7 @@ class OpfNTC(Opf):
         else:
             n1flow_gen_f = list()
             con_gen_idx = list()
+            con_gen_alpha = list()
 
         if self.consider_hvdc_contingencies:
             # formulate the hvdc contingencies
@@ -2261,6 +2262,7 @@ class OpfNTC(Opf):
         else:
             n1flow_hvdc_f = list()
             con_hvdc_idx = list()
+            con_hvdc_alpha = list()
 
         # formulate the objective
         formulate_objective(

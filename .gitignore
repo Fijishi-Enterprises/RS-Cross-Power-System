@@ -28,3 +28,4 @@ demo_5_node.json
 .idea/*.iml
 .idea/*.xml
 .idea/dictionaries/*.xml
+/src/dist/
