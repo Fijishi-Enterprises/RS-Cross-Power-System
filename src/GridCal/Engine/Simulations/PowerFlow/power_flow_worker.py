@@ -550,7 +550,7 @@ def get_hvdc_power(multi_circuit: MultiCircuit, bus_dict, theta, t=None):
     Pf_hvdc = np.zeros(len(multi_circuit.hvdc_lines))
     Pt_hvdc = np.zeros(len(multi_circuit.hvdc_lines))
     loading_hvdc = np.zeros(len(multi_circuit.hvdc_lines))
-    n_free = 0  # number of free hvdc lines that nee PF recalculation
+    n_free = 0  # number of free hvdc lines that need PF recalculation
 
     for k, elm in enumerate(multi_circuit.hvdc_lines):
 

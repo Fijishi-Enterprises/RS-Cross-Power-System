@@ -27,6 +27,8 @@ from GridCal.Engine.Simulations.driver_template import DriverTemplate
 from GridCal.Engine.Core.Compilers.circuit_to_bentayga import BENTAYGA_AVAILABLE, bentayga_linear_matrices
 # from GridCal.Engine.Core.Compilers.circuit_to_newton_pa import NEWTON_PA_AVAILABLE, new
 import GridCal.Engine.basic_structures as bs
+from GridCal.Engine.Simulations.PowerFlow.power_flow_worker import get_hvdc_power
+import GridCal.Engine.Simulations.group_post_process as group_pp
 
 
 ########################################################################################################################
@@ -47,10 +49,19 @@ class LinearAnalysisResults(ResultsTemplate):
         """
         ResultsTemplate.__init__(self,
                                  name='Linear Analysis',
-                                 available_results=[ResultTypes.PTDFBranchesSensitivity,
-                                                    ResultTypes.OTDF,
-                                                    ResultTypes.BranchActivePowerFrom,
-                                                    ResultTypes.BranchLoading],
+                                 available_results={ResultTypes.BranchResults: [
+                                                        ResultTypes.PTDFBranchesSensitivity,
+                                                        ResultTypes.OTDF,
+                                                        ResultTypes.BranchActivePowerFrom,
+                                                        ResultTypes.BranchLoading
+                                                    ],
+                                                    ResultTypes.AreaResults: [
+                                                        ResultTypes.InterAreaExchange,
+                                                        ResultTypes.ActivePowerFlowPerArea,
+                                                        ResultTypes.LossesPerArea,
+                                                        ResultTypes.LossesPercentPerArea
+                                                    ]
+                                                    },
                                  data_variables=['branch_names',
                                                  'bus_names',
                                                  'bus_types',
@@ -82,6 +93,19 @@ class LinearAnalysisResults(ResultsTemplate):
         self.voltage = np.ones(self.n_bus, dtype=complex)
 
         self.loading = np.zeros(self.n_br)
+
+        self.F = None
+        self.T = None
+        self.hvdc_F = None
+        self.hvdc_T = None
+        self.bus_area_indices = None
+        self.area_names = None
+        self.hvdc_Pf = None
+        self.hvdc_Pt = None
+        self.hvdc_losses = None
+
+    def fill_circuit_info(self, grid: "MultiCircuit"):
+        self.area_names, self.bus_area_indices, self.F, self.T, self.hvdc_F, self.hvdc_T = grid.get_grouping_info()
 
     def apply_new_rates(self, nc: "SnapshotData"):
         """
@@ -220,9 +244,25 @@ class LinearAnalysisDriver(DriverTemplate):
             self.results.bus_types = analysis.numerical_circuit.bus_data.bus_types
             self.results.PTDF = analysis.PTDF
             self.results.LODF = analysis.LODF
-            self.results.Sf = analysis.get_flows(analysis.numerical_circuit.Sbus.real)
+
+            # compose the HVDC power injections
+            bus_dict = self.grid.get_bus_index_dict()
+            nbus = len(self.grid.buses)
+            Shvdc, Losses_hvdc, Pf_hvdc, Pt_hvdc, loading_hvdc, n_free = get_hvdc_power(self.grid,
+                                                                                        bus_dict,
+                                                                                        theta=np.zeros(nbus))
+
+            self.results.Sf = analysis.get_flows(analysis.numerical_circuit.Sbus.real + Shvdc)
             self.results.loading = self.results.Sf / (analysis.numerical_circuit.branch_rates + 1e-20)
             self.results.Sbus = analysis.numerical_circuit.Sbus.real
+
+            self.results.losses = analysis.get_losses(self.results.Sf)
+
+            self.results.F = analysis.numerical_circuit.F
+            self.results.T = analysis.numerical_circuit.T
+            self.results.hvdc_F = analysis.numerical_circuit.hvdc_data.get_bus_indices_f()
+            self.results.hvdc_T = analysis.numerical_circuit.hvdc_data.get_bus_indices_t()
+
         elif self.engine == bs.EngineType.Bentayga:
 
             lin_mat = bentayga_linear_matrices(self.grid, distributed_slack=self.options.distribute_slack)
@@ -231,6 +271,9 @@ class LinearAnalysisDriver(DriverTemplate):
             self.results.Sf = lin_mat.get_flows(lin_mat.Pbus * self.grid.Sbase)
             self.results.loading = self.results.Sf / (lin_mat.rates + 1e-20)
             self.results.Sbus = lin_mat.Pbus * self.grid.Sbase
+
+        # fill F, T, Areas, etc...
+        self.results.fill_circuit_info(self.grid)
 
         end = time.time()
         self.elapsed = end - start

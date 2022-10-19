@@ -478,6 +478,7 @@ def power_flow_post_process(calculation_inputs: SnapshotData, Sbus, V, branch_ra
         # Branch power in MVA
         Sfb = Sf * calculation_inputs.Sbase
         Stb = St * calculation_inputs.Sbase
+
     else:
         # DC power flow
         theta_f = np.angle(Vf, deg=False)
@@ -486,9 +487,10 @@ def power_flow_post_process(calculation_inputs: SnapshotData, Sbus, V, branch_ra
         Sf = (1.0 / calculation_inputs.branch_data.X) * Vbranch
         Sfb = Sf * calculation_inputs.Sbase
         Stb = Sf * calculation_inputs.Sbase
-        If = Sfb
-        It = Stb
-        losses = np.zeros(calculation_inputs.nbr)
+        If = Sf / (Vf + 1e-20)
+        It = -If
+        # losses are not considered in the power flow computation
+        losses = If * If * calculation_inputs.branch_data.R * calculation_inputs.Sbase
 
     # Branch loading in p.u.
     loading = Sfb / (branch_rates + 1e-9)
@@ -548,7 +550,7 @@ def get_hvdc_power(multi_circuit: MultiCircuit, bus_dict, theta, t=None):
     Pf_hvdc = np.zeros(len(multi_circuit.hvdc_lines))
     Pt_hvdc = np.zeros(len(multi_circuit.hvdc_lines))
     loading_hvdc = np.zeros(len(multi_circuit.hvdc_lines))
-    n_free = 0  # number of free hvdc lines that nee PF recalculation
+    n_free = 0  # number of free hvdc lines that need PF recalculation
 
     for k, elm in enumerate(multi_circuit.hvdc_lines):
 

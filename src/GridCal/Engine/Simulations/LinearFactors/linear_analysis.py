@@ -438,3 +438,16 @@ class LinearAnalysis:
         Pbr = np.dot(self.PTDF, Sbus.real).T * self.grid.Sbase
 
         return Pbr
+
+    def get_losses(self, Sf):
+        """
+        Compute losses estimation
+        :param Sf: branch active power Sf time series (MW)
+        :return: branch active losses time series
+        """
+
+        u = np.ones(Sf.shape)
+        p = Sf / self.grid.Sbase
+        i = p / (u + 1e-20)
+
+        return i * i * self.numerical_circuit.branch_data.R * self.grid.Sbase
