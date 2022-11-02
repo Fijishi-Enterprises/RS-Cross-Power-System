@@ -23,15 +23,12 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="903393a6-e011-4cf7-964c-90325cdcb845" name="Default Changelist" comment="PTDF losses implementation">
-      <change afterPath="$PROJECT_DIR$/src/build/lib/GridCal/Engine/Simulations/group_post_process.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/dist/GridCal-4.6.1a2-py3-none-any.whl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/dist/GridCal-4.6.1a3-py3-none-any.whl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/dist/GridCal-4.6.1a4-py3-none-any.whl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/dist/GridCal-4.6.1a5-py3-none-any.whl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/dist/GridCal-4.6.1a6-py3-none-any.whl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/build/lib/GridCal/Engine/Simulations/OPF/ntc_opf.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/build/lib/GridCal/Engine/Simulations/OPF/ntc_opf.py" afterDir="false" />
+    <list default="true" id="903393a6-e011-4cf7-964c-90325cdcb845" name="Default Changelist" comment="correction generation contingency checkbox">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCal/Engine/Simulations/OPF/opf_ntc_ts_driver.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/Engine/Simulations/OPF/opf_ntc_ts_driver.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCal/Engine/Simulations/result_types.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/Engine/Simulations/result_types.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCal/__version__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/__version__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCal/snp_ntc_opf.lp" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/snp_ntc_opf.lp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -147,7 +144,7 @@
       <recent name="C:\Users\SPV86\Documents\Git\GitHub\GridCal\src\GridCal\Gui\Session" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.ExecuteGridCal">
+  <component name="RunManager" selected="Python.setup">
     <configuration name="ExecuteGridCal" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="GridCal" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -722,13 +719,6 @@
       <workItem from="1646596754247" duration="5002000" />
       <workItem from="1646637733706" duration="432000" />
     </task>
-    <task id="LOCAL-00256" summary="Added &quot;maximize exchange&quot; option to the normal OPF">
-      <created>1642536865181</created>
-      <option name="number" value="00256" />
-      <option name="presentableId" value="LOCAL-00256" />
-      <option name="project" value="LOCAL" />
-      <updated>1642536865181</updated>
-    </task>
     <task id="LOCAL-00257" summary="Added &quot;maximize exchange&quot; option to the normal OPF-time series">
       <created>1642540764467</created>
       <option name="number" value="00257" />
@@ -1065,7 +1055,14 @@
       <option name="project" value="LOCAL" />
       <updated>1666218076378</updated>
     </task>
-    <option name="localTasksCounter" value="305" />
+    <task id="LOCAL-00305" summary="correction generation contingency checkbox">
+      <created>1666218307595</created>
+      <option name="number" value="00305" />
+      <option name="presentableId" value="LOCAL-00305" />
+      <option name="project" value="LOCAL" />
+      <updated>1666218307595</updated>
+    </task>
+    <option name="localTasksCounter" value="306" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -1099,7 +1096,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Fixed LODF bug when dividing by very small numbers" />
     <MESSAGE value="working to include ntc load rule to monitor criteria" />
     <MESSAGE value="Several fixes. &#10;Included NTC Load Rule in reports" />
     <MESSAGE value="Fix report" />
@@ -1124,7 +1120,8 @@
     <MESSAGE value=" - fixed abs alpha_n1 value in contingency selection" />
     <MESSAGE value="corrected generation contingency checkbox" />
     <MESSAGE value="PTDF losses implementation" />
-    <option name="LAST_COMMIT_MESSAGE" value="PTDF losses implementation" />
+    <MESSAGE value="correction generation contingency checkbox" />
+    <option name="LAST_COMMIT_MESSAGE" value="correction generation contingency checkbox" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
