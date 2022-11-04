@@ -23,12 +23,13 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="903393a6-e011-4cf7-964c-90325cdcb845" name="Default Changelist" comment="correction generation contingency checkbox">
+    <list default="true" id="903393a6-e011-4cf7-964c-90325cdcb845" name="Default Changelist" comment="Fixed bug with none interarea hvdcs.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCal/Engine/Simulations/OPF/opf_ntc_ts_driver.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/Engine/Simulations/OPF/opf_ntc_ts_driver.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCal/Engine/Simulations/result_types.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/Engine/Simulations/result_types.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCal/Engine/Simulations/OPF/ntc_opf.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/Engine/Simulations/OPF/ntc_opf.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GridCal/__version__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/__version__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCal/snp_ntc_opf.lp" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/snp_ntc_opf.lp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/build/lib/GridCal/Engine/Simulations/OPF/opf_ntc_ts_driver.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/build/lib/GridCal/Engine/Simulations/OPF/opf_ntc_ts_driver.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/build/lib/GridCal/Engine/Simulations/result_types.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/build/lib/GridCal/Engine/Simulations/result_types.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/build/lib/GridCal/__version__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/build/lib/GridCal/__version__.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -719,13 +720,6 @@
       <workItem from="1646596754247" duration="5002000" />
       <workItem from="1646637733706" duration="432000" />
     </task>
-    <task id="LOCAL-00257" summary="Added &quot;maximize exchange&quot; option to the normal OPF-time series">
-      <created>1642540764467</created>
-      <option name="number" value="00257" />
-      <option name="presentableId" value="LOCAL-00257" />
-      <option name="project" value="LOCAL" />
-      <updated>1642540764467</updated>
-    </task>
     <task id="LOCAL-00258" summary="Added inter area generation maximization/minimization&#10;Rearranged menus&#10;Added area &quot;slicing&quot; functions to the snapshot">
       <created>1642583578445</created>
       <option name="number" value="00258" />
@@ -1062,7 +1056,14 @@
       <option name="project" value="LOCAL" />
       <updated>1666218307595</updated>
     </task>
-    <option name="localTasksCounter" value="306" />
+    <task id="LOCAL-00306" summary="New optimal NTC reports:&#10; - Grouped by category&#10; - New generation serie result.">
+      <created>1667396145006</created>
+      <option name="number" value="00306" />
+      <option name="presentableId" value="LOCAL-00306" />
+      <option name="project" value="LOCAL" />
+      <updated>1667396145006</updated>
+    </task>
+    <option name="localTasksCounter" value="307" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -1096,8 +1097,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="working to include ntc load rule to monitor criteria" />
-    <MESSAGE value="Several fixes. &#10;Included NTC Load Rule in reports" />
     <MESSAGE value="Fix report" />
     <MESSAGE value="Rounded values in report" />
     <MESSAGE value="Little fix divided by sbase twice" />
@@ -1121,7 +1120,9 @@
     <MESSAGE value="corrected generation contingency checkbox" />
     <MESSAGE value="PTDF losses implementation" />
     <MESSAGE value="correction generation contingency checkbox" />
-    <option name="LAST_COMMIT_MESSAGE" value="correction generation contingency checkbox" />
+    <MESSAGE value="New optimal NTC reports:&#10; - Grouped by category&#10; - New generation serie result." />
+    <MESSAGE value="Fixed bug with none interarea hvdcs." />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed bug with none interarea hvdcs." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1359,12 +1360,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/GridCal/Engine/Simulations/OPF/ntc_opf.py</url>
-          <line>2198</line>
+          <line>2203</line>
           <option name="timeStamp" value="772" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/GridCal/Engine/Simulations/OPF/ntc_opf.py</url>
-          <line>1571</line>
+          <line>1576</line>
           <option name="timeStamp" value="773" />
         </line-breakpoint>
       </breakpoints>
