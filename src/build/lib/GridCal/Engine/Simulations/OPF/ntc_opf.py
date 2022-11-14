@@ -185,20 +185,25 @@ def get_inter_areas_branches(nbr, F, T, buses_areas_1, buses_areas_2):
     return lst
 
 def get_structural_ntc(inter_area_branches, inter_area_hvdc, branch_ratings, hvdc_ratings):
-    '''
+    """
 
     :param inter_area_branches:
     :param inter_area_hvdc:
     :param branch_rates:
     :param hvdc_ratings:
     :return:
-    '''
+    """
+
     idx_branch, b = list(zip(*inter_area_branches))
     idx_branch = list(idx_branch)
 
-    idx_hvdc, b = list(zip(*inter_area_hvdc))
-    idx_hvdc = list(idx_hvdc)
-    return sum(branch_ratings[idx_branch]) + sum(hvdc_ratings[idx_hvdc])
+    sum_ratings = sum(branch_ratings[idx_branch])
+    if len(inter_area_hvdc) > 0:
+        idx_hvdc, b = list(zip(*inter_area_hvdc))
+        idx_hvdc = list(idx_hvdc)
+        sum_ratings +=  sum(hvdc_ratings[idx_hvdc])
+
+    return sum_ratings
 
 def get_generators_per_areas(Cgen, buses_in_a1, buses_in_a2):
     """
