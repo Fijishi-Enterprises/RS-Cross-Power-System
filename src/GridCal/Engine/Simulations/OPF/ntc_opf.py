@@ -921,6 +921,10 @@ def formulate_branches_flow(solver: pywraplp.Solver, nbr, nbus, Rates, Sbase,
             if rates[m] <= 0:
                 logger.add_error('Rate = 0', 'Branch:{0}'.format(m) + ';' + branch_names[m], rates[m])
 
+
+            # NTC min for considering as limiting element by CEP rule
+            branch_ntc_load_rule[m] = cep_rule * rates[m] / (max_alpha + 1e-20)
+
             # determine the monitoring logic
             monitor[m] = monitor_loading[m]
 
@@ -939,9 +943,6 @@ def formulate_branches_flow(solver: pywraplp.Solver, nbr, nbus, Rates, Sbase,
                 # declare the flow variable with ample limits
                 flow_f[m] = solver.NumVar(
                     -inf, inf, 'branch_flow_{0}:{1}'.format(branch_names[m], m))
-
-            # NTC min for considering as limiting element by CEP rule
-            branch_ntc_load_rule[m] = cep_rule * rates[m] / (max_alpha + 1e-20)
 
             # compute the flow
             _f = F[m]
