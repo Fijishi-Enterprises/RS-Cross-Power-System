@@ -26,12 +26,7 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="903393a6-e011-4cf7-964c-90325cdcb845" name="Default Changelist" comment="csc sparse branch derivatives">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCal/Engine/Simulations/OPF/ntc_opf.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/Engine/Simulations/OPF/ntc_opf.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCal/Engine/Simulations/OPF/opf_ntc_driver.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/Engine/Simulations/OPF/opf_ntc_driver.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCal/snp_ntc_opf.lp" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/snp_ntc_opf.lp" afterDir="false" />
-    </list>
+    <list default="true" id="903393a6-e011-4cf7-964c-90325cdcb845" name="Default Changelist" comment="version 4.6.1a9&#10;&#10;- fixed little bug in CEP rule: was not computing alpha neither alpha n-1" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -1040,13 +1035,6 @@
       <workItem from="1662067830182" duration="1211000" />
       <workItem from="1662359262233" duration="956000" />
     </task>
-    <task id="LOCAL-00299" summary="Added ZIP values to the Json V3 reader&#10;Added extra debug info to NR">
-      <created>1652303366559</created>
-      <option name="number" value="00299" />
-      <option name="presentableId" value="LOCAL-00299" />
-      <option name="project" value="LOCAL" />
-      <updated>1652303366559</updated>
-    </task>
     <task id="LOCAL-00300" summary="Slight modifications to display more data for debugging">
       <created>1652692334167</created>
       <option name="number" value="00300" />
@@ -1383,7 +1371,14 @@
       <option name="project" value="LOCAL" />
       <updated>1662061867029</updated>
     </task>
-    <option name="localTasksCounter" value="348" />
+    <task id="LOCAL-00348" summary="version 4.6.1a9&#10;&#10;- fixed little bug in CEP rule: was not computing alpha neither alpha n-1">
+      <created>1668685525557</created>
+      <option name="number" value="00348" />
+      <option name="presentableId" value="LOCAL-00348" />
+      <option name="project" value="LOCAL" />
+      <updated>1668685525557</updated>
+    </task>
+    <option name="localTasksCounter" value="349" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -1417,7 +1412,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="added newton pa support for clustering time series" />
     <MESSAGE value="Worked on new expressions" />
     <MESSAGE value="added negative and zero sequence magnitudes to the branches" />
     <MESSAGE value="Added DPI support" />
@@ -1442,7 +1436,8 @@
     <MESSAGE value="Updated the version file" />
     <MESSAGE value="Added losses % to the power flow time series&#10;Minor refactors of the GUI" />
     <MESSAGE value="csc sparse branch derivatives" />
-    <option name="LAST_COMMIT_MESSAGE" value="csc sparse branch derivatives" />
+    <MESSAGE value="version 4.6.1a9&#10;&#10;- fixed little bug in CEP rule: was not computing alpha neither alpha n-1" />
+    <option name="LAST_COMMIT_MESSAGE" value="version 4.6.1a9&#10;&#10;- fixed little bug in CEP rule: was not computing alpha neither alpha n-1" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
