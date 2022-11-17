@@ -960,7 +960,7 @@ class OptimalNetTransferCapacityDriver(DriverTemplate):
         linear.run()
 
         # sensitivities
-        if self.options.monitor_only_sensitive_branches:
+        if self.options.monitor_only_sensitive_branches or self.options.monitor_only_ntc_load_rule_branches:
             alpha, alpha_n1 = self.compute_exchange_sensitivity(
                 linear=linear,
                 numerical_circuit=numerical_circuit,

@@ -201,7 +201,7 @@ def get_structural_ntc(inter_area_branches, inter_area_hvdc, branch_ratings, hvd
     if len(inter_area_hvdc) > 0:
         idx_hvdc, b = list(zip(*inter_area_hvdc))
         idx_hvdc = list(idx_hvdc)
-        sum_ratings +=  sum(hvdc_ratings[idx_hvdc])
+        sum_ratings += sum(hvdc_ratings[idx_hvdc])
 
     return sum_ratings
 
@@ -928,11 +928,15 @@ def formulate_branches_flow(solver: pywraplp.Solver, nbr, nbus, Rates, Sbase,
             # determine the monitoring logic
             monitor[m] = monitor_loading[m]
 
+            c1 = monitor_loading[m]
+            c2 = max_alpha > branch_sensitivity_threshold
+            c3 = branch_ntc_load_rule[m] <= structural_ntc
+
             if monitor_only_sensitive_branches:
-                monitor[m] = monitor[m] and max_alpha > branch_sensitivity_threshold
+                monitor[m] = c1 and c2
 
             if monitor_only_ntc_load_rule_branches:
-                monitor[m] = monitor[m] and branch_ntc_load_rule[m] <= structural_ntc
+                monitor[m] = c1 and c2 and c3
 
             # determine branch rate according monitor logic
             if monitor[m]:
@@ -1689,7 +1693,7 @@ class OpfNTC(Opf):
 
         # branch
         branch_ratings = self.numerical_circuit.branch_rates / Sbase
-        hvdc_ratings = self.numerical_circuit.hvdc_data.rate / Sbase
+        hvdc_ratings = self.numerical_circuit.hvdc_data.rate[:, t] / Sbase
 
         alpha_abs = np.abs(self.alpha)
         alpha_n1_abs = np.abs(self.alpha_n1)
