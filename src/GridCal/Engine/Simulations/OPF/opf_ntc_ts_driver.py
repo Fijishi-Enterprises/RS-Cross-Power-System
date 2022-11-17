@@ -593,7 +593,7 @@ class OptimalNetTransferCapacityTimeSeriesDriver(TimeSeriesDriverTemplate):
                 print('Optimal net transfer capacity at ' + str(self.grid.time_profile[t]))
 
             # sensitivities
-            if self.options.monitor_only_sensitive_branches:
+            if self.options.monitor_only_sensitive_branches or self.options.monitor_only_ntc_load_rule_branches:
 
                 if self.options.sensitivity_mode == AvailableTransferMode.InstalledPower:
                     alpha = self.installed_alpha

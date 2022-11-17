@@ -921,7 +921,6 @@ def formulate_branches_flow(solver: pywraplp.Solver, nbr, nbus, Rates, Sbase,
             if rates[m] <= 0:
                 logger.add_error('Rate = 0', 'Branch:{0}'.format(m) + ';' + branch_names[m], rates[m])
 
-
             # NTC min for considering as limiting element by CEP rule
             branch_ntc_load_rule[m] = cep_rule * rates[m] / (max_alpha + 1e-20)
 
