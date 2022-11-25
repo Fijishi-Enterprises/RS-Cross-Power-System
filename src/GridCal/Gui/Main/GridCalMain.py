@@ -4198,7 +4198,7 @@ class MainGUI(QMainWindow):
         self.ui.skipNtcGenerationLimitsCheckBox.setChecked(False)
         self.ui.considerContingenciesNtcOpfCheckBox.setChecked(True)
         self.ui.ntcDispatchAllAreasCheckBox.setChecked(False)
-        self.ui.ntcFeasibilityCheckCheckBox.setChecked(False)
+        # self.ui.ntcFeasibilityCheckCheckBox.setChecked(False)
         self.ui.weightPowerShiftSpinBox.setValue(0)
         self.ui.weightGenCostSpinBox.setValue(0)
         self.ui.weightsOverloadsSpinBox.setValue(0)
@@ -4211,7 +4211,7 @@ class MainGUI(QMainWindow):
         self.ui.skipNtcGenerationLimitsCheckBox.setChecked(True)
         self.ui.considerContingenciesNtcOpfCheckBox.setChecked(True)
         self.ui.ntcDispatchAllAreasCheckBox.setChecked(False)
-        self.ui.ntcFeasibilityCheckCheckBox.setChecked(False)
+        # self.ui.ntcFeasibilityCheckCheckBox.setChecked(False)
         self.ui.weightPowerShiftSpinBox.setValue(5)
         self.ui.weightGenCostSpinBox.setValue(2)
         self.ui.weightsOverloadsSpinBox.setValue(3)
@@ -4260,15 +4260,16 @@ class MainGUI(QMainWindow):
                     generation_formulation = dev.GenerationNtcFormulation.Optimal
                     # perform_previous_checks = False
 
-                monitor_only_sensitive_branches = self.ui.ntcSelectBasedOnExchangeSensitivityRadioButton.isChecked()
-                monitor_only_ntc_rule_branches = self.ui.ntcSelectBasedOnAcerCriteriaRadioButton.isChecked()
+                monitor_only_sensitive_branches = self.ui.ntcSelectBasedOnExchangeSensitivityCheckBox.isChecked()
+                monitor_only_ntc_rule_branches = self.ui.ntcSelectBasedOnAcerCriteriaCheckBox.isChecked()
                 skip_generation_limits = self.ui.skipNtcGenerationLimitsCheckBox.isChecked()
                 branch_sensitivity_threshold = self.ui.ntcAlphaSpinBox.value() / 100.0
                 dT = self.ui.atcPerturbanceSpinBox.value()
                 mode = self.transfer_modes_dict[self.ui.transferMethodComboBox.currentText()]
                 tolerance = 10.0 ** self.ui.ntcOpfTolSpinBox.value()
 
-                perform_previous_checks = self.ui.ntcFeasibilityCheckCheckBox.isChecked()
+                # perform_previous_checks = self.ui.ntcFeasibilityCheckCheckBox.isChecked()
+                perform_previous_checks = False
 
                 dispatch_all_areas = self.ui.ntcDispatchAllAreasCheckBox.isChecked()
 
@@ -4417,15 +4418,16 @@ class MainGUI(QMainWindow):
                     generation_formulation = dev.GenerationNtcFormulation.Optimal
                     # perform_previous_checks = False
 
-                monitor_only_sensitive_branches = self.ui.ntcSelectBasedOnExchangeSensitivityRadioButton.isChecked()
-                monitor_only_ntc_rule_branches = self.ui.ntcSelectBasedOnAcerCriteriaRadioButton.isChecked()
+                monitor_only_sensitive_branches = self.ui.ntcSelectBasedOnExchangeSensitivityCheckBox.isChecked()
+                monitor_only_ntc_rule_branches = self.ui.ntcSelectBasedOnAcerCriteriaCheckBox.isChecked()
                 skip_generation_limits = self.ui.skipNtcGenerationLimitsCheckBox.isChecked()
                 branch_sensitivity_threshold = self.ui.atcThresholdSpinBox.value()
                 dT = self.ui.atcPerturbanceSpinBox.value()
                 mode = self.transfer_modes_dict[self.ui.transferMethodComboBox.currentText()]
                 tolerance = 10.0 ** self.ui.ntcOpfTolSpinBox.value()
 
-                perform_previous_checks = self.ui.ntcFeasibilityCheckCheckBox.isChecked()
+                # perform_previous_checks = self.ui.ntcFeasibilityCheckCheckBox.isChecked()
+                perform_previous_checks = False
 
                 dispatch_all_areas = self.ui.ntcDispatchAllAreasCheckBox.isChecked()
 

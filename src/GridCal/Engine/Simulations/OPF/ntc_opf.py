@@ -927,15 +927,11 @@ def formulate_branches_flow(solver: pywraplp.Solver, nbr, nbus, Rates, Sbase,
             # determine the monitoring logic
             monitor[m] = monitor_loading[m]
 
-            c1 = monitor_loading[m]
-            c2 = max_alpha > branch_sensitivity_threshold
-            c3 = branch_ntc_load_rule[m] <= structural_ntc
-
             if monitor_only_sensitive_branches:
-                monitor[m] = c1 and c2
+                monitor[m] = monitor[m] and max_alpha > branch_sensitivity_threshold
 
             if monitor_only_ntc_load_rule_branches:
-                monitor[m] = c1 and c2 and c3
+                monitor[m] = monitor[m] and branch_ntc_load_rule[m] <= structural_ntc
 
             # determine branch rate according monitor logic
             if monitor[m]:
