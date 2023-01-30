@@ -4198,7 +4198,7 @@ class MainGUI(QMainWindow):
         self.ui.skipNtcGenerationLimitsCheckBox.setChecked(False)
         self.ui.considerContingenciesNtcOpfCheckBox.setChecked(True)
         self.ui.ntcDispatchAllAreasCheckBox.setChecked(False)
-        # self.ui.ntcFeasibilityCheckCheckBox.setChecked(False)
+        self.ui.ntcFeasibilityCheckCheckBox.setChecked(False)
         self.ui.weightPowerShiftSpinBox.setValue(0)
         self.ui.weightGenCostSpinBox.setValue(0)
         self.ui.weightsOverloadsSpinBox.setValue(0)
@@ -4211,7 +4211,7 @@ class MainGUI(QMainWindow):
         self.ui.skipNtcGenerationLimitsCheckBox.setChecked(True)
         self.ui.considerContingenciesNtcOpfCheckBox.setChecked(True)
         self.ui.ntcDispatchAllAreasCheckBox.setChecked(False)
-        # self.ui.ntcFeasibilityCheckCheckBox.setChecked(False)
+        self.ui.ntcFeasibilityCheckCheckBox.setChecked(False)
         self.ui.weightPowerShiftSpinBox.setValue(5)
         self.ui.weightGenCostSpinBox.setValue(2)
         self.ui.weightsOverloadsSpinBox.setValue(3)
@@ -4268,8 +4268,7 @@ class MainGUI(QMainWindow):
                 mode = self.transfer_modes_dict[self.ui.transferMethodComboBox.currentText()]
                 tolerance = 10.0 ** self.ui.ntcOpfTolSpinBox.value()
 
-                # perform_previous_checks = self.ui.ntcFeasibilityCheckCheckBox.isChecked()
-                perform_previous_checks = False
+                perform_previous_checks = self.ui.ntcFeasibilityCheckCheckBox.isChecked()
 
                 dispatch_all_areas = self.ui.ntcDispatchAllAreasCheckBox.isChecked()
 

@@ -2164,22 +2164,34 @@ class Ui_mainWindow(object):
         self.frame_67.setFrameShadow(QFrame.Raised)
         self.gridLayout_24 = QGridLayout(self.frame_67)
         self.gridLayout_24.setObjectName(u"gridLayout_24")
-        self.ntcDispatchAllAreasCheckBox = QCheckBox(self.frame_67)
-        self.ntcDispatchAllAreasCheckBox.setObjectName(u"ntcDispatchAllAreasCheckBox")
-
-        self.gridLayout_24.addWidget(self.ntcDispatchAllAreasCheckBox, 3, 0, 1, 1)
-
         self.label_231 = QLabel(self.frame_67)
         self.label_231.setObjectName(u"label_231")
 
-        self.gridLayout_24.addWidget(self.label_231, 5, 0, 1, 1)
+        self.gridLayout_24.addWidget(self.label_231, 6, 0, 1, 1)
 
         self.ntcOpfTolSpinBox = QSpinBox(self.frame_67)
         self.ntcOpfTolSpinBox.setObjectName(u"ntcOpfTolSpinBox")
         self.ntcOpfTolSpinBox.setMinimum(-99)
         self.ntcOpfTolSpinBox.setValue(-3)
 
-        self.gridLayout_24.addWidget(self.ntcOpfTolSpinBox, 4, 1, 1, 1)
+        self.gridLayout_24.addWidget(self.ntcOpfTolSpinBox, 5, 1, 1, 1)
+
+        self.ntcDispatchAllAreasCheckBox = QCheckBox(self.frame_67)
+        self.ntcDispatchAllAreasCheckBox.setObjectName(u"ntcDispatchAllAreasCheckBox")
+
+        self.gridLayout_24.addWidget(self.ntcDispatchAllAreasCheckBox, 3, 0, 1, 1)
+
+        self.proportionalRedispatchRadioButton = QRadioButton(self.frame_67)
+        self.proportionalRedispatchRadioButton.setObjectName(u"proportionalRedispatchRadioButton")
+        self.proportionalRedispatchRadioButton.setChecked(True)
+
+        self.gridLayout_24.addWidget(self.proportionalRedispatchRadioButton, 0, 0, 1, 2)
+
+        self.skipNtcGenerationLimitsCheckBox = QCheckBox(self.frame_67)
+        self.skipNtcGenerationLimitsCheckBox.setObjectName(u"skipNtcGenerationLimitsCheckBox")
+        self.skipNtcGenerationLimitsCheckBox.setChecked(True)
+
+        self.gridLayout_24.addWidget(self.skipNtcGenerationLimitsCheckBox, 2, 0, 1, 2)
 
         self.trmSpinBox = QSpinBox(self.frame_67)
         self.trmSpinBox.setObjectName(u"trmSpinBox")
@@ -2188,30 +2200,23 @@ class Ui_mainWindow(object):
         self.trmSpinBox.setValue(400)
         self.trmSpinBox.setDisplayIntegerBase(10)
 
-        self.gridLayout_24.addWidget(self.trmSpinBox, 5, 1, 1, 1)
-
-        self.skipNtcGenerationLimitsCheckBox = QCheckBox(self.frame_67)
-        self.skipNtcGenerationLimitsCheckBox.setObjectName(u"skipNtcGenerationLimitsCheckBox")
-        self.skipNtcGenerationLimitsCheckBox.setChecked(True)
-
-        self.gridLayout_24.addWidget(self.skipNtcGenerationLimitsCheckBox, 2, 0, 1, 2)
-
-        self.proportionalRedispatchRadioButton = QRadioButton(self.frame_67)
-        self.proportionalRedispatchRadioButton.setObjectName(u"proportionalRedispatchRadioButton")
-        self.proportionalRedispatchRadioButton.setChecked(True)
-
-        self.gridLayout_24.addWidget(self.proportionalRedispatchRadioButton, 0, 0, 1, 2)
-
-        self.label_101 = QLabel(self.frame_67)
-        self.label_101.setObjectName(u"label_101")
-
-        self.gridLayout_24.addWidget(self.label_101, 4, 0, 1, 1)
+        self.gridLayout_24.addWidget(self.trmSpinBox, 6, 1, 1, 1)
 
         self.optimalRedispatchRadioButton = QRadioButton(self.frame_67)
         self.optimalRedispatchRadioButton.setObjectName(u"optimalRedispatchRadioButton")
         self.optimalRedispatchRadioButton.setChecked(False)
 
         self.gridLayout_24.addWidget(self.optimalRedispatchRadioButton, 1, 0, 1, 2)
+
+        self.label_101 = QLabel(self.frame_67)
+        self.label_101.setObjectName(u"label_101")
+
+        self.gridLayout_24.addWidget(self.label_101, 5, 0, 1, 1)
+
+        self.ntcFeasibilityCheckCheckBox = QCheckBox(self.frame_67)
+        self.ntcFeasibilityCheckCheckBox.setObjectName(u"ntcFeasibilityCheckCheckBox")
+
+        self.gridLayout_24.addWidget(self.ntcFeasibilityCheckCheckBox, 4, 0, 1, 1)
 
 
         self.gridLayout_15.addWidget(self.frame_67, 2, 0, 2, 3)
@@ -4456,7 +4461,6 @@ class Ui_mainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.considerContingenciesNtcOpfCheckBox.setText(QCoreApplication.translate("mainWindow", u"Consider branch contingencies", None))
         self.considerContingenciesHvdcOpfCheckBox.setText(QCoreApplication.translate("mainWindow", u"Consider hvdc contingencies", None))
-        self.ntcDispatchAllAreasCheckBox.setText(QCoreApplication.translate("mainWindow", u"Dispatch all areas", None))
 #if QT_CONFIG(tooltip)
         self.label_231.setToolTip(QCoreApplication.translate("mainWindow", u"Transmission reliability margin (TRM)", None))
 #endif // QT_CONFIG(tooltip)
@@ -4466,23 +4470,25 @@ class Ui_mainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.ntcOpfTolSpinBox.setSuffix("")
         self.ntcOpfTolSpinBox.setPrefix(QCoreApplication.translate("mainWindow", u"1e", None))
-        self.trmSpinBox.setSuffix(QCoreApplication.translate("mainWindow", u" MW", None))
-#if QT_CONFIG(tooltip)
-        self.skipNtcGenerationLimitsCheckBox.setToolTip(QCoreApplication.translate("mainWindow", u"If activated, the generation limits are not considered", None))
-#endif // QT_CONFIG(tooltip)
-        self.skipNtcGenerationLimitsCheckBox.setText(QCoreApplication.translate("mainWindow", u"Skip generation limits", None))
+        self.ntcDispatchAllAreasCheckBox.setText(QCoreApplication.translate("mainWindow", u"Dispatch all areas", None))
 #if QT_CONFIG(tooltip)
         self.proportionalRedispatchRadioButton.setToolTip(QCoreApplication.translate("mainWindow", u"The generation is modified as a linear combination of it's current dispatch", None))
 #endif // QT_CONFIG(tooltip)
         self.proportionalRedispatchRadioButton.setText(QCoreApplication.translate("mainWindow", u"Proportional redispatch", None))
 #if QT_CONFIG(tooltip)
-        self.label_101.setToolTip(QCoreApplication.translate("mainWindow", u"<html><head/><body><p>This tolerance determines the maximum value of a slack variable that produces an error</p></body></html>", None))
+        self.skipNtcGenerationLimitsCheckBox.setToolTip(QCoreApplication.translate("mainWindow", u"If activated, the generation limits are not considered", None))
 #endif // QT_CONFIG(tooltip)
-        self.label_101.setText(QCoreApplication.translate("mainWindow", u"Slack variables' tolerance", None))
+        self.skipNtcGenerationLimitsCheckBox.setText(QCoreApplication.translate("mainWindow", u"Skip generation limits", None))
+        self.trmSpinBox.setSuffix(QCoreApplication.translate("mainWindow", u" MW", None))
 #if QT_CONFIG(tooltip)
         self.optimalRedispatchRadioButton.setToolTip(QCoreApplication.translate("mainWindow", u"The generation is modified so that the transference is maximal.", None))
 #endif // QT_CONFIG(tooltip)
         self.optimalRedispatchRadioButton.setText(QCoreApplication.translate("mainWindow", u"Optimal dispatch", None))
+#if QT_CONFIG(tooltip)
+        self.label_101.setToolTip(QCoreApplication.translate("mainWindow", u"<html><head/><body><p>This tolerance determines the maximum value of a slack variable that produces an error</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.label_101.setText(QCoreApplication.translate("mainWindow", u"Slack variables' tolerance", None))
+        self.ntcFeasibilityCheckCheckBox.setText(QCoreApplication.translate("mainWindow", u"Check feasibility ", None))
 #if QT_CONFIG(tooltip)
         self.ntcSelectBasedOnExchangeSensitivityCheckBox.setToolTip(QCoreApplication.translate("mainWindow", u"A branch is monitored solely based on its contribution to the inter-area exchange sensivility. Therefore a branch is selected if ti's alpha value is greater than the set alpha %", None))
 #endif // QT_CONFIG(tooltip)

@@ -4050,14 +4050,7 @@ p, li { white-space: pre-wrap; }
                   <enum>QFrame::Raised</enum>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_24">
-                  <item row="3" column="0">
-                   <widget class="QCheckBox" name="ntcDispatchAllAreasCheckBox">
-                    <property name="text">
-                     <string>Dispatch all areas</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="0">
+                  <item row="6" column="0">
                    <widget class="QLabel" name="label_23">
                     <property name="toolTip">
                      <string>Transmission reliability margin (TRM)</string>
@@ -4067,7 +4060,7 @@ p, li { white-space: pre-wrap; }
                     </property>
                    </widget>
                   </item>
-                  <item row="4" column="1">
+                  <item row="5" column="1">
                    <widget class="QSpinBox" name="ntcOpfTolSpinBox">
                     <property name="toolTip">
                      <string>This value determines if the convergence is reached</string>
@@ -4086,7 +4079,40 @@ p, li { white-space: pre-wrap; }
                     </property>
                    </widget>
                   </item>
-                  <item row="5" column="1">
+                  <item row="3" column="0">
+                   <widget class="QCheckBox" name="ntcDispatchAllAreasCheckBox">
+                    <property name="text">
+                     <string>Dispatch all areas</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0" colspan="2">
+                   <widget class="QRadioButton" name="proportionalRedispatchRadioButton">
+                    <property name="toolTip">
+                     <string>The generation is modified as a linear combination of it's current dispatch</string>
+                    </property>
+                    <property name="text">
+                     <string>Proportional redispatch</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0" colspan="2">
+                   <widget class="QCheckBox" name="skipNtcGenerationLimitsCheckBox">
+                    <property name="toolTip">
+                     <string>If activated, the generation limits are not considered</string>
+                    </property>
+                    <property name="text">
+                     <string>Skip generation limits</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="1">
                    <widget class="QSpinBox" name="trmSpinBox">
                     <property name="suffix">
                      <string> MW</string>
@@ -4105,42 +4131,6 @@ p, li { white-space: pre-wrap; }
                     </property>
                    </widget>
                   </item>
-                  <item row="2" column="0" colspan="2">
-                   <widget class="QCheckBox" name="skipNtcGenerationLimitsCheckBox">
-                    <property name="toolTip">
-                     <string>If activated, the generation limits are not considered</string>
-                    </property>
-                    <property name="text">
-                     <string>Skip generation limits</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="0" colspan="2">
-                   <widget class="QRadioButton" name="proportionalRedispatchRadioButton">
-                    <property name="toolTip">
-                     <string>The generation is modified as a linear combination of it's current dispatch</string>
-                    </property>
-                    <property name="text">
-                     <string>Proportional redispatch</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="0">
-                   <widget class="QLabel" name="label_101">
-                    <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This tolerance determines the maximum value of a slack variable that produces an error&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="text">
-                     <string>Slack variables' tolerance</string>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="1" column="0" colspan="2">
                    <widget class="QRadioButton" name="optimalRedispatchRadioButton">
                     <property name="toolTip">
@@ -4151,6 +4141,23 @@ p, li { white-space: pre-wrap; }
                     </property>
                     <property name="checked">
                      <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="0">
+                   <widget class="QLabel" name="label_101">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This tolerance determines the maximum value of a slack variable that produces an error&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="text">
+                     <string>Slack variables' tolerance</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="QCheckBox" name="ntcFeasibilityCheckCheckBox">
+                    <property name="text">
+                     <string>Check feasibility </string>
                     </property>
                    </widget>
                   </item>
