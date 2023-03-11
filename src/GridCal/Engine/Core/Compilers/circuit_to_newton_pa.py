@@ -754,10 +754,19 @@ def newton_pa_pf(circuit: MultiCircuit, opt: PowerFlowOptions, time_series=False
         time_indices = [0]
         n_threads = 1
 
-    pf_res = npa.runPowerFlow(circuit=npa_circuit,
+    '''
+    numeric_circuit: newtonpa.HybridCircuit, 
+    pf_options: newtonpa.PowerFlowOptions = <newtonpa.PowerFlowOptions object at 0x7f33853854f0>, 
+    time_indices: List[int] = [0], 
+    n_threads: int = 0, 
+    mute_pg_bar: bool = False)
+    '''
+
+    pf_res = npa.runPowerFlow(numeric_circuit=npa_circuit,
                               pf_options=pf_options,
                               time_indices=time_indices,
-                              n_threads=n_threads)
+                              n_threads=n_threads,
+                              mute_pg_bar=False)
 
     return pf_res
 
