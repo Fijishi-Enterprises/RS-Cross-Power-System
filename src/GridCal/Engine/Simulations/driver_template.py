@@ -115,7 +115,7 @@ class TimeSeriesDriverTemplate(DriverTemplate):
     def __init__(
             self,
             grid: MultiCircuit,
-            time_indices: IntVec,
+            time_indices: Union[IntVec, None],
             clustering_results: Union["ClusteringResults", None] = None,
             engine: bs.EngineType = bs.EngineType.GridCal):
         """
