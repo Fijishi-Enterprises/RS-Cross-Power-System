@@ -37,7 +37,7 @@ from GridCal.Engine.basic_structures import Logger, Mat, Vec, IntVec, DateVec, B
 import GridCal.ThirdParty.ortools.ortools_extra as pl
 from GridCal.Engine.Core.Devices.enumerations import TransformerControlType, HvdcControlType
 from GridCal.Engine.Simulations.LinearFactors.linear_analysis import LinearAnalysis, LinearMultiContingency
-from GridCal.Engine.Simulations.OPF.linear_opf_ts import BatteryVars, BranchVars, BusVars, GenerationVars, HvdcVars, LoadVars, OpfVars
+from GridCal.Engine.Simulations.OPF.linear_opf_ts import BatteryVars, BranchVars, BusVars, GenerationVars, HvdcVars, LoadVars, OpfVars, get_contingency_flow_with_filter
 
 def join(init: str, vals: List[int], sep="_"):
     """
@@ -605,16 +605,19 @@ def add_ntc_branches_formulation(
                 if consider_contingencies:
 
                     for c, multi_ctg in enumerate(multi_contingencies):
+
+                        # compute contingency injections
                         if len(multi_ctg.bus_indices):
                             injections = pl.lpDot(gen_data_t.C_bus_elm, gen_vars.p[t, :])
                         else:
                             injections = None
 
-                        flow_n1 = multi_ctg.get_contingency_flows_with_filter(
+                        flow_n1 = get_contingency_flow_with_filter(
+                            multi_contingency=multi_ctg,
                             base_flow=branch_vars.flows[t, :],
                             injections=injections,
                             threshold=lodf_threshold,
-                        )
+                            m=m)
 
                         flow_n1_var = prob.NumVar(
                             ub=inf,

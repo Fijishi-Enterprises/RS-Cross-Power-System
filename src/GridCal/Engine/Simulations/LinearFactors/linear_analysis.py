@@ -72,30 +72,6 @@ class LinearMultiContingency:
 
         return res
 
-    def get_contingency_flows_with_filter(self, base_flow: Vec, injections: Union[None, Vec], threshold: float):
-        """
-        Get contingency flows
-        :param base_flow: Base branch flows (nbranch)
-        :param injections: Bus injections increments (nbus)
-        :return: New flows (nbranch)
-        """
-        res = base_flow.copy()
-
-        if len(self.branch_indices):
-            # res += self.lodf_factors @ base_flow[self.branch_indices]
-            for i, c in enumerate(self.branch_indices):
-                for j in range(self.lodf_factors.shape[0]):
-                    if abs(self.lodf_factors[i, j]) >= threshold:
-                        res += self.lodf_factors[i, j] * base_flow[c]
-
-        if len(self.bus_indices):
-            # res += self.ptdf_factors @ (self.injections_factor * injections[self.bus_indices])
-            for i, c in enumerate(self.bus_indices):
-                for j in range(self.ptdf_factors.shape[0]):
-                    if abs(self.ptdf_factors[i, j]) >= threshold:
-                        res += self.ptdf_factors[i, j] * self.injections_factor[i] * injections[c]
-
-        return res
 
 def compute_acptdf(Ybus: sp.csc_matrix,
                    Yf: sp.csc_matrix,

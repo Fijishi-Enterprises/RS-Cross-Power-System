@@ -36,7 +36,7 @@ from GridCal.Engine.Core.DataStructures.bus_data import BusData
 from GridCal.Engine.basic_structures import Logger, Mat, Vec, IntVec, DateVec
 import GridCal.ThirdParty.ortools.ortools_extra as pl
 from GridCal.Engine.Core.Devices.enumerations import TransformerControlType, HvdcControlType
-from GridCal.Engine.Simulations.LinearFactors.linear_analysis import LinearAnalysis
+from GridCal.Engine.Simulations.LinearFactors.linear_analysis import LinearAnalysis, LinearMultiContingency
 
 
 def join(init: str, vals: List[int], sep="_"):
@@ -65,6 +65,37 @@ def get_lp_var_value(x: Union[float, ort.Variable]) -> float:
     else:
         return x
 
+
+def get_contingency_flow_with_filter(
+        multi_contingency: LinearMultiContingency,
+        base_flow: Vec,
+        injections: Union[None, Vec],
+        threshold: float,
+        m: int) -> ort.LinearExpr:
+
+    """
+    Get contingency flow
+    :param multi_contingency: MultiContingency object
+    :param base_flow: Base branch flows (nbranch)
+    :param injections: Bus injections increments (nbus)
+    :param threshold: threshold to filter contingency elements
+    :param m: branch monitor index (int)
+    :return: New flows (nbranch)
+    """
+
+    res = base_flow[m] + 0
+
+    if len(multi_contingency.branch_indices):
+        for i, c in enumerate(multi_contingency.branch_indices):
+            if abs(multi_contingency.lodf_factors[m, i]) >= threshold:
+                res += multi_contingency.lodf_factors[m, i] * base_flow[c]
+
+    if len(multi_contingency.bus_indices):
+        for i, c in enumerate(multi_contingency.bus_indices):
+            if abs(multi_contingency.ptdf_factors[m, i]) >= threshold:
+                res += multi_contingency.ptdf_factors[m, i] * multi_contingency.injections_factor[i] * injections[c]
+
+    return res
 
 class BusVars:
     """
