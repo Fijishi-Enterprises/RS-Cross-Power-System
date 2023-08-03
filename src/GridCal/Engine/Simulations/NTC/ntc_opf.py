@@ -1133,7 +1133,7 @@ def formulate_contingency(
 
         for m in mon_br_idx:
 
-            c1 = all(m != c)
+            c1 = all(m != c)  # todo: change to any??
             c2 = any(np.abs(lodfnx[m]) > branch_sensitivity_threshold)
             c3 = np.abs(alpha[m]) > branch_sensitivity_threshold
             c4 = any(np.abs(alpha_n1[m, c]) > branch_sensitivity_threshold)  # todo: check if any or all
@@ -1622,16 +1622,22 @@ def formulate_hvdc_contingency(solver: pywraplp.Solver, ContingencyRates, Sbase,
                     'hvdc_n-1_flow_' + suffix
                 )
 
+                # todo: check to change PTDF signs
+                lodf = (PTDF[m, _f_hvdc] - PTDF[m, _t_hvdc])  # asi en el mou
+                # lodf = (-PTDF[m, _f_hvdc] + PTDF[m, _t_hvdc])   # propuesta nueva
+
                 solver.Add(
-                    flow_n1 == flow_f[m] + (PTDF[m, _f_hvdc] - PTDF[m, _t_hvdc]) * hvdc_f,
+                    flow_n1 == flow_f[m] + lodf * hvdc_f,
                     "hvdc_n-1_flow_assignment_" + suffix
                 )
 
                 # store vars
                 con_hvdc_idx.append((m, [i]))
                 flow_hvdc_n1f.append(flow_n1)
-                # con_alpha.append(PTDF[m, _f_hvdc] - PTDF[m, _t_hvdc] - alpha[m])
-                con_alpha.append(alpha[m] - (PTDF[m, _f_hvdc] - PTDF[m, _t_hvdc]))
+
+                # todo: check
+                # con_alpha.append(lodf - alpha[m])
+                con_alpha.append(alpha[m] - lodf)
 
     return flow_hvdc_n1f, np.array([con_alpha]).T, con_hvdc_idx
 

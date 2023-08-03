@@ -492,7 +492,8 @@ def add_ntc_branches_formulation(
         consider_contingencies: bool,
         multi_contingencies: List[LinearMultiContingency],
         lodf_threshold: float,
-        inf=1e20):
+        inf=1e20,
+        with_slacks=True):
     """
     Formulate the branches
     :param t: time index
@@ -571,36 +572,40 @@ def add_ntc_branches_formulation(
 
             # add the flow constraint if monitored
             if monitor[m]:
-                # TODO: repasar que hacer con los flow slacks
-                # branch_vars.flow_slacks_pos[t, m] = prob.NumVar(
-                #     lb=0,
-                #     ub=inf,
-                #     name=join("flow_slack_pos_", [t, m], "_"))
-                # branch_vars.flow_slacks_neg[t, m] = prob.NumVar(
-                #     lb=0,
-                #     ub=inf,
-                #     name=join("flow_slack_neg_", [t, m], "_"))
 
-                # add upper rate constraint
-                # branch_vars.flow_constraints_ub[t, m] = branch_vars.flows[t, m] + branch_vars.flow_slacks_pos[t, m] - branch_vars.flow_slacks_neg[t, m] <= branch_data_t.rates[m] / Sbase
-                # prob.Add(
-                #     constraint=branch_vars.flow_constraints_ub[t, m],
-                #     name=join("br_flow_upper_lim_", [t, m]))
-                #
-                # # add lower rate constraint
-                # branch_vars.flow_constraints_lb[t, m] = branch_vars.flows[t, m] + branch_vars.flow_slacks_pos[t, m] - branch_vars.flow_slacks_neg[t, m] >= -branch_data_t.rates[m] / Sbase
-                # prob.Add(
-                #     constraint=branch_vars.flow_constraints_lb[t, m],
-                #     name=join("br_flow_lower_lim_", [t, m]))
-                #
-                # # add to the objective function
-                # f_obj += branch_data_t.overload_cost[m] * branch_vars.flow_slacks_pos[t, m]
-                # f_obj += branch_data_t.overload_cost[m] * branch_vars.flow_slacks_neg[t, m]
+                if with_slacks:
 
-                # todo: de momento para mantener lo del mou yo haría esto otro:
-                # Redefine branch limits
-                branch_vars.flows[t, m].setUb(branch_data_t.rates[m] / Sbase)
-                branch_vars.flows[t, m].setLb(-branch_data_t.rates[m] / Sbase)
+                    branch_vars.flow_slacks_pos[t, m] = prob.NumVar(
+                        lb=0,
+                        ub=inf,
+                        name=join("flow_slack_pos_", [t, m], "_"))
+
+                    branch_vars.flow_slacks_neg[t, m] = prob.NumVar(
+                        lb=0,
+                        ub=inf,
+                        name=join("flow_slack_neg_", [t, m], "_"))
+
+                    # add upper rate constraint
+                    branch_vars.flow_constraints_ub[t, m] = branch_vars.flows[t, m] + branch_vars.flow_slacks_pos[t, m] - branch_vars.flow_slacks_neg[t, m] <= branch_data_t.rates[m] / Sbase
+                    prob.Add(
+                        constraint=branch_vars.flow_constraints_ub[t, m],
+                        name=join("br_flow_upper_lim_", [t, m]))
+
+                    # add lower rate constraint
+                    branch_vars.flow_constraints_lb[t, m] = branch_vars.flows[t, m] + branch_vars.flow_slacks_pos[t, m] - branch_vars.flow_slacks_neg[t, m] >= -branch_data_t.rates[m] / Sbase
+                    prob.Add(
+                        constraint=branch_vars.flow_constraints_lb[t, m],
+                        name=join("br_flow_lower_lim_", [t, m]))
+
+                    # add to the objective function
+                    f_obj += branch_data_t.overload_cost[m] * branch_vars.flow_slacks_pos[t, m]
+                    f_obj += branch_data_t.overload_cost[m] * branch_vars.flow_slacks_neg[t, m]
+
+                else:
+
+                    # Redefine branch limits
+                    branch_vars.flows[t, m].setUb(branch_data_t.rates[m] / Sbase)
+                    branch_vars.flows[t, m].setLb(-branch_data_t.rates[m] / Sbase)
 
                 if consider_contingencies:
 
@@ -619,17 +624,52 @@ def add_ntc_branches_formulation(
                             threshold=lodf_threshold,
                             m=m)
 
-                        flow_n1_var = prob.NumVar(
-                            ub=inf,
-                            lb=-inf,
-                            name=join("flown1_", [t, m, c], "_"))
+                        if with_slacks:
+                            flow_n1_var = prob.NumVar(
+                                ub=inf,
+                                lb=-inf,
+                                name=join("flown1_", [t, m, c], "_"))
+
+                            flow_n1_slack_pos_var = prob.NumVar(
+                                ub=inf,
+                                lb=0,
+                                name=join("flown1_slack_pos", [t, m, c], "_"))
+
+                            flow_n1_slack_neg_var = prob.NumVar(
+                                ub=inf,
+                                lb=0,
+                                name=join("flown1_slack_neg", [t, m, c], "_"))
+
+                            # add upper rate constraint
+                            prob.Add(
+                                constraint=flow_n1_var + flow_n1_slack_pos_var - flow_n1_slack_neg_var <= branch_data_t.contingency_rates[t, m] / Sbase,
+                                name=join("flow_n1_ub_ctr"))
+
+                            # add lower rate constraint
+                            prob.Add(
+                                constraint=flow_n1_var + flow_n1_slack_pos_var - flow_n1_slack_neg_var <= branch_data_t.contingency_rates[t, m] / Sbase,
+                                name=join("flow_n1_lb_ctr"))
+
+                        else:
+
+                            flow_n1_slack_pos_var = 0
+                            flow_n1_slack_neg_var = 0
+
+                            flow_n1_var = prob.NumVar(
+                                ub=branch_data_t.contingency_rates[m] / Sbase,
+                                lb=-branch_data_t.contingency_rates[m] / Sbase,
+                                name=join("flown1_", [t, m, c], "_"))
+
+                        branch_vars.add_contingency_flow(
+                            m=m,
+                            c=c,
+                            flow_var=flow_n1_var,
+                            slack_pos_var=flow_n1_slack_pos_var,
+                            slack_neg_var=flow_n1_slack_neg_var)
 
                         prob.Add(
                             constraint=flow_n1_var == flow_n1,
                             name=join("flow_n1_ctr", [t, m, c], "_"))
-
-                        branch_vars.add_contingency_flow(m=m, c=c, flow_var=flow_n1_var)
-
     return f_obj
 
 
