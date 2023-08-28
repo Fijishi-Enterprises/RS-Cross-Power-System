@@ -16,7 +16,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from uuid import uuid4
 from PySide6.QtCore import QThread, Signal
-from typing import Dict
+from typing import Dict, Callable, Union
 
 # Module imports
 from GridCal.Engine.Simulations.ATC.available_transfer_capacity_driver import AvailableTransferCapacityResults
@@ -47,18 +47,18 @@ def get_results_object_dictionary():
     Get dictionary of recognizable result types in order to be able to load a driver from disk
     :return: dictionary[driver name: empty results object]
     """
-    lst = [(AvailableTransferCapacityResults([], [], [], []), SimulationTypes.NetTransferCapacity_run),
-           (AvailableTransferCapacityTimeSeriesResults([], [], [], [], []), SimulationTypes.NetTransferCapacityTS_run),
+    lst = [(AvailableTransferCapacityResults([], [], [], [], clustering_results=None), SimulationTypes.NetTransferCapacity_run),
+           (AvailableTransferCapacityTimeSeriesResults([], [], [], [], [], clustering_results=None), SimulationTypes.NetTransferCapacityTS_run),
            (ContingencyAnalysisResults(0, 0, 0, [], [], [], []), SimulationTypes.ContingencyAnalysis_run),
-           (ContingencyAnalysisTimeSeriesResults(0, 0, 0, [], [], [], [], []),
+           (ContingencyAnalysisTimeSeriesResults(0, 0, 0, [], [], [], [], [], clustering_results=None),
             SimulationTypes.ContingencyAnalysisTS_run),
            (ContinuationPowerFlowResults(0, 0, 0, [], [], []), SimulationTypes.ContinuationPowerFlow_run),
            (LinearAnalysisResults(0, 0, (), (), ()), SimulationTypes.LinearAnalysis_run),
-           (LinearAnalysisTimeSeriesResults(0, 0, (), (), (), ()), SimulationTypes.LinearAnalysis_TS_run),
+           (LinearAnalysisTimeSeriesResults(0, 0, (), (), (), (), clustering_results=None), SimulationTypes.LinearAnalysis_TS_run),
            (OptimalPowerFlowResults(bus_names=(), branch_names=(), load_names=(), generator_names=(), battery_names=(),
                                     hvdc_names=(), bus_types=(), area_names=(), F=(), T=(), F_hvdc=(), T_hvdc=(), bus_area_indices=()),
                                     SimulationTypes.OPF_run),
-           (OptimalPowerFlowTimeSeriesResults((), (), (), (), (), (), 0, 0, 0), SimulationTypes.OPFTimeSeries_run),
+           (OptimalPowerFlowTimeSeriesResults((), (), (), (), (), (), 0, 0, 0, clustering_results=None), SimulationTypes.OPFTimeSeries_run),
            (PowerFlowResults(0, 0, 0, 0, (), (), (), (), ()), SimulationTypes.PowerFlow_run),
            (PowerFlowTimeSeriesResults(0, 0, 0, 0, (), (), (), (), (), ()), SimulationTypes.TimeSeries_run),
            (ShortCircuitResults(0, 0, 0, 0, (), (), (), (), ()), SimulationTypes.ShortCircuit_run),
@@ -144,7 +144,7 @@ class SimulationSession:
         self.name: str = name
 
         # dictionary of drivers
-        self.drivers = dict()
+        self.drivers: Dict[SimulationTypes, DriverTemplate] = dict()
         self.threads: Dict[GcThread] = dict()
 
     def __str__(self):
@@ -156,7 +156,7 @@ class SimulationSession:
         """
         self.drivers = dict()
 
-    def register(self, driver):
+    def register(self, driver: DriverTemplate):
         """
         Register driver
         :param driver: driver to register (must have a tpe variable in it)
@@ -164,7 +164,11 @@ class SimulationSession:
         # register
         self.drivers[driver.tpe] = driver
 
-    def run(self, driver, post_func=None, prog_func=None, text_func=None):
+    def run(self,
+            driver: DriverTemplate,
+            post_func: Union[None, Callable] = None,
+            prog_func: Union[None, Callable] = None,
+            text_func: Union[None, Callable] = None):
         """
         Register driver
         :param driver: driver to register (must have a tpe variable in it)

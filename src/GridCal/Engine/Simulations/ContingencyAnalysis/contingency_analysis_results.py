@@ -56,7 +56,9 @@ class ContingencyAnalysisResults(ResultsTemplate):
                 'S',
                 'Sf',
                 'loading'
-            ]
+            ],
+            time_array=None,
+            clustering_results=None
         )
 
         self.branch_names = branch_names

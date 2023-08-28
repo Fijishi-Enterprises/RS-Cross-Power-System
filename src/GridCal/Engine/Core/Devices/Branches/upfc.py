@@ -123,13 +123,13 @@ class UPFC(ParentBranch):
         self.register(key='Qfset', units='MVAr', tpe=float, definition='Active power set point.')
 
     def get_ysh1(self):
-        return 1.0 / complex(self.Rsh, self.Xsh)
+        return 1.0 / complex(self.Rsh + 1e-20, self.Xsh)
 
     def get_ysh0(self):
-        return 1.0 / complex(self.Rsh0, self.Xsh0)
+        return 1.0 / complex(self.Rsh0 + 1e-20, self.Xsh0)
 
     def get_ysh2(self):
-        return 1.0 / complex(self.Rsh2, self.Xsh2)
+        return 1.0 / complex(self.Rsh2 + 1e-20, self.Xsh2)
 
     def get_max_bus_nominal_voltage(self):
         return max(self.bus_from.Vnom, self.bus_to.Vnom)
@@ -249,7 +249,7 @@ class UPFC(ParentBranch):
             ax_1 = fig.add_subplot(211)
             ax_2 = fig.add_subplot(212, sharex=ax_1)
 
-            x = time_series.results.time
+            x = time_series.results.time_array
 
             # loading
             y = time_series.results.loading.real * 100.0

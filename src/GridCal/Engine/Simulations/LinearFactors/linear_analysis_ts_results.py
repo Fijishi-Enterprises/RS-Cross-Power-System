@@ -33,7 +33,7 @@ class LinearAnalysisTimeSeriesResults(ResultsTemplate):
             bus_names: StrVec,
             bus_types: IntVec,
             branch_names: StrVec,
-    ):
+            clustering_results):
         """
         Constructor
         :param n: number of buses
@@ -61,13 +61,15 @@ class LinearAnalysisTimeSeriesResults(ResultsTemplate):
                 'Sf',
                 'loading',
                 'losses'
-            ]
+            ],
+            time_array=time_array,
+            clustering_results=clustering_results
         )
 
         self.nt: int = len(time_array)
         self.m: int = m
         self.n: int = n
-        self.time: DateVec = time_array
+        # self.time_array: DateVec = time_array
 
         self.bus_names: StrVec = bus_names
 
@@ -144,8 +146,8 @@ class LinearAnalysisTimeSeriesResults(ResultsTemplate):
         else:
             raise Exception('Result type not understood:' + str(result_type))
 
-        if self.time is not None:
-            index = self.time
+        if self.time_array is not None:
+            index = self.time_array
         else:
             index = list(range(data.shape[0]))
 

@@ -297,7 +297,9 @@ class OptimalNetTransferCapacityResults(ResultsTemplate):
                 'battery_power',
                 'generator_power',
                 'converged'
-            ]
+            ],
+            time_array=None,
+            clustering_results=None
         )
         nbr = len(branch_names)
 

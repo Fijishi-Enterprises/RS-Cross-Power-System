@@ -267,11 +267,10 @@ class Bus(EditableDevice):
         self.loads.clear()
         self.generators.clear()
 
-    def add_device(self, device):
+    def add_device(self, device) -> None:
         """
         Add device to the bus in the corresponding list
         :param device:
-        :return:
         """
         if device.device_type == DeviceType.BatteryDevice:
             self.batteries.append(device)
@@ -489,7 +488,7 @@ class Bus(EditableDevice):
         if time_series_driver is not None:
             v = np.abs(time_series_driver.results.voltage[:, my_index])
             p = np.abs(time_series_driver.results.S[:, my_index])
-            t = time_series_driver.results.time
+            t = time_series_driver.results.time_array
             pd.DataFrame(data=v, index=t, columns=['Voltage (p.u.)']).plot(ax=ax_voltage)
             pd.DataFrame(data=p, index=t, columns=['Computed power (p.u.)']).plot(ax=ax_load)
 
@@ -529,85 +528,6 @@ class Bus(EditableDevice):
             dta[elm.name] = -elm.P_prof
 
         return dta
-
-    def copy(self):
-        """
-        Deep copy of this object
-        :return: New instance of this object
-        """
-        bus = Bus()
-        bus.name = self.name
-
-        # Nominal voltage (kV)
-        bus.Vnom = self.Vnom
-
-        bus.vmin = self.Vmin
-
-        bus.Vmax = self.Vmax
-
-        bus.r_fault = self.r_fault
-
-        bus.x_fault = self.x_fault
-
-        bus.Qmin_sum = self.Qmin_sum
-
-        bus.Qmax_sum = self.Qmax_sum
-
-        bus.active = self.active
-
-        # List of load s attached to this bus
-        for elm in self.loads:
-            bus.loads.append(elm.copy())
-
-        # List of Controlled generators attached to this bus
-        for elm in self.generators:
-            bus.generators.append(elm.copy())
-
-        # List of shunt s attached to this bus
-        for elm in self.shunts:
-            bus.shunts.append(elm.copy())
-
-        # List of batteries attached to this bus
-        for elm in self.batteries:
-            bus.batteries.append(elm.copy())
-
-        # List of static generators attached tot this bus
-        for g in self.static_generators:
-            bus.static_generators.append(g.copy())
-
-        # List of static generators attached tot this bus
-        for g in self.external_grids:
-            bus.external_grids.append(g.copy())
-
-        # Bus type
-        bus.type = self.type
-
-        # Flag to determine if the bus is a slack bus or not
-        bus.is_slack = self.is_slack
-
-        # if true, the presence of storage devices turn the bus into a Reference bus in practice
-        # So that P +jQ are computed
-        bus.dispatch_storage = self.dispatch_storage
-
-        bus.x = self.x
-
-        bus.y = self.y
-
-        bus.h = self.h
-
-        bus.w = self.w
-
-        bus.area = self.area
-
-        bus.zone = self.zone
-
-        bus.substation = self.substation
-
-        bus.measurements = self.measurements
-
-        bus.active_prof = self.active_prof
-
-        return bus
 
     def get_properties_dict(self, version=3):
         """

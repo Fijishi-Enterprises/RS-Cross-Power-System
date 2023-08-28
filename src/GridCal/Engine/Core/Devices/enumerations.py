@@ -28,6 +28,7 @@ class BranchType(Enum):
     Reactance = 'reactance'
     Switch = 'switch'
     Winding = 'Winding'
+    BranchTemplate = 'BranchTemplate'
 
     def __str__(self):
         return self.value
@@ -236,6 +237,7 @@ class DeviceType(Enum):
 
     GenericArea = 'Generic Area'
     SubstationDevice = 'Substation'
+    ConnectivityNodeDevice = 'ConnectivityNode'
     AreaDevice = 'Area'
     ZoneDevice = 'Zone'
     CountryDevice = 'Country'
@@ -256,6 +258,8 @@ class DeviceType(Enum):
     GeneratorEmissionAssociation = 'Generator Emission'
     GeneratorFuelAssociation = 'Generator Fuel'
     GeneratorTechnologyAssociation = 'Generator Technology'
+
+    DiagramDevice = 'Diagram'
 
     def __str__(self):
         return self.value

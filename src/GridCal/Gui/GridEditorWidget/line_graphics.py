@@ -14,339 +14,47 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-import numpy as np
 
 from typing import Union
-from PySide6 import QtWidgets, QtGui, QtCore
-from PySide6.QtCore import Qt, QPoint, QLineF, QPointF, QRectF
-from PySide6.QtGui import QPen, QCursor, QIcon, QPixmap, QBrush, QColor, QTransform
-from PySide6.QtWidgets import QMenu, QGraphicsLineItem, QPushButton, QVBoxLayout, QGraphicsRectItem, QDialog, QLabel, \
-    QDoubleSpinBox, QComboBox
-from GridCal.Gui.GuiFunctions import get_list_model
-from GridCal.Gui.GridEditorWidget.generic_graphics import ACTIVE, DEACTIVATED, FONT_SCALE, EMERGENCY, OTHER
+from PySide6.QtCore import Qt, QRectF
+from PySide6.QtGui import QPen, QIcon, QPixmap, QBrush
+from PySide6.QtWidgets import QMenu, QGraphicsRectItem
+from GridCal.Gui.GeneralDialogues import InputNumberDialogue
 from GridCal.Gui.GridEditorWidget.bus_graphics import TerminalItem
-from GridCal.Gui.GridEditorWidget.messages import yes_no_question, warning_msg
-from GridCal.Gui.GuiFunctions import BranchObjectModel
-from GridCal.Engine.Core.Devices.Branches.line import Line, SequenceLineType, OverheadLineType, UndergroundLineType
+from GridCal.Gui.GridEditorWidget.line_editor import LineEditor
+from GridCal.Gui.messages import yes_no_question, warning_msg
+from GridCal.Gui.GridEditorWidget.line_graphics_template import LineGraphicTemplateItem
+from GridCal.Engine.Core.Devices.Branches.line import Line, SequenceLineType
 from GridCal.Engine.Core.Devices.Branches.branch import BranchType
-from GridCal.Engine.Simulations.Topology.topology_driver import reduce_grid_brute
 
 
-class LineEditor(QDialog):
-    """
-    LineEditor
-    """
-
-    def __init__(self, line: Line, Sbase=100, templates=None, current_template=None):
-        """
-        Line Editor constructor
-        :param line: Branch object to update
-        :param Sbase: Base power in MVA
-        """
-        super(LineEditor, self).__init__()
-
-        # keep pointer to the line object
-        self.line = line
-
-        self.Sbase = Sbase
-
-        self.templates = templates
-
-        self.current_template = current_template
-
-        self.selected_template = None
-
-        self.setObjectName("self")
-
-        self.setContextMenuPolicy(Qt.NoContextMenu)
-
-        self.layout = QVBoxLayout(self)
-
-        # ------------------------------------------------------------------------------------------
-        # Set the object values
-        # ------------------------------------------------------------------------------------------
-
-        Vf = self.line.bus_from.Vnom
-        Vt = self.line.bus_to.Vnom
-
-        Zbase = (Vf * Vf) / self.Sbase
-        Ybase = 1 / Zbase
-        length = self.line.length
-
-        if length == 0:
-            length = 1.0
-
-        R = self.line.R * Zbase / length
-        X = self.line.X * Zbase / length
-        B = self.line.B * Ybase / length
-        I = np.round(self.line.rate / (Vf * 1.73205080757), 6)  # current in kA
-
-        # ------------------------------------------------------------------------------------------
-
-        # catalogue
-        self.catalogue_combo = QComboBox()
-        if self.templates is not None:
-            if len(self.templates) > 0:
-                self.catalogue_combo.setModel(get_list_model(self.templates))
-
-                if self.current_template is not None:
-                    try:
-                        idx = self.templates.index(self.current_template)
-                        self.catalogue_combo.setCurrentIndex(idx)
-
-                        if isinstance(self.current_template, SequenceLineType):
-                            I = self.current_template.rating
-                            R = self.current_template.R
-                            X = self.current_template.X
-                            B = self.current_template.B
-
-                        if isinstance(self.current_template, UndergroundLineType):
-                            I = self.current_template.rating
-                            R = self.current_template.R
-                            X = self.current_template.X
-                            B = self.current_template.B
-
-                        elif isinstance(self.current_template, OverheadLineType):
-                            I = self.current_template.rating
-                            R = self.current_template.R1
-                            X = self.current_template.X1
-                            B = self.current_template.Bsh1
-
-                    except:
-                        pass
-
-        # load template
-        self.load_template_btn = QPushButton()
-        self.load_template_btn.setText('Load template values')
-        self.load_template_btn.clicked.connect(self.load_template_btn_click)
-
-        # line length
-        self.l_spinner = QDoubleSpinBox()
-        self.l_spinner.setMinimum(0)
-        self.l_spinner.setMaximum(9999999)
-        self.l_spinner.setDecimals(6)
-        self.l_spinner.setValue(length)
-
-        # Max current
-        self.i_spinner = QDoubleSpinBox()
-        self.i_spinner.setMinimum(0)
-        self.i_spinner.setMaximum(9999999)
-        self.i_spinner.setDecimals(2)
-        self.i_spinner.setValue(I)
-
-        # R
-        self.r_spinner = QDoubleSpinBox()
-        self.r_spinner.setMinimum(0)
-        self.r_spinner.setMaximum(9999999)
-        self.r_spinner.setDecimals(6)
-        self.r_spinner.setValue(R)
-
-        # X
-        self.x_spinner = QDoubleSpinBox()
-        self.x_spinner.setMinimum(0)
-        self.x_spinner.setMaximum(9999999)
-        self.x_spinner.setDecimals(6)
-        self.x_spinner.setValue(X)
-
-        # B
-        self.b_spinner = QDoubleSpinBox()
-        self.b_spinner.setMinimum(0)
-        self.b_spinner.setMaximum(9999999)
-        self.b_spinner.setDecimals(6)
-        self.b_spinner.setValue(B)
-
-        # accept button
-        self.accept_btn = QPushButton()
-        self.accept_btn.setText('Accept')
-        self.accept_btn.clicked.connect(self.accept_click)
-
-        # add all to the GUI
-        if templates is not None:
-            self.layout.addWidget(QLabel("Available templates"))
-            self.layout.addWidget(self.catalogue_combo)
-            self.layout.addWidget(self.load_template_btn)
-            self.layout.addWidget(QLabel(""))
-
-        self.layout.addWidget(QLabel("L: Line length [Km]"))
-        self.layout.addWidget(self.l_spinner)
-
-        self.layout.addWidget(QLabel("Imax: Max. current [KA] @" + str(int(Vf)) + " [KV]"))
-        self.layout.addWidget(self.i_spinner)
-
-        self.layout.addWidget(QLabel("R: Resistance [Ohm/Km]"))
-        self.layout.addWidget(self.r_spinner)
-
-        self.layout.addWidget(QLabel("X: Inductance [Ohm/Km]"))
-        self.layout.addWidget(self.x_spinner)
-
-        self.layout.addWidget(QLabel("B: Susceptance [S/Km]"))
-        self.layout.addWidget(self.b_spinner)
-
-        self.layout.addWidget(self.accept_btn)
-
-        self.setLayout(self.layout)
-
-        self.setWindowTitle('Line editor')
-
-    def accept_click(self):
-        """
-        Set the values
-        :return:
-        """
-        length = self.l_spinner.value()
-        I = self.i_spinner.value()
-        R = self.r_spinner.value() * length
-        X = self.x_spinner.value() * length
-        B = self.b_spinner.value() * length
-
-        Vf = self.line.bus_from.Vnom
-        Vt = self.line.bus_to.Vnom
-
-        Zbase = (Vf * Vf) / self.Sbase
-        Ybase = 1.0 / Zbase
-
-        self.line.R = np.round(R / Zbase, 6)
-        self.line.X = np.round(X / Zbase, 6)
-        self.line.B = np.round(B / Ybase, 6)
-        self.line.rate = np.round(I * Vf * 1.73205080757, 6)  # nominal power in MVA = kA * kV
-        self.line.length = length
-
-        if self.selected_template is not None:
-            self.line.template = self.selected_template
-
-        self.accept()
-
-    def load_template(self, template):
-        """
-
-        :param template:
-        :return:
-        """
-        if isinstance(template, SequenceLineType):
-            self.i_spinner.setValue(template.rating)
-            self.r_spinner.setValue(template.R)
-            self.x_spinner.setValue(template.X)
-            self.b_spinner.setValue(template.B)
-
-            self.selected_template = template
-
-        elif isinstance(template, UndergroundLineType):
-            self.i_spinner.setValue(template.rating)
-            self.r_spinner.setValue(template.R)
-            self.x_spinner.setValue(template.X)
-            self.b_spinner.setValue(template.B)
-
-            self.selected_template = template
-
-        elif isinstance(template, OverheadLineType):
-            self.i_spinner.setValue(template.rating)
-            self.r_spinner.setValue(template.R1)
-            self.x_spinner.setValue(template.X1)
-            self.b_spinner.setValue(template.Bsh1)
-
-            self.selected_template = template
-
-    def load_template_btn_click(self):
-        """
-        Accept template values
-        """
-
-        if self.templates is not None:
-            idx = self.catalogue_combo.currentIndex()
-            template = self.templates[idx]
-
-            self.load_template(template)
-
-
-class LineGraphicItem(QGraphicsLineItem):
+class LineGraphicItem(LineGraphicTemplateItem):
     """
     LineGraphicItem
     """
 
-    def __init__(self, fromPort: TerminalItem, toPort: Union[TerminalItem, None], diagramScene, width=5,
-                 branch: Line = None):
+    def __init__(self,
+                 fromPort: TerminalItem,
+                 toPort: Union[TerminalItem, None],
+                 diagramScene,
+                 width=5,
+                 api_object: Line = None):
         """
 
         :param fromPort:
         :param toPort:
         :param diagramScene:
         :param width:
-        :param branch:
+        :param api_object:
         """
-        QGraphicsLineItem.__init__(self, None)
+        LineGraphicTemplateItem.__init__(self,
+                                         fromPort=fromPort,
+                                         toPort=toPort,
+                                         diagramScene=diagramScene,
+                                         width=width,
+                                         api_object=api_object)
 
-        self.api_object = branch
-        if self.api_object is not None:
-            if self.api_object.active:
-                self.style = ACTIVE['style']
-                self.color = ACTIVE['color']
-            else:
-                self.style = DEACTIVATED['style']
-                self.color = DEACTIVATED['color']
-        else:
-            self.style = OTHER['style']
-            self.color = OTHER['color']
-        self.width = width
-        self.pen_width = width
-        self.setPen(QPen(self.color, self.width, self.style))
-        self.setFlag(self.GraphicsItemFlag.ItemIsSelectable, True)
-        self.setCursor(QCursor(Qt.PointingHandCursor))
-
-        self.pos1 = None
-        self.pos2 = None
-        self.fromPort: Union[TerminalItem, None] = None
-        self.toPort: Union[TerminalItem, None] = None
-        self.diagramScene = diagramScene
-
-        if fromPort:
-            self.setFromPort(fromPort)
-
-        if toPort:
-            self.setToPort(toPort)
-
-        # add transformer circles
-        self.symbol_type = BranchType.Line
-        self.symbol = None
-        self.c0 = None
-        self.c1 = None
-        self.c2 = None
-        if self.api_object is not None:
-            self.update_symbol()
-
-        # add the line and it possible children to the scene
-        self.diagramScene.addItem(self)
-
-        if fromPort and toPort:
-            self.redraw()
-
-    def recolour_mode(self):
-        """
-        Change the colour according to the system theme
-        """
-        if self.api_object is not None:
-            if self.api_object.active:
-                self.color = ACTIVE['color']
-                self.style = ACTIVE['style']
-            else:
-                self.color = DEACTIVATED['color']
-                self.style = DEACTIVATED['style']
-        else:
-            self.color = ACTIVE['color']
-            self.style = ACTIVE['style']
-
-        self.set_colour(self.color, self.width, self.style)
-
-    def set_colour(self, color: QColor, w, style: Qt.PenStyle):
-        """
-        Set color and style
-        :param color: QColor instance
-        :param w: width
-        :param style: PenStyle instance
-        :return:
-        """
-        self.setPen(QPen(color, w, style))
-
-    def remove_symbol(self):
+    def remove_symbol(self) -> None:
         """
         Remove all symbols
         """
@@ -358,31 +66,6 @@ class LineGraphicItem(QGraphicsLineItem):
                     elm = None
                 except:
                     pass
-
-    def update_symbol(self):
-        """
-        Make the branch symbol
-        :return:
-        """
-
-        # remove the symbol of the branch
-        self.remove_symbol()
-
-        if self.api_object.branch_type == BranchType.Switch:
-            self.make_switch_symbol()
-            self.symbol_type = BranchType.Switch
-
-        elif self.api_object.branch_type == BranchType.Reactance:
-            self.make_reactance_symbol()
-            self.symbol_type = BranchType.Switch
-
-        else:
-            # this is a line
-            self.symbol = None
-            self.c0 = None
-            self.c1 = None
-            self.c2 = None
-            self.symbol_type = BranchType.Line
 
     def make_switch_symbol(self):
         """
@@ -409,21 +92,19 @@ class LineGraphicItem(QGraphicsLineItem):
         self.symbol.setPen(QPen(self.color, self.width, self.style))
         self.symbol.setBrush(self.color)
 
-    def setToolTipText(self, toolTip: str):
+    def mouseDoubleClickEvent(self, event):
         """
-        Set branch tool tip text
-        Args:
-            toolTip: text
+        On double click, edit
+        :param event:
+        :return:
         """
-        self.setToolTip(toolTip)
-
-        if self.symbol is not None:
-            self.symbol.setToolTip(toolTip)
-
-        if self.c0 is not None:
-            self.c0.setToolTip(toolTip)
-            self.c1.setToolTip(toolTip)
-            self.c2.setToolTip(toolTip)
+        if self.api_object is not None:
+            if self.api_object.branch_type in [BranchType.Transformer, BranchType.Line]:
+                # trigger the editor
+                self.edit()
+            elif self.api_object.branch_type is BranchType.Switch:
+                # change state
+                self.enable_disable_toggle()
 
     def contextMenuEvent(self, event):
         """
@@ -465,6 +146,18 @@ class LineGraphicItem(QGraphicsLineItem):
             ra5_icon.addPixmap(QPixmap(":/Icons/icons/assign_to_profile.svg"))
             ra5.setIcon(ra5_icon)
             ra5.triggered.connect(self.assign_status_to_profile)
+
+            ra3 = menu.addAction('Add to catalogue')
+            ra3_icon = QIcon()
+            ra3_icon.addPixmap(QPixmap(":/Icons/icons/Catalogue.svg"))
+            ra3.setIcon(ra3_icon)
+            ra3.triggered.connect(self.add_to_catalogue)
+
+            spl = menu.addAction('Split line')
+            spl_icon = QIcon()
+            spl_icon.addPixmap(QPixmap(":/Icons/icons/divide.svg"))
+            spl.setIcon(spl_icon)
+            spl.triggered.connect(self.split_line)
 
             # menu.addSeparator()
 
@@ -509,34 +202,6 @@ class LineGraphicItem(QGraphicsLineItem):
         else:
             pass
 
-    def mousePressEvent(self, QGraphicsSceneMouseEvent):
-        """
-        mouse press: display the editor
-        :param QGraphicsSceneMouseEvent:
-        :return:
-        """
-        if self.api_object is not None:
-            mdl = BranchObjectModel([self.api_object], self.api_object.editable_headers,
-                                    parent=self.diagramScene.parent().object_editor_table,
-                                    editable=True, transposed=True,
-                                    non_editable_attributes=self.api_object.non_editable_attributes)
-
-            self.diagramScene.parent().object_editor_table.setModel(mdl)
-
-    def mouseDoubleClickEvent(self, event):
-        """
-        On double click, edit
-        :param event:
-        :return:
-        """
-        if self.api_object is not None:
-            if self.api_object.branch_type in [BranchType.Transformer, BranchType.Line]:
-                # trigger the editor
-                self.edit()
-            elif self.api_object.branch_type is BranchType.Switch:
-                # change state
-                self.enable_disable_toggle()
-
     def remove(self, ask=True):
         """
         Remove this object in the diagram and the API
@@ -550,61 +215,6 @@ class LineGraphicItem(QGraphicsLineItem):
         if ok:
             self.diagramScene.circuit.delete_line(self.api_object)
             self.diagramScene.removeItem(self)
-
-    def reduce(self):
-        """
-        Reduce this branch
-        """
-
-        ok = yes_no_question('Do you want to reduce this line?', 'Reduce line')
-
-        if ok:
-            # get the index of the branch
-            br_idx = self.diagramScene.circuit.lines.index(self.api_object)
-
-            # call the reduction routine
-            removed_branch, removed_bus, \
-                updated_bus, updated_branches = reduce_grid_brute(self.diagramScene.circuit, br_idx)
-
-            # remove the reduced branch
-            removed_branch.graphic_obj.remove_symbol()
-            self.diagramScene.removeItem(removed_branch.graphic_obj)
-
-            # update the buses (the deleted one and the updated one)
-            if removed_bus is not None:
-                # merge the removed bus with the remaining one
-                updated_bus.graphic_obj.merge(removed_bus.graphic_obj)
-
-                # remove the updated bus children
-                for g in updated_bus.graphic_obj.shunt_children:
-                    self.diagramScene.removeItem(g.nexus)
-                    self.diagramScene.removeItem(g)
-                # re-draw the children
-                updated_bus.graphic_obj.create_children_icons()
-
-                # remove bus
-                for g in removed_bus.graphic_obj.shunt_children:
-                    self.diagramScene.removeItem(g.nexus)  # remove the links between the bus and the children
-                self.diagramScene.removeItem(removed_bus.graphic_obj)  # remove the bus and all the children contained
-
-                #
-                # updated_bus.graphic_obj.update()
-
-            for br in updated_branches:
-                # remove the branch from the schematic
-                self.diagramScene.removeItem(br.graphic_obj)
-                # add the branch to the schematic with the rerouting and all
-                self.diagramScene.parent_.add_line(br)
-                # update both buses
-                br.bus_from.graphic_obj.update()
-                br.bus_to.graphic_obj.update()
-
-    def remove_widget(self):
-        """
-        Remove this object in the diagram
-        @return:
-        """
-        self.diagramScene.removeItem(self)
 
     def enable_disable_toggle(self):
         """
@@ -625,41 +235,6 @@ class LineGraphicItem(QGraphicsLineItem):
                     # change the bus state (time series)
                     self.diagramScene.set_active_status_to_profile(self.api_object, override_question=True)
 
-    def set_enable(self, val=True):
-        """
-        Set the enable value, graphically and in the API
-        @param val:
-        @return:
-        """
-        self.api_object.active = val
-        if self.api_object is not None:
-            if self.api_object.active:
-                self.style = ACTIVE['style']
-                self.color = ACTIVE['color']
-            else:
-                self.style = DEACTIVATED['style']
-                self.color = DEACTIVATED['color']
-        else:
-            self.style = OTHER['style']
-            self.color = OTHER['color']
-
-        # Switch coloring
-        if self.symbol_type == BranchType.Switch:
-            if self.api_object.active:
-                self.symbol.setBrush(self.color)
-            else:
-                self.symbol.setBrush(Qt.white)
-
-        if self.symbol_type == BranchType.DCLine:
-            self.symbol.setBrush(self.color)
-            if self.api_object.active:
-                self.symbol.setPen(QPen(ACTIVE['color']))
-            else:
-                self.symbol.setPen(QPen(DEACTIVATED['color']))
-
-        # Set pen for everyone
-        self.set_pen(QPen(self.color, self.width, self.style))
-
     def plot_profiles(self):
         """
         Plot the time series profiles
@@ -669,127 +244,19 @@ class LineGraphicItem(QGraphicsLineItem):
         i = self.diagramScene.circuit.get_branches().index(self.api_object)
         self.diagramScene.plot_branch(i, self.api_object)
 
-    def setFromPort(self, fromPort):
-        """
-        Set the From terminal in a connection
-        @param fromPort:
-        @return:
-        """
-        self.fromPort = fromPort
-        if self.fromPort:
-            self.pos1 = fromPort.scenePos()
-            self.fromPort.posCallbacks.append(self.setBeginPos)
-            self.fromPort.parent.setZValue(0)
-
-    def setToPort(self, toPort):
-        """
-        Set the To terminal in a connection
-        @param toPort:
-        @return:
-        """
-        self.toPort = toPort
-        if self.toPort:
-            self.pos2 = toPort.scenePos()
-            self.toPort.posCallbacks.append(self.setEndPos)
-            self.toPort.parent.setZValue(0)
-
-    def setEndPos(self, endpos):
-        """
-        Set the starting position
-        @param endpos:
-        @return:
-        """
-        self.pos2 = endpos
-        self.redraw()
-
-    def setBeginPos(self, pos1):
-        """
-        Set the starting position
-        @param pos1:
-        @return:
-        """
-        self.pos1 = pos1
-        self.redraw()
-
-    def redraw(self):
-        """
-        Redraw the line with the given positions
-        @return:
-        """
-        if self.pos1 is not None and self.pos2 is not None:
-
-            # Set position
-            self.setLine(QLineF(self.pos1, self.pos2))
-
-            # set Z-Order (to the back)
-            self.setZValue(-1)
-
-            if self.api_object is not None:
-
-                # if the object branch type is different from the current displayed type, change it
-                if self.symbol_type != self.api_object.branch_type:
-                    self.update_symbol()
-
-                if self.api_object.branch_type == BranchType.Line:
-                    pass
-
-                elif self.api_object.branch_type == BranchType.Branch:
-                    pass
-
-                else:
-
-                    # if the branch has a moveable symbol, move it
-                    try:
-                        if self.symbol is not None:
-                            h = self.pos2.y() - self.pos1.y()
-                            b = self.pos2.x() - self.pos1.x()
-                            ang = np.arctan2(h, b)
-                            h2 = self.symbol.rect().height() / 2.0
-                            w2 = self.symbol.rect().width() / 2.0
-                            a = h2 * np.cos(ang) - w2 * np.sin(ang)
-                            b = w2 * np.sin(ang) + h2 * np.cos(ang)
-
-                            center = (self.pos1 + self.pos2) * 0.5 - QPointF(a, b)
-
-                            transform = QTransform()
-                            transform.translate(center.x(), center.y())
-                            transform.rotate(np.rad2deg(ang))
-                            self.symbol.setTransform(transform)
-
-                    except Exception as ex:
-                        print(ex)
-
-    def set_pen(self, pen):
-        """
-        Set pen to all objects
-        Args:
-            pen:
-        """
-        self.setPen(pen)
-
-        # Color the symbol only for switches
-        if self.api_object.branch_type == BranchType.Switch:
-            if self.symbol is not None:
-                self.symbol.setPen(pen)
-
-        elif self.api_object.branch_type == BranchType.Transformer:
-            if self.c1 is not None:
-                self.c1.setPen(pen)
-                self.c2.setPen(pen)
-
     def edit(self):
         """
         Open the appropriate editor dialogue
         :return:
         """
         Sbase = self.diagramScene.circuit.Sbase
-        templates = self.diagramScene.circuit.underground_cable_types + self.diagramScene.circuit.overhead_line_types
+        templates = self.diagramScene.circuit.underground_cable_types + self.diagramScene.circuit.overhead_line_types + self.diagramScene.circuit.sequence_line_types
         current_template = self.api_object.template
         dlg = LineEditor(self.api_object, Sbase, templates, current_template)
         if dlg.exec_():
             pass
 
-    def add_to_templates(self):
+    def show_line_editor(self):
         """
         Open the appropriate editor dialogue
         :return:
@@ -800,17 +267,66 @@ class LineGraphicItem(QGraphicsLineItem):
         if dlg.exec_():
             pass
 
-    def assign_rate_to_profile(self):
+    def add_to_catalogue(self):
         """
-        Assign the snapshot rate to the profile
+        Add this to the catalogue
         """
-        self.diagramScene.set_rate_to_profile(self.api_object)
+        ok = yes_no_question(text="A template will be generated using this line values per unit of length",
+                             title="Add sequence line type")
 
-    def assign_status_to_profile(self):
+        if ok:
+            # rate = I
+            rated_current = self.api_object.rate / (self.api_object.Vf * 1.73205080757)  # MVA = kA * kV * sqrt(3)
+
+            tpe = SequenceLineType(name='SequenceLine from ' + self.api_object.name,
+                                   idtag=None,
+                                   rating=rated_current,
+                                   R=self.api_object.R / self.api_object.length,
+                                   X=self.api_object.X / self.api_object.length,
+                                   G=0.0,
+                                   B=self.api_object.B / self.api_object.length,
+                                   R0=self.api_object.R0 / self.api_object.length,
+                                   X0=self.api_object.X0 / self.api_object.length,
+                                   G0=0,
+                                   B0=self.api_object.B0 / self.api_object.length)
+
+            self.diagramScene.circuit.add_sequence_line(tpe)
+
+    def split_line(self):
         """
-        Assign the snapshot rate to the profile
+        Split line
+        :return:
         """
-        self.diagramScene.set_active_status_to_profile(self.api_object)
+        dlg = InputNumberDialogue(min_value=1.0,
+                                  max_value=99.0,
+                                  is_int=False,
+                                  title="Split line",
+                                  text="Enter the distance from the beginning of the \n"
+                                       "line as a percentage of the total length",
+                                  suffix=' %',
+                                  decimals=2,
+                                  default_value=50.0)
+        if dlg.exec_():
+
+            if dlg.is_accepted:
+                br1, br2, middle_bus = self.api_object.split_line(position=dlg.value / 100.0)
+
+                # add the graphical objects
+                # TODO: Figure this out
+                # middle_bus.graphic_obj = self.diagramScene.parent_.add_api_bus(middle_bus)
+                # br1.graphic_obj = self.diagramScene.parent_.add_api_line(br1)
+                # br2.graphic_obj = self.diagramScene.parent_.add_api_line(br2)
+                # # middle_bus.graphic_obj.redraw()
+                # br1.bus_from.graphic_obj.arrange_children()
+                # br2.bus_to.graphic_obj.arrange_children()
+
+                # add to gridcal
+                self.diagramScene.circuit.add_bus(middle_bus)
+                self.diagramScene.circuit.add_line(br1)
+                self.diagramScene.circuit.add_line(br2)
+
+                # remove this line
+                self.remove(ask=False)
 
     def to_transformer(self):
         """

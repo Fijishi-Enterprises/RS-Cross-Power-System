@@ -25,3 +25,4 @@ from GridCal.Engine.Core.Devices.Branches import *
 from GridCal.Engine.Core.Devices.Injections import *
 from GridCal.Engine.Core.Devices.Substation import *
 from GridCal.Engine.Core.Devices.Associations import *
+from GridCal.Engine.Core.Devices.Diagrams import *

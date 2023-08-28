@@ -18,6 +18,7 @@
 import os
 import sys
 import cmath
+import copy
 import numpy as np
 import pandas as pd
 from typing import List, Dict, Tuple, Union
@@ -291,6 +292,9 @@ class MultiCircuit:
                     self.profile_magnitudes[key] = (profile_attr, profile_types)
                     self.device_type_name_dict[key] = elm.device_type
 
+        # list of declared diagrams
+        self.diagrams: List[Union[dev.MapDiagram, dev.BusBranchDiagram, dev.NodeBreakerDiagram]] = list()
+
     def __str__(self):
         return str(self.name)
 
@@ -485,14 +489,6 @@ class MultiCircuit:
             T[i] = bus_dict[elm.bus_to]
         return F, T
 
-    def get_bus_area_indices(self) -> IntVec:
-        """
-        Get an array of area indices per bus
-        :return: IntVec
-        """
-        area_dict = {elm: i for i, elm in enumerate(self.get_areas())}
-        return np.array([area_dict[b.area] for b in self.buses])
-
     def get_time_number(self) -> int:
         """
         Return the number of buses
@@ -546,6 +542,35 @@ class MultiCircuit:
         return tp.find_different_states(
             states_array=self.get_branch_active_time_array()
         )
+
+    def get_diagrams(self) -> List[Union[dev.MapDiagram, dev.BusBranchDiagram, dev.NodeBreakerDiagram]]:
+        """
+        Get list of diagrams
+        :return: MapDiagram, BusBranchDiagram, NodeBreakerDiagram device
+        """
+        return self.diagrams
+
+    def has_diagrams(self) -> bool:
+        """
+        Check if there are diagrams stored
+        :return:
+        """
+        return len(self.diagrams) > 0
+
+    def add_diagram(self, diagram: Union[dev.MapDiagram, dev.BusBranchDiagram, dev.NodeBreakerDiagram]):
+        """
+        Add diagram
+        :param diagram: MapDiagram, BusBranchDiagram, NodeBreakerDiagram device
+        :return:
+        """
+        self.diagrams.append(diagram)
+
+    def remove_diagram(self, diagram: Union[dev.MapDiagram, dev.BusBranchDiagram, dev.NodeBreakerDiagram]):
+        """
+        Remove diagrams
+        :param diagram: MapDiagram, BusBranchDiagram, NodeBreakerDiagram device
+        """
+        self.diagrams.remove(diagram)
 
     def clear(self):
         """
@@ -1103,6 +1128,9 @@ class MultiCircuit:
         elif element_type == dev.DeviceType.DCLineDevice:
             return self.dc_lines
 
+        elif element_type == dev.DeviceType.SwitchDevice:
+            return self.switch_devices
+
         elif element_type == dev.DeviceType.SubstationDevice:
             return self.substations
 
@@ -1262,6 +1290,36 @@ class MultiCircuit:
         else:
             raise Exception('Element type not understood ' + str(element_type))
 
+    def gat_all_elemnts_dict_by_type(self) -> Dict[str, Dict[str, dev.EditableDevice]]:
+        """
+        Get a dictionary of all elements by type
+        :return:
+        """
+        data = dict()
+        for tpe in [dev.DeviceType.BusDevice,
+                    dev.DeviceType.LoadDevice,
+                    dev.DeviceType.StaticGeneratorDevice,
+                    dev.DeviceType.GeneratorDevice,
+                    dev.DeviceType.BatteryDevice,
+                    dev.DeviceType.ShuntDevice,
+                    dev.DeviceType.ExternalGridDevice,
+                    dev.DeviceType.SubstationDevice,
+                    dev.DeviceType.AreaDevice,
+                    dev.DeviceType.ZoneDevice,
+                    dev.DeviceType.CountryDevice,
+                    dev.DeviceType.LineDevice,
+                    dev.DeviceType.DCLineDevice,
+                    dev.DeviceType.Transformer2WDevice,
+                    dev.DeviceType.Transformer3WDevice,
+                    dev.DeviceType.UpfcDevice,
+                    dev.DeviceType.VscDevice,
+                    dev.DeviceType.HVDCLineDevice,
+                    dev.DeviceType.SwitchDevice,
+                    dev.DeviceType.WindingDevice, ]:
+            data[tpe.value] = self.get_elements_dict_by_type(element_type=tpe, use_secondary_key=False)
+
+        return data
+
     def get_elements_dict_by_type(self, element_type: dev.DeviceType,
                                   use_secondary_key=False) -> Dict[str, dev.EditableDevice]:
         """
@@ -1313,6 +1371,33 @@ class MultiCircuit:
         elif element_type == dev.DeviceType.CountryDevice:
             return [x.country for x in self.buses]
 
+        elif element_type == dev.DeviceType.LineDevice:
+            return self.get_lines()
+
+        elif element_type == dev.DeviceType.DCLineDevice:
+            return self.get_dc_lines()
+
+        elif element_type == dev.DeviceType.Transformer2WDevice:
+            return self.get_transformers2w()
+
+        elif element_type == dev.DeviceType.Transformer3WDevice:
+            return self.get_transformers3w()
+
+        elif element_type == dev.DeviceType.UpfcDevice:
+            return self.get_upfc()
+
+        elif element_type == dev.DeviceType.VscDevice:
+            return self.get_vsc()
+
+        elif element_type == dev.DeviceType.HVDCLineDevice:
+            return self.get_hvdc()
+
+        elif element_type == dev.DeviceType.SwitchDevice:
+            return self.get_switches()
+
+        elif element_type == dev.DeviceType.WindingDevice:
+            return self.get_windings()
+
         else:
             raise Exception('Element type not understood ' + str(element_type))
 
@@ -1320,28 +1405,26 @@ class MultiCircuit:
         """
         Returns a deep (true) copy of this circuit.
         """
-
+        # TODO: eliminate usages of this function
         cpy = MultiCircuit()
 
         cpy.name = self.name
 
         bus_dict = dict()
         for bus in self.buses:
-            bus_cpy = bus.copy()
-            bus_dict[bus] = bus_cpy
-            cpy.buses.append(bus_cpy)
+            cpy.buses.append(bus.copy())
 
         for branch in self.lines:
-            cpy.lines.append(branch.copy(bus_dict))
+            cpy.lines.append(branch.copy())
 
         for branch in self.transformers2w:
-            cpy.transformers2w.append(branch.copy(bus_dict))
+            cpy.transformers2w.append(branch.copy())
 
         for branch in self.hvdc_lines:
-            cpy.hvdc_lines.append(branch.copy(bus_dict))
+            cpy.hvdc_lines.append(branch.copy())
 
         for branch in self.vsc_devices:
-            cpy.vsc_devices.append(branch.copy(bus_dict))
+            cpy.vsc_devices.append(branch.copy())
 
         cpy.Sbase = self.Sbase
 
@@ -1349,7 +1432,8 @@ class MultiCircuit:
 
         cpy.bus_original_idx = self.bus_original_idx.copy()
 
-        cpy.time_profile = self.time_profile.copy()
+        if self.time_profile is not None:
+            cpy.time_profile = self.time_profile.copy()
 
         return cpy
 
@@ -1777,13 +1861,11 @@ class MultiCircuit:
             obj.create_profiles(self.time_profile)
         self.switch_devices.append(obj)
 
-    def add_branch(self, obj):
+    def add_branch(self, obj: Union[dev.Line, dev.DcLine, dev.Transformer2W, dev.HvdcLine, dev.VSC,
+    dev.UPFC, dev.Winding, dev.Switch, dev.Branch]) -> None:
         """
-        Add a :ref:`Branch<branch>` object to the grid.
-
-        Arguments:
-
-            **obj** (:ref:`Branch<branch>`): :ref:`Branch<branch>` object
+        Add any branch object (it's type will be infered here)
+        :param obj: any class inheriting from ParentBranch
         """
 
         if obj.device_type == dev.DeviceType.LineDevice:
@@ -1811,16 +1893,16 @@ class MultiCircuit:
             self.add_switch(obj)
 
         elif obj.device_type == dev.DeviceType.BranchDevice:
-            # we need to convert it :D
-            if obj.branch_type == dev.BranchType.Line or obj.branch_type == dev.BranchType.Transformer:
-                obj2 = dev.convert_branch(obj)
-                self.add_branch(obj2)  # call this again, but this time it is not a Branch object
+
+            if obj.should_this_be_a_transformer():
+                self.add_transformer2w(obj.get_equivalent_transformer())
             else:
-                print('Omitting branch ' + obj.name)
+                self.add_line(obj.get_equivalent_line())
         else:
             raise Exception('Unrecognized branch type ' + obj.device_type.value)
 
-    def delete_branch(self, obj: dev.Branch):
+    def delete_branch(self, obj: Union[dev.Line, dev.DcLine, dev.Transformer2W, dev.HvdcLine, dev.VSC,
+    dev.UPFC, dev.Winding, dev.Switch, dev.Branch]):
         """
         Delete a :ref:`Branch<branch>` object from the grid.
 
@@ -2064,9 +2146,13 @@ class MultiCircuit:
     def delete_wire(self, obj: dev.Wire):
         """
         Delete wire from the collection
-        :param obj:
+        :param obj: Wire object
         """
-        # TODO: remove dependencies
+        for tower in self.overhead_line_types:
+            for elm in tower.wires_in_tower:
+                if elm.template == obj:
+                    elm.template = None
+
         self.wire_types.remove(obj)
 
     def add_overhead_line(self, obj: dev.OverheadLineType):
@@ -2080,14 +2166,33 @@ class MultiCircuit:
             else:
                 print('The template is not an overhead line!')
 
+    def delete_line_template_dependency(self, obj):
+        """
+        Search a branch template from lines and transformers and delete it
+        :param obj:
+        :return:
+        """
+        for elm in self.lines:
+            if elm.template == obj:
+                elm.template = None
+
+    def delete_transformer_template_dependency(self, obj: dev.TransformerType):
+        """
+        Search a branch template from lines and transformers and delete it
+        :param obj:
+        :return:
+        """
+        for elm in self.transformers2w:
+            if elm.template == obj:
+                elm.template = None
+
     def delete_overhead_line(self, obj: dev.OverheadLineType):
         """
         Delete tower from the collection
         :param obj: OverheadLineType
         """
 
-        # TODO: remove dependencies
-
+        self.delete_line_template_dependency(obj=obj)
         self.overhead_line_types.remove(obj)
 
     def add_underground_line(self, obj: dev.UndergroundLineType):
@@ -2106,7 +2211,7 @@ class MultiCircuit:
         Delete underground line
         :param obj:
         """
-        # TODO: remove dependencies
+        self.delete_line_template_dependency(obj=obj)
         self.underground_cable_types.remove(obj)
 
     def add_sequence_line(self, obj: dev.SequenceLineType):
@@ -2125,8 +2230,7 @@ class MultiCircuit:
         Delete sequence line from the collection
         :param obj:
         """
-        # todo: remove dependencies
-
+        self.delete_line_template_dependency(obj=obj)
         self.sequence_line_types.remove(obj)
         return True
 
@@ -2141,12 +2245,12 @@ class MultiCircuit:
             else:
                 print('The template is not a transformer!')
 
-    def delete_transformer_type(self, obj):
+    def delete_transformer_type(self, obj: dev.TransformerType):
         """
         Delete transformer type from the collection
         :param obj
         """
-        # TODO: Remove dependencies
+        self.delete_transformer_template_dependency(obj=obj)
         self.transformer_types.remove(obj)
 
     def apply_all_branch_types(self) -> bs.Logger:
@@ -2171,12 +2275,15 @@ class MultiCircuit:
         """
         self.substations.append(obj)
 
-    def delete_substation(self, obj):
+    def delete_substation(self, obj: dev.Substation):
         """
         Delete Substation
-        :param i: index
+        :param obj: Substation object
         """
-        # todo: Remove dependencies
+        for elm in self.buses:
+            if elm.substation == obj:
+                elm.substation = None
+
         self.substations.remove(obj)
 
     def add_area(self, obj: dev.Area):
@@ -2191,7 +2298,10 @@ class MultiCircuit:
         Delete area
         :param obj: Area
         """
-        # todo: delete dependencies
+        for elm in self.buses:
+            if elm.area == obj:
+                elm.area = None
+
         self.areas.remove(obj)
 
     def add_zone(self, obj: dev.Zone):
@@ -2202,6 +2312,10 @@ class MultiCircuit:
         self.zones.append(obj)
 
     def add_contingency_group(self, obj: dev.ContingencyGroup):
+        """
+        Add contingency group
+        :param obj: ContingencyGroup
+        """
         self.contingency_groups.append(obj)
 
     def delete_contingency_group(self, obj):
@@ -2294,6 +2408,10 @@ class MultiCircuit:
         Delete zone
         :param obj: index
         """
+        for elm in self.buses:
+            if elm.zone == obj:
+                elm.zone = None
+
         self.zones.remove(obj)
 
     def add_country(self, obj: dev.Country):
@@ -2308,6 +2426,10 @@ class MultiCircuit:
         Delete country
         :param obj: index
         """
+        for elm in self.buses:
+            if elm.country == obj:
+                elm.country = None
+
         self.countries.remove(obj)
 
     def add_fuel(self, obj: dev.Fuel):
@@ -2331,12 +2453,22 @@ class MultiCircuit:
         """
         self.emission_gases.append(obj)
 
-    def delete_emission_gas(self, obj):
+    def delete_emission_gas(self, obj: dev.EmissionGas):
         """
         Delete Substation
         :param obj: index
         """
-        # todo: delete dependencies
+        # store the associations
+        rels = list()
+        for elm in self.generators_emissions:
+            if elm.emission == obj:
+                rels.append(elm)
+
+        # delete the assciations
+        for elm in rels:
+            self.delete_generator_emission(elm)
+
+        # delete the gas
         self.emission_gases.remove(obj)
 
     def add_generator_technology(self, obj: dev.GeneratorTechnology):
@@ -2351,7 +2483,17 @@ class MultiCircuit:
         Delete GeneratorTechnology
         :param obj: GeneratorTechnology
         """
-        # todo: delete dependencies
+        # store the associations
+        rels = list()
+        for elm in self.generators_technologies:
+            if elm.technology == obj:
+                rels.append(elm)
+
+        # delete the assciations
+        for elm in rels:
+            self.delete_generator_technology(elm)
+
+        # delete the technology
         self.generators_technologies.remove(obj)
 
     def add_generator_fuel(self, obj: dev.GeneratorFuel):
@@ -2366,7 +2508,17 @@ class MultiCircuit:
         Delete GeneratorFuel
         :param obj: GeneratorFuel
         """
-        # todo: delete dependencies
+        # store the associations
+        rels = list()
+        for elm in self.generators_fuels:
+            if elm.fuel == obj:
+                rels.append(elm)
+
+        # delete the assciations
+        for elm in rels:
+            self.delete_generator_fuel(elm)
+
+        # delete the fuel
         self.generators_fuels.remove(obj)
 
     def add_generator_emission(self, obj: dev.GeneratorEmission):
@@ -2938,18 +3090,17 @@ class MultiCircuit:
         Get the precision that simulates correctly the power flow
         :return: tolerance parameter for the power flow options, exponent
         """
-        injections = list()
-        devices = self.get_loads() + self.get_static_generators() + self.get_generators() + self.get_batteries()
-        for elm in devices:
-            if elm.P != 0.0:
-                injections.append(elm.P)
-
+        injections = self.get_Pbus()
         P = np.abs(injections) / self.Sbase
         P = P[P > 0]
-        lg = np.log10(P)
-        lg[lg == -np.inf] = 1e20
-        exponent = int(np.min(np.abs(lg))) * 3
-        tolerance = 1.0 / (10.0 ** exponent)
+        if np.sum(P) > 0:
+            lg = np.log10(P)
+            lg[lg == -np.inf] = 1e20
+            exponent = int(np.min(np.abs(lg))) * 3
+            tolerance = 1.0 / (10.0 ** exponent)
+        else:
+            exponent = 3
+            tolerance = 1e-3
 
         return tolerance, exponent
 
@@ -3159,17 +3310,17 @@ class MultiCircuit:
 
         return logger
 
-    def get_bus_area_indices(self):
+    def get_bus_area_indices(self) -> IntVec:
         """
         Get array of area indices for each bus
         :return:
         """
-        d = {elm: k for k, elm in enumerate(self.areas)}
+        areas_dict = {elm: k for k, elm in enumerate(self.get_areas())}
 
         lst = np.zeros(len(self.buses), dtype=int)
         for k, bus in enumerate(self.buses):
             if bus.area is not None:
-                lst[k] = d[bus.area]
+                lst[k] = areas_dict.get(bus.area, 0)
             else:
                 lst[k] = 0
         return lst

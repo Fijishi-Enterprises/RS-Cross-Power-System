@@ -43,7 +43,9 @@ class InvestmentsEvaluationResults(ResultsTemplate):
         ResultsTemplate.__init__(self,
                                  name='Investments Evaluation',
                                  available_results=available_results,
-                                 data_variables=[])
+                                 data_variables=[],
+                                 time_array=None,
+                                 clustering_results=None)
 
         self.grid = grid
         self.n_groups = len(grid.investments_groups)

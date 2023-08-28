@@ -16,19 +16,16 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import numpy as np
 from typing import List
-from PySide6 import QtWidgets, QtGui, QtCore
-from PySide6.QtCore import Qt, QPoint, QLineF, QPointF, QRectF
-from PySide6.QtGui import QPen, QCursor, QIcon, QPixmap, QBrush, QColor
-from PySide6.QtWidgets import QMenu, QGraphicsItem, QGraphicsEllipseItem, QGraphicsRectItem
+from PySide6.QtCore import Qt, QPoint, QPointF
+from PySide6.QtGui import QPen, QCursor, QColor
+from PySide6.QtWidgets import QGraphicsItem, QGraphicsEllipseItem, QGraphicsRectItem
 
 from GridCal.Engine.Core.Devices.Branches.transformer3w import Transformer3W
-from GridCal.Gui.GridEditorWidget.generic_graphics import ACTIVE, DEACTIVATED, FONT_SCALE, EMERGENCY
+from GridCal.Gui.GridEditorWidget.generic_graphics import ACTIVE, DEACTIVATED
 from GridCal.Gui.GuiFunctions import ObjectsModel
-from GridCal.Engine.Simulations.Topology.topology_driver import reduce_buses
-from GridCal.Gui.GridEditorWidget.terminal_item import TerminalItem, HandleItem
+from GridCal.Gui.GridEditorWidget.terminal_item import TerminalItem
 from GridCal.Gui.GridEditorWidget.winding_graphics import WindingGraphicItem
-from GridCal.Gui.GridEditorWidget.messages import yes_no_question
-from GridCal.Engine.Core.Devices.enumerations import DeviceType
+from GridCal.Gui.messages import yes_no_question
 
 
 class Transformer3WGraphicItem(QGraphicsRectItem):
@@ -188,7 +185,12 @@ class Transformer3WGraphicItem(QGraphicsRectItem):
         """
         super().mouseMoveEvent(event)
 
-        self.api_object.retrieve_graphic_position()
+        self.diagramScene.parent_.set_position(device=self.api_object,
+                                               x=self.pos().x(),
+                                               y=self.pos().y(),
+                                               w=self.w,
+                                               h=self.h,
+                                               r=self.rotation())
 
         self.update_conn()
 
@@ -234,7 +236,13 @@ class Transformer3WGraphicItem(QGraphicsRectItem):
         :param h:
         """
         # Keep for compatibility
-        pass
+
+        self.diagramScene.parent_.set_position(idtag=self.api_object.idtag,
+                                               x=self.pos().x(),
+                                               y=self.pos().y(),
+                                               w=w,
+                                               h=h,
+                                               r=self.rotation())
 
     def set_position(self, x: float, y: float) -> None:
         """

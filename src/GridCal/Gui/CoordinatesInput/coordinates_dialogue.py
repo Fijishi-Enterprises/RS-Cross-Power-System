@@ -6,7 +6,7 @@ from typing import List
 from GridCal.Gui.CoordinatesInput.gui import Ui_Dialog
 from GridCal.Gui.ProfilesInput.excel_dialog import ExcelDialog
 from GridCal.Engine.Core.Devices.Substation.bus import Bus
-from GridCal.Gui.GridEditorWidget.messages import error_msg
+from GridCal.Gui.messages import error_msg
 
 
 def get_list_model(iterable):
@@ -181,12 +181,12 @@ class CoordinatesInputGUI(QtWidgets.QDialog):
         :param title: Name of the window
         """
         msg = QtWidgets.QMessageBox()
-        msg.setIcon(QtWidgets.QMessageBox.Information)
+        msg.setIcon(QtWidgets.QMessageBox.Icon.Information)
         msg.setText(text)
         # msg.setInformativeText("This is additional information")
         msg.setWindowTitle(title)
         # msg.setDetailedText("The details are as follows:")
-        msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msg.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
         retval = msg.exec_()
 
     def dropEvent(self, event):

@@ -34,7 +34,8 @@ class Fuel(EditableDevice):
                  idtag=None,
                  device_type=DeviceType.FuelDevice,
                  cost: float = 0.0,
-                 cost_prof: Union[Vec, None] = None):
+                 cost_prof: Union[Vec, None] = None,
+                 color: Union[str, None] = None):
         """
 
         :param name:
@@ -53,8 +54,11 @@ class Fuel(EditableDevice):
 
         self.cost_prof = cost_prof
 
+        self.color = color if color is not None else self.rnd_color()
+
         self.register(key='cost', units='€/t', tpe=float, definition='Cost of fuel (currency / ton)',
                       profile_name='cost_prof')
+        self.register(key='color', units='', tpe=str, definition='Color to paint')
 
     def get_properties_dict(self, version=3):
         data = {'id': self.idtag,
@@ -65,7 +69,8 @@ class Fuel(EditableDevice):
         return data
 
     def get_profiles_dict(self, version=3):
-        data = {'id': self.idtag}
+        data = {'id': self.idtag,
+                'cost': self.cost_prof}
         return data
 
     def get_units_dict(self, version=3):

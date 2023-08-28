@@ -1,15 +1,31 @@
+# GridCal
+# Copyright (C) 2015 - 2023 Santiago Peñate Vera
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 3 of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import sys
 from PySide6 import QtWidgets
 
 from GridCal.Gui.BusViewer.gui import Ui_BusViewerWindow, QMainWindow
-from GridCal.Gui.GridEditorWidget import GridEditor
+from GridCal.Gui.GridEditorWidget import GridEditorWidget, generate_bus_branch_diagram
 import GridCal.Engine.Core.Devices as dev
 from GridCal.Engine.Core.Devices.multi_circuit import MultiCircuit
 
 
 class BusViewerGUI(QMainWindow):
 
-    def __init__(self, circuit: MultiCircuit, root_bus: dev.Bus, parent=None, ):
+    def __init__(self, circuit: MultiCircuit, root_bus: dev.Bus, name='', parent=None, view_toolbar=True):
         """
 
         :param circuit:
@@ -19,6 +35,8 @@ class BusViewerGUI(QMainWindow):
         QMainWindow.__init__(self, parent)
         self.ui = Ui_BusViewerWindow()
         self.ui.setupUi(self)
+
+        self.name = name
 
         self.root_bus = root_bus
         self.bus_id = self.root_bus.name + ' ' + self.root_bus.code
@@ -32,7 +50,14 @@ class BusViewerGUI(QMainWindow):
         self.bus_idx = list()
 
         # create grid editor o
-        self.grid_editor = None
+        self.grid_editor = GridEditorWidget(self.circuit, diagram=None)
+
+        # delete all widgets
+        for i in reversed(range(self.ui.editorLayout.count())):
+            self.ui.editorLayout.itemAt(i).widget().deleteLater()
+
+        # add the widgets
+        self.ui.editorLayout.addWidget(self.grid_editor)
 
         # create editor and show the root bus
         self.draw()
@@ -42,9 +67,27 @@ class BusViewerGUI(QMainWindow):
 
         # toolbar clicks
         self.ui.actiondraw.triggered.connect(self.draw)
-        self.ui.actionExpand_nodes.triggered.connect(self.bigger_nodes)
-        self.ui.actionScrink_nodes.triggered.connect(self.smaller_nodes)
+        self.ui.actionExpand_nodes.triggered.connect(self.expand_node_distances)
+        self.ui.actionScrink_nodes.triggered.connect(self.shrink_node_distances)
         self.ui.actionAdjust_to_window_size.triggered.connect(self.center_nodes)
+
+        self.ui.toolBar.setVisible(view_toolbar)
+
+    @property
+    def diagram(self) -> dev.BusBranchDiagram:
+        """
+        Get the diagram object
+        :return: BusBranchDiagram
+        """
+        return self.grid_editor.diagram
+
+    @diagram.setter
+    def diagram_setter(self, val: dev.BusBranchDiagram):
+        """
+        Set the diagram object
+        :param val: BusBranchDiagram
+        """
+        self.grid_editor.diagram = val
 
     def msg(self, text, title="Warning"):
         """
@@ -53,22 +96,22 @@ class BusViewerGUI(QMainWindow):
         :param title: Name of the window
         """
         msg = QtWidgets.QMessageBox()
-        msg.setIcon(QtWidgets.QMessageBox.Information)
+        msg.setIcon(QtWidgets.QMessageBox.Icon.Information)
         msg.setText(text)
         # msg.setInformativeText("This is additional information")
         msg.setWindowTitle(title)
         # msg.setDetailedText("The details are as follows:")
-        msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msg.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
         retval = msg.exec_()
 
-    def bigger_nodes(self):
+    def expand_node_distances(self):
         """
         Move the nodes more separated
         """
         if self.grid_editor is not None:
             self.grid_editor.expand_node_distances()
 
-    def smaller_nodes(self):
+    def shrink_node_distances(self):
         """
         Move the nodes closer
         """
@@ -87,7 +130,7 @@ class BusViewerGUI(QMainWindow):
         """
         Create new editor
         """
-        self.grid_editor = GridEditor(self.circuit)
+        self.grid_editor = GridEditorWidget(self.circuit, diagram=None)
 
         # delete all widgets
         for i in reversed(range(self.ui.editorLayout.count())):
@@ -191,26 +234,25 @@ class BusViewerGUI(QMainWindow):
                 raise Exception('Unrecognized branch type ' + obj.device_type.value)
 
         # Draw schematic subset
-        self.grid_editor.add_elements_to_schematic(buses=list(buses),
-                                                   lines=lines,
-                                                   dc_lines=dc_lines,
-                                                   transformers2w=transformers2w,
-                                                   transformers3w=transformers3w,
-                                                   hvdc_lines=hvdc_lines,
-                                                   vsc_devices=vsc_converters,
-                                                   upfc_devices=upfc_devices,
-                                                   explode_factor=1.0,
-                                                   prog_func=None,
-                                                   text_func=print)
+        diagram = generate_bus_branch_diagram(buses=list(buses),
+                                              lines=lines,
+                                              dc_lines=dc_lines,
+                                              transformers2w=transformers2w,
+                                              transformers3w=transformers3w,
+                                              hvdc_lines=hvdc_lines,
+                                              vsc_devices=vsc_converters,
+                                              upfc_devices=upfc_devices,
+                                              explode_factor=1.0,
+                                              prog_func=None,
+                                              text_func=print,
+                                              name=self.root_bus.name + 'vecinity')
 
-        for bus in buses:
-            bus.graphic_obj.arrange_children()
+        self.grid_editor.set_data(self.circuit, diagram=diagram)
 
         self.center_nodes()
 
 
 if __name__ == "__main__":
-
     app = QtWidgets.QApplication(sys.argv)
     circuit_ = MultiCircuit()
     circuit_.add_bus(dev.Bus('bus1'))
@@ -218,4 +260,3 @@ if __name__ == "__main__":
     window.resize(1.61 * 700.0, 600.0)  # golden ratio
     window.show()
     sys.exit(app.exec())
-

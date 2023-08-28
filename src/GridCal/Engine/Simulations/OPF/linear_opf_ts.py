@@ -277,7 +277,7 @@ class BranchVars:
         self.rates = np.zeros((nt, n_elm), dtype=float)
         self.loading = np.zeros((nt, n_elm), dtype=float)
 
-        self.contingency_flow_data: List[Tuple[int, int, ort.Variable, ort.Variable, ort.Variable]] = list()
+        self.contingency_flow_data: List[Tuple[int, int, ort.Variable]] = list()
 
     def get_values(self, Sbase: float) -> "BranchVars":
         """
@@ -299,11 +299,9 @@ class BranchVars:
                 data.flow_constraints_lb[t, i] = get_lp_var_value(self.flow_constraints_lb[t, i])
 
         for i in range(len(self.contingency_flow_data)):
-            m, c, var, var_slp, var_sln = self.contingency_flow_data[i]
+            m, c, var = self.contingency_flow_data[i]
             val = get_lp_var_value(var)
-            val_slp = get_lp_var_value(var_slp)
-            val_sln = get_lp_var_value(var_sln)
-            self.contingency_flow_data[i] = (m, c, val, val_slp, val_sln)
+            self.contingency_flow_data[i] = (m, c, val)
 
         # format the arrays aproprietly
         data.flows = data.flows.astype(float, copy=False)
@@ -316,23 +314,15 @@ class BranchVars:
 
         return data
 
-    def add_contingency_flow(
-            self,
-            m: int,
-            c: int,
-            flow_var: ort.Variable,
-            slack_pos_var: ort.Variable,
-            slack_neg_var: ort.Variable):
+    def add_contingency_flow(self, m: int, c: int, flow_var: ort.Variable):
         """
 
-        :param m: monitor index
-        :param c: contingency index
-        :param flow_var: ortVar for value
-        :param slack_pos_var: ortVar for slack positive
-        :param slack_neg_var: ortVar for slack negative
+        :param m:
+        :param c:
+        :param flow_var:
         :return:
         """
-        self.contingency_flow_data.append((m, c, flow_var, slack_pos_var, slack_neg_var))
+        self.contingency_flow_data.append((m, c, flow_var))
 
 class HvdcVars:
     """

@@ -47,7 +47,9 @@ class StochasticPowerFlowResults(ResultsTemplate):
                                                                                 ResultTypes.BranchLossesStd,
                                                                                 ResultTypes.BranchLossesCDF]
                                                     },
-                                 data_variables=[])
+                                 data_variables=[],
+                                 time_array=None,
+                                 clustering_results=None)
 
         self.n = n
 

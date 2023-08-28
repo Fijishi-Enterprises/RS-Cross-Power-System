@@ -24,6 +24,7 @@ from typing import Union
 import GridCal.Engine.basic_structures as bs
 from GridCal.Engine.basic_structures import IntVec, StrVec
 from GridCal.Engine.Core.Devices.multi_circuit import MultiCircuit
+from GridCal.Engine.Simulations.LinearFactors.linear_analysis import LinearMultiContingencies
 from GridCal.Engine.Simulations.LinearFactors.linear_analysis_options import LinearAnalysisOptions
 from GridCal.Engine.Simulations.LinearFactors.linear_analysis_ts_driver import LinearAnalysisTimeSeriesDriver
 from GridCal.Engine.Simulations.ContingencyAnalysis.contingency_analysis_driver import ContingencyAnalysisOptions, \
@@ -157,7 +158,8 @@ class ContingencyAnalysisTimeSeries(TimeSeriesDriverTemplate):
             bus_names=(),
             branch_names=(),
             bus_types=(),
-            con_names=()
+            con_names=(),
+            clustering_results=clustering_results
         )
 
         self.branch_names: StrVec = np.empty(shape=grid.get_branch_number_wo_hvdc(), dtype=str)
@@ -182,11 +184,15 @@ class ContingencyAnalysisTimeSeries(TimeSeriesDriverTemplate):
             branch_names=self.grid.get_branch_names_wo_hvdc(),
             bus_names=self.grid.get_bus_names(),
             bus_types=np.ones(nb, dtype=int),
-            con_names=self.grid.get_contingency_group_names()
+            con_names=self.grid.get_contingency_group_names(),
+            clustering_results=self.clustering_results
         )
 
+        linear_multiple_contingencies = LinearMultiContingencies(grid=self.grid)
+
         cdriver = ContingencyAnalysisDriver(grid=self.grid,
-                                            options=self.options)
+                                            options=self.options,
+                                            linear_multiple_contingencies=linear_multiple_contingencies)
 
         contingency_count = None
 
@@ -261,7 +267,8 @@ class ContingencyAnalysisTimeSeries(TimeSeriesDriverTemplate):
             branch_names=self.grid.get_branch_names_wo_hvdc(),
             bus_names=self.grid.get_bus_names(),
             bus_types=np.ones(nb, dtype=int),
-            con_names=self.grid.get_contingency_group_names()
+            con_names=self.grid.get_contingency_group_names(),
+            clustering_results=self.clustering_results
         )
 
         # results.S[t, :] = res_t.S.real.max(axis=0)

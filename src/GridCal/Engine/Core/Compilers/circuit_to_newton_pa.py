@@ -43,19 +43,19 @@ try:
             if npa.isLicenseActivated():
                 NEWTON_PA_AVAILABLE = True
             else:
-                print('Newton Power Analytics v' + npa.get_version(),
-                      "installed, tried to activate with {} but the license did not work :/".format(npa_license))
+                # print('Newton Power Analytics v' + npa.get_version(),
+                #       "installed, tried to activate with {} but the license did not work :/".format(npa_license))
                 NEWTON_PA_AVAILABLE = False
         else:
-            print('Newton Power Analytics v' + npa.get_version(), "installed but not licensed")
+            # print('Newton Power Analytics v' + npa.get_version(), "installed but not licensed")
             NEWTON_PA_AVAILABLE = False
     else:
-        print('Newton Power Analytics v' + npa.get_version())
+        # print('Newton Power Analytics v' + npa.get_version())
         NEWTON_PA_AVAILABLE = True
 
 except ImportError as e:
     NEWTON_PA_AVAILABLE = False
-    print('Newton Power Analytics is not available:', e)
+    # print('Newton Power Analytics is not available:', e)
 
 # numpy integer type for Newton's uword
 BINT = np.ulonglong
@@ -223,7 +223,9 @@ def add_npa_investments(circuit: MultiCircuit,
                              name=elm.name,
                              time_steps=n_time,
                              device_uuid=elm.device_idtag,
-                             group=groups_dict[elm.group])
+                             group=groups_dict[elm.group],
+                             capex=elm.CAPEX,
+                             opex=elm.OPEX)
 
         npa_circuit.addInvestment(dev)
 
@@ -1119,7 +1121,7 @@ def get_newton_pa_linear_opf_options(opf_opt: "OptimalPowerFlowOptions",
                    bs.MIPSolvers.XPRESS: npa.LpSolvers.Xpress,
                    bs.MIPSolvers.CPLEX: npa.LpSolvers.CPLEX,
                    bs.MIPSolvers.GLOP: npa.LpSolvers.Highs,
-                   bs.MIPSolvers.SCIP: npa.LpSolvers.Highs,
+                   bs.MIPSolvers.SCIP: npa.LpSolvers.Scip,
                    bs.MIPSolvers.GUROBI: npa.LpSolvers.Gurobi}
 
     grouping_dict = {bs.TimeGrouping.NoGrouping: npa.TimeGrouping.NoGrouping,

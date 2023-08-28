@@ -84,7 +84,8 @@ class PowerFlowResults(ResultsTemplate):
             branch_names: np.ndarray,
             hvdc_names: np.ndarray,
             bus_types: np.ndarray,
-            area_names: Union[np.ndarray, None] = None):
+            area_names: Union[np.ndarray, None] = None,
+            clustering_results=None):
         """
         A **PowerFlowResults** object is create as an attribute of the
         :ref:`PowerFlowMP<pf_mp>` (as PowerFlowMP.results) when the power flow is run. It
@@ -168,7 +169,9 @@ class PowerFlowResults(ResultsTemplate):
                 'hvdc_Pf',
                 'hvdc_Pt',
                 'hvdc_loading'
-            ]
+            ],
+            time_array=None,
+            clustering_results=clustering_results
         )
 
         self.n = n
@@ -240,7 +243,7 @@ class PowerFlowResults(ResultsTemplate):
         bus_dict = grid.get_bus_index_dict()
 
         self.area_names = [a.name for a in grid.get_areas()]
-        self.bus_area_indices = np.array([area_dict[b.area] for b in grid.buses])
+        self.bus_area_indices = np.array([area_dict.get(b.area, 0) for b in grid.buses])
 
         branches = grid.get_branches_wo_hvdc()
         self.F = np.zeros(len(branches), dtype=int)
