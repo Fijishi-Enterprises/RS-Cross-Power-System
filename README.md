@@ -161,7 +161,7 @@ the infrastructure definition.
 
 In GridCal, the inputs do not get modified by the simulation results. This very important concept, helps
 maintaining the independence of the inputs and outputs, allowing the replicability of the results. 
-This key feature is not true for other open-source of comercial programs.
+This key feature is not true for other open-source or comercial programs.
 
 A snapshot or any point of the time series, may be compiled to a `NumericalCircuit`. This object holds the
 numerical arrays and matrices of a time step, ready for the numerical methods. 
