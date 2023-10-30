@@ -1,10 +1,9 @@
 # GridCal
 
 GridCal is a top tier power systems planning and simulation software. 
-As such it has all the static analysis studies that you can think of, plus 
+As such, it has all the static analysis studies that you can think of, plus 
 linear and non-linear optimization functions. Some of these functions are 
-well known, while others you may have never heard of as they are a 
-product of cutting-edge research.
+well known, while others may seem unfamiliar since they are a product of cutting-edge research.
 
 ![](pics/GridCal.png)
 
@@ -18,9 +17,9 @@ GridCal started in 2015 with a clear objective: create a solid programming libra
 This straightforward approach sparked many innovations — some driven by the necessity 
 for commercial use, and others fueled by curiosity and research.
 
-Whether you're a pro needing free tools, a researcher wanting a real-world tested platform, 
+Whether you're a pro needing good free tools, a researcher wanting a real-world tested platform, 
 a teacher sharing commercial-grade software insights, or a student diving into practical algorithms, 
-GridCal's got your back. It's a high quality product made for all of us now and 
+GridCal's is what you were looking for. It's a high quality product made for all of us now and 
 for the future generations.
 
 ## Installation
@@ -43,7 +42,7 @@ following video might be of assistance: [Setup tutorial (video)](https://youtu.b
 We recommend to install the latest version of [Python](www.python.org) and then, 
 install GridCal with the following terminal command:
 
-```
+``` bash
 pip install GridCal
 ```
 
@@ -52,12 +51,12 @@ come with Python pre-installed already.
 
 
 
-### Run th graphical user interface
+### Run the graphical user interface
 
 Once you install GridCal in your local Python distribution, you can run the 
 graphical user interface with the following terminal command:
 
-```
+``` python
 python -c "from GridCal.ExecuteGridCal import run; run()"
 ```
 
@@ -66,10 +65,10 @@ You may save this command in a shortcut for easy future access.
 ### Install only the engine
 
 Some of you may only need GridCal as a library for some other purpose 
-like batch calculations, AI training or simple scripting. Whatever it may be, 
+like batch calculations, _AI_ training or simple scripting. Whatever it may be, 
 you can get the GridCal engine with the following terminal command:
 
-```
+``` bash
 pip install GridCalEngine
 ```
 
@@ -77,8 +76,11 @@ This will install the `GridCalEngine` package that is a dependency of `GridCal`.
 
 Again, you may need to use `pip3` if you are under Linux or MacOS.
 
+You may use the api with:
 
-
+``` python
+import GridCalEngine.api as gce
+```
 
 ## Features
 
@@ -134,8 +136,8 @@ We have included extra materials to work with. These are included in the standal
 ## API
 
 Since day one, GridCal was meant to be used as a library as much as it was meant 
-to be used from the user interface. Following, we include some usage examples, but 
-feel free to check the [documentation](https://gridcal.readthedocs.io) out where you will find a complete
+to be used from the user interface. Following, we include some usage examples. 
+Feel free to check the [documentation](https://gridcal.readthedocs.io) out where you will find a complete
 description of the theory, the models and the objects.
 
 ### Understanding the program structure
