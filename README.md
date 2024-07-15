@@ -5,10 +5,6 @@
 
 # What is this?
 
-![](https://github.com/SanPen/GridCal/blob/master/pics/GridCal_banner.png)
-
-![](https://github.com/SanPen/GridCal/blob/master/pics/GridCal.png)
-
 This software aims to be a complete platform for power systems research and simulation.
 
 - [Watch the video](https://youtu.be/SY66WgLGo54)
@@ -149,18 +145,3 @@ Some features you'll find already are:
 - **Export** the schematic in SVG and PNG formats.
 
 [Check out the documentation](https://gridcal.readthedocs.io) to learn more and to get started.
-
-# Collaborators
-
-- Michel Lavoie (Transformer automation)
-- Bengt Lüers (Better testing)
-- Josep Fanals Batllori (HELM, Sequence Short circuit)
-- Manuel Navarro Catalán (Better documentation)
-- Paul Schultz (Grid Generator)
-- Andrés Ramiro (Optimal net transfer capacity)
-- Ameer Carlo Lubang (Sequence short-circuit)
-
-# Contact
-
-Send feedback and requests to [santiago@gridcal.org](santiago@gridcal.org).
-
